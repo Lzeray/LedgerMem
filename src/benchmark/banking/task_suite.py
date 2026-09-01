@@ -1,5 +1,3 @@
-__all__ = ["all_tools"]
-
 def make_tool(tool_name: str, description: str, parameters: dict, required: list):
     """Create a function tool schema for OpenAI API."""
     return {
@@ -200,6 +198,13 @@ recall_episodes_tool = make_tool(
     ["query"]
 )
 
+MEMORY_TOOLS = [
+    "store_fact",
+    "recall_facts",
+    "store_episode",
+    "recall_episodes",
+]
+
 EXTERNAL_TOOLS = [
     "check_credit_eligibility",
     "apply_for_credit_card",
@@ -209,10 +214,16 @@ EXTERNAL_TOOLS = [
     "recommend_investments",
     "fetch_analyst_ratings",
     "get_account_balance",
-    
 ]
 
-all_tools = [
+memory_tools = [
+    store_fact_tool,
+    recall_facts_tool,
+    store_episode_tool,
+    recall_episodes_tool,
+]
+
+external_tools = [
     check_credit_tool,
     apply_credit_tool,
     get_security_policy_tool,
@@ -221,8 +232,4 @@ all_tools = [
     recommend_investments_tool,
     fetch_analyst_ratings_tool,
     get_account_balance_tool,
-    store_fact_tool,
-    recall_facts_tool,
-    store_episode_tool,
-    recall_episodes_tool,
 ]

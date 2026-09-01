@@ -1,0 +1,24 @@
+# Environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+.venv/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+
+# OS
+.DS_Store
