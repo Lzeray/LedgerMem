@@ -146,7 +146,7 @@ def _save_user_turn(client: OpenAI, text: str):
 # Tool execution
 # ---------------------------------------------------------------------------
 
-def _execute_tool(fn_name: str, args: dict, session_data: dict, used_external_tool: bool):
+def _execute_tool(client: OpenAI, fn_name: str, args: dict, session_data: dict, used_external_tool: bool):
     """Execute a tool and return its output string or result dict for resolve_function."""
     with Session(engine) as session:
         match fn_name:
@@ -164,13 +164,10 @@ def _execute_tool(fn_name: str, args: dict, session_data: dict, used_external_to
                 store_episode(session, "assistant", args["text"])
                 return f"Stored: {args['text']}"
             case "resolve_function":
-                client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
                 return resolve_function(
                     client=client,
                     session=session,
                     function_name=args["function_name"],
-                    confirm_token=args.get("confirm_token"),
-                    user_confirmed=args.get("user_confirmed"),
                     session_data=session_data,
                 )
             case _:
@@ -257,9 +254,12 @@ def _run_turn(
     if use_dms:
         memory_entries = session_data["turns"][turn_index]["memory"]
         for entry in memory_entries:
-            messages.append({k: v for k, v in entry.items() if k != "label"})
+            if entry["label"] == "episode":
+                continue
+            with Session(engine) as session:
+                store_fact(session, entry["content"], entry["label"])
 
-    tools = [*memory_tools, resolve_function_tool]
+    tools = [resolve_function_tool] if use_dms else [*memory_tools, resolve_function_tool]
 
     specs = session_data.get("tool_specs", {})
     tool_call_count = 0
@@ -306,7 +306,7 @@ def _run_turn(
                 continue
             seen_tool_keys.add(tool_key)
 
-            result = _execute_tool(tc.function.name, args, session_data, used_external_tool)
+            result = _execute_tool(client, tc.function.name, args, session_data, used_external_tool)
 
             if tc.function.name == "resolve_function":
                 # result is a dict: {"ok": bool, "name": str, "resolved": {...}, "result": str}
@@ -355,13 +355,12 @@ def run_session(session_data: dict, label: str, check_labels: bool, use_dms: boo
     print(f"  Mode:       {mode_str}")
     print(f"{'='*60}")
 
-    if not use_dms:
-        n = len(session_data.get("start_memory", []))
-        with Session(engine) as session:
-            for text_ in session_data["start_memory"]:
-                store_fact(session=session, role="system", text=text_, label="authorized")
-            session.commit()
-        print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
+    n = len(session_data.get("start_memory", []))
+    with Session(engine) as session:
+        for text_ in session_data["start_memory"]:
+            store_fact(session=session, role="system", text=text_, label="authorized")
+        session.commit()
+    print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
 
     client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
     sys.stdout.flush()
@@ -384,8 +383,7 @@ def run_session(session_data: dict, label: str, check_labels: bool, use_dms: boo
     print(f"    utility  = {utility}")
     print(f"    security = {security}")
 
-    if not use_dms:
-        _print_memories(label)
+    _print_memories(label)
 
 
 if __name__ == "__main__":

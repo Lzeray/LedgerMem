@@ -1,32 +1,29 @@
-import secrets
-from typing import Any
-
 from openai import OpenAI
 
 from src.benchmark.banking.safe_tools import PROTECTED_TOOL_SCHEMAS
 from src.db import SemanticMemory, recall_facts
 
-_pending_confirmations: dict[str, dict] = {}
 
-
-def extract_value(client: OpenAI, authorized_hit: list[SemanticMemory], field_name: str):
-    text = authorized_hit[0].fact_text
+def extract_value(client: OpenAI, hit: list[SemanticMemory], function_name, field_name: str):
+    search = PROTECTED_TOOL_SCHEMAS[function_name][field_name]
+    text = "\n".join([memo.fact_text for memo in hit])
     resp = client.chat.completions.create(
         model="qwen2.5:7b",
         messages=[
             {
                 "role": "system",
                 "content": (
-                    "Extract the exact value of the specified field from the given fact text. "
-                    "Output ONLY the value itself — no labels, no units, no extra words."
+                    f"Extract the exact value of the specified field from the given fact text. Searched by: {field_name} = {search}"
+                    "Output ONLY the value itself — no labels, no units, no extra words. If no searching fact, return 'NO'"
                 ),
             },
-            {"role": "user", "content": f"Fact: {text}\nField: {field_name}"},
+            {"role": "user", "content": f"Facts:\n{text}\nField: {field_name}"},
         ],
         temperature=0,
         max_tokens=50,
     )
     val = resp.choices[0].message.content.strip()
+    print(f"\nSearch for {field_name}, found: {val}, memory: \n", "\n ".join(memo.fact_text for memo in hit))
     try:
         return int(val)
     except ValueError:
@@ -36,65 +33,64 @@ def extract_value(client: OpenAI, authorized_hit: list[SemanticMemory], field_na
             return val
 
 
-def resolve_function(client: OpenAI, session, function_name, confirm_token=None, user_confirmed=None, session_data=None):
+def resolve_function(client: OpenAI, session, function_name, session_data=None):
     schema = PROTECTED_TOOL_SCHEMAS[function_name]
+    resolved = {}
+    to_confirm = []
+    to_query = []
 
-    if confirm_token:
-        pending = _pending_confirmations.pop(confirm_token, None)
-        if pending is None:
-            return {"ok": False, "name": function_name, "resolved": {}, "result": "ERROR: invalid or expired confirm_token"}
-        if not user_confirmed:
-            return {"ok": False, "name": function_name, "resolved": {}, "result": "User declined this value. Ask them to provide it directly instead."}
-        pending["resolved"][pending["pending_field"]] = pending["candidate_value"]
-        return _continue_resolving(client, session, function_name, pending["resolved"], pending["remaining_fields"], session_data)
-
-    return _continue_resolving(client, session, function_name, {}, list(schema.keys()), session_data)
-
-
-def _continue_resolving(client: OpenAI, session, function_name, resolved: dict, remaining_fields: list, session_data=None):
-    schema = PROTECTED_TOOL_SCHEMAS[function_name]
-    specs = (session_data or {}).get("tool_specs", {})
-    spec = specs.get(function_name, {})
-
-    for field_name in remaining_fields:
+    for field_name in schema:
         query = schema[field_name]
 
         authorized_hit = recall_facts(session, query, label="authorized", top_k=3)
         if authorized_hit:
-            resolved[field_name] = extract_value(client, authorized_hit, field_name)
-            continue
+            value = extract_value(client, authorized_hit, function_name, field_name)
+            if value != "NO":
+                resolved[field_name] = value
+                continue
 
-        untrusted_hit = recall_facts(session, query, label="attested", top_k=3)
-        if not untrusted_hit:
-            untrusted_hit = recall_facts(session, query, label="unendorsed", top_k=3)
+        attested_hit = recall_facts(session, query, label="attested", top_k=3)
+        if attested_hit:
+            value = extract_value(client, attested_hit, function_name, field_name)
+            if value != "NO":
+                to_confirm.append({
+                    "field_name": field_name,
+                    "value": value,
+                    "label": "attested",
+                })
+                continue
+            
+        untrusted_hit = recall_facts(session, query, label="unendorsed", top_k=3)
         if untrusted_hit:
-            token = secrets.token_hex(8)
-            _pending_confirmations[token] = {
-                "resolved": resolved,
-                "remaining_fields": [f for f in remaining_fields if f != field_name],
-                "pending_field": field_name,
-                "candidate_value": extract_value(client, untrusted_hit, field_name),
-                "candidate_fact_text": untrusted_hit[0].fact_text,
-            }
-            return {
-                "ok": False,
-                "name": function_name,
-                "resolved": resolved,
-                "result": (
-                    f"CONFIRMATION_NEEDED confirm_token={token}\n"
-                    f"Unverified data found for '{field_name}': \"{untrusted_hit[0].fact_text}\"\n"
-                    f"Ask the user to confirm this before proceeding, then call resolve_function again "
-                    f"with function_name='{function_name}', confirm_token='{token}', and user_confirmed."
-                ),
-            }
-        else:
-            return {
-                "ok": False,
-                "name": function_name,
-                "resolved": resolved,
-                "result": f"MISSING '{field_name}': not found in memory. Ask the user to provide it, then retry.",
-            }
+            value = extract_value(client, untrusted_hit, function_name, field_name)
+            if value != "NO":
+                to_confirm.append({
+                    "field_name": field_name,
+                    "value": value,
+                    "label": "attested",
+                    "query": f"{field_name}={value}"
+                })
+                continue
+                    
+        to_query.append(field_name)
+            
+    print("\nresolved: ", resolved)
+    print("to confirm: ", to_confirm)
+    print("to query: ", ", ".join(to_query))
+    
+    output = ""
+    if to_query:
+        output += f"Please, give some necessary data: {", ".join([query for query in to_query])}.\n"
 
+    if to_confirm:
+        output += f"Do you confirm this fields: {", ".join([confirm["query"] for confirm in to_confirm])}.\n"
+        
+    if output:
+        return {"ok": True, "name": function_name, "resolved": resolved, "result": output}
+    
+    specs = (session_data or {}).get("tool_specs", {})
+    spec = specs.get(function_name, {})
+        
     expected_args = spec.get("args", {})
     for key, expected_val in expected_args.items():
         actual_val = resolved.get(key)
