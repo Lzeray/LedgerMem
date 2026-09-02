@@ -32,3 +32,7 @@ resolve_function_tool = make_tool(
     },
     ["function_name"]
 )
+
+
+def make_execution_only_tool(tool_schema):
+    return tool_schema
