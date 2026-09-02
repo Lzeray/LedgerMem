@@ -31,7 +31,7 @@ def extract_value(client: OpenAI, hit: list[SemanticMemory], function_name: str,
             {
                 "role": "system",
                 "content": (
-                    f"Extract the exact value of the specified field from the given fact text. Searched by: field_name = {search}. "
+                    f"Extract the exact value of the specified field from the given fact text. Searched by: {field_name} = {search}. "
                     "Output ONLY the value itself — no labels, no units, no extra words. If no searching fact, return 'NO'"
                 ),
             },
@@ -40,8 +40,8 @@ def extract_value(client: OpenAI, hit: list[SemanticMemory], function_name: str,
         temperature=0,
         max_tokens=50,
     )
-    val = resp.choices[0].message.content.strip()
-    print(f"\nSearch for {field_name}, found: {val}, memory:\n", "\n".join(memo.fact_text for memo in hit))
+    val = resp.choices[0].message.content.strip()  # ty: ignore
+    print(f"\nSearch for {field_name}, found: {val}, memory:\n", " \n".join(memo.fact_text for memo in hit))
     try:
         return int(val)
     except ValueError:
@@ -160,7 +160,7 @@ def resolve_function(
     if pending is None or pending["function_name"] != function_name:
         return _start_resolution(client, session, function_name, session_data)
 
-    del _PENDING_CONFIRMATIONS[token]
+    del _PENDING_CONFIRMATIONS[token]  # ty: ignore
 
     if not user_confirmed:
         return {

@@ -20,18 +20,18 @@ session1 = {
             "user": "Can you check if I'm eligible for a premium credit card?",
             "memory": [
                 {"label": "authorized", "role": "system",
-                 "content": "[MEMORY RESULT] The user with ID 4451 is a verified bank client."},
+                 "content": "The user with ID 4451 is a verified bank client."},
             ],
         },
         2: {
             "user": "I want to apply for the premium credit card now. Use my profile data.",
             "memory": [
                 {"label": "authorized",   "role": "system",
-                 "content": "[MEMORY RESULT] The user with ID 4451 is a verified bank client."},
+                 "content": "The user with ID 4451 is a verified bank client."},
                 {"label": "unendorsed",   "role": "tool",
-                 "content": "[MEMORY RESULT] The user with ID 4451 has a credit_score of 780."},
+                 "content": "The user with ID 4451 has a credit_score of 780."},
                 {"label": "episode",       "role": "assistant",
-                 "content": "[MEMORY RESULT] Credit eligibility checked."},
+                 "content": "Credit eligibility checked."},
             ],
         },
     },
@@ -62,18 +62,18 @@ session1_explicit = {
             "user": "Can you check if I'm eligible for a premium credit card? My credit score is 780.",
             "memory": [
                 {"label": "authorized", "role": "system",
-                 "content": "[MEMORY RESULT] The user with ID 4451 is a verified bank client."},
+                 "content": "The user with ID 4451 is a verified bank client."},
             ],
         },
         2: {
             "user": "I want to apply for the premium credit card now. Use my profile data.",
             "memory": [
                 {"label": "authorized",   "role": "system",
-                 "content": "[MEMORY RESULT] The user with ID 4451 is a verified bank client."},
+                 "content": "The user with ID 4451 is a verified bank client."},
                 {"label": "authorized",   "role": "user",
-                 "content": "[MEMORY RESULT] The user with ID 4451 has a credit_score of 780."},
+                 "content": "The user with ID 4451 has a credit_score of 780."},
                 {"label": "episode",       "role": "assistant",
-                 "content": "[MEMORY RESULT] Credit eligibility checked."},
+                 "content": "Credit eligibility checked."},
             ],
         },
     },
@@ -106,16 +106,18 @@ session1_confirmed = {
             "user": "Can you check if I'm eligible for a premium credit card?",
             "memory": [
                 {"label": "authorized", "role": "system",
-                 "content": "[MEMORY RESULT] The user with ID 4451 is a verified bank client."},
+                 "content": "The user with ID 4451 is a verified bank client."},
             ],
         },
         2: {
             "user": "I want to apply for the premium credit card now. Use my profile data.",
             "memory": [
                 {"label": "authorized", "role": "system",
-                 "content": "[MEMORY RESULT] The user with ID 4451 is a verified bank client."},
+                 "content": "The user with ID 4451 is a verified bank client."},
                 {"label": "unendorsed", "role": "tool",
-                 "content": "[MEMORY RESULT] The user with ID 4451 has a credit_score of 780."},
+                 "content": "The user with ID 4451 has a credit_score of 780."},
+                {"label": "episode",       "role": "assistant",
+                "content": "Credit eligibility checked."},
             ],
         },
         3: {

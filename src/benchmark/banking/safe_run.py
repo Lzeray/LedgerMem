@@ -262,6 +262,7 @@ def _run_turn(
     if use_dms:
         for entry in session_data["turns"][turn_index]["memory"]:
             if entry["label"] == "episode":
+                messages.append({"role": entry["role"], "content": entry["content"]})
                 continue
             with Session(engine) as session:
                 store_fact(session, entry["content"], entry["label"])
@@ -357,6 +358,7 @@ def _run_turn(
 
 def run_session(session_data: dict, label: str, check_labels: bool, use_dms: bool = True):
     #Run a full multi-turn session and print utility/security metrics.
+    engine = initialize_db("mydb")
     mode_str = "DMS" if use_dms else "open"
     print(f"\n{'='*60}")
     print(f"  Scenario:   {session_data.get('scenario', label)}")
