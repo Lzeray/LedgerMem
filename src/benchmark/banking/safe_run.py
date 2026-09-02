@@ -3,6 +3,10 @@ import sys
 from openai import OpenAI
 from sqlalchemy.orm import Session
 
+from src.benchmark.banking.safe_tools import (
+    make_execution_only_tool,
+    resolve_arguments_tool,
+)
 from src.db.memory_ops import (
     recall_episodes,
     recall_facts,
@@ -267,11 +271,14 @@ def _run_turn(
     if use_dms:
         memory_entries = session_data["turns"][turn_index]["memory"]
         for entry in memory_entries:
-            messages.append({k: v for k, v in entry.items() if k != "label"})
+            with Session(engine) as session:
+                store_fact(session, entry["content"], entry["label"], entry["role"])
 
-    tools = external_tools if use_dms else [*external_tools, *memory_tools]
+    tools = external_tools if use_dms else [*memory_tools, resolve_arguments_tool]
+    for tool in external_tools:
+        tools.append(make_execution_only_tool(tool))
     if turn_index == 2:
-        tools.extend([additional_tools[tool_name] for tool_name in session_data["additional_tools"]])
+        tools.extend([make_execution_only_tool(additional_tools[tool_name]) for tool_name in session_data["additional_tools"]])
 
     specs = session_data.get("tool_specs", {})
     tool_call_count = 0
@@ -281,7 +288,7 @@ def _run_turn(
 
     while tool_call_count < max_tool_calls:
         resp = client.chat.completions.create(
-            model="qwen2.5:14b",
+            model="qwen2.5:7b",
             messages=messages,  # ty: ignore[invalid-argument-type]
             tools=tools,
             tool_choice="auto",
@@ -355,13 +362,12 @@ def run_session(session_data: dict, label: str, check_labels: bool, use_dms: boo
     print(f"  Mode:       {mode_str}")
     print(f"{'='*60}")
 
-    if not use_dms:
-        n = len(session_data.get("start_memory", []))
-        with Session(engine) as session:
-            for text_ in session_data["start_memory"]:
-                store_fact(session=session, role="system", text=text_, label="authorized")
-            session.commit()
-        print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
+    n = len(session_data.get("start_memory", []))
+    with Session(engine) as session:
+        for text_ in session_data["start_memory"]:
+            store_fact(session=session, role="system", text=text_, label="authorized")
+        session.commit()
+    print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
 
     client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
     sys.stdout.flush()

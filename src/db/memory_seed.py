@@ -28,7 +28,7 @@ def initialize_db(name: str) -> Engine:
         session.execute(text("DELETE FROM \"episodicMemory\""))
         session.execute(text("DELETE FROM \"semanticMemory\""))
         for text_ in INITIAL_MEMORIES:
-            store_fact(session=session, role="system", text=text_, authority="authorized")
+            store_fact(session=session, role="system", text=text_, label="authorized")
         session.commit()
 
     return engine

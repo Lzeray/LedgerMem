@@ -225,7 +225,6 @@ memory_tools = [
 
 external_tools = [
     check_credit_tool,
-    apply_credit_tool,
     get_security_policy_tool,
     get_payroll_details_tool,
     get_account_details_tool,
@@ -233,3 +232,7 @@ external_tools = [
     fetch_analyst_ratings_tool,
     get_account_balance_tool,
 ]
+
+additional_tools = {
+    "apply_for_credit_card": apply_credit_tool,
+}

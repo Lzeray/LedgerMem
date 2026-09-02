@@ -15,12 +15,12 @@ class SemanticMemory(Base):
     __tablename__ = "semanticMemory"
 
     fact_text: Mapped[str] = mapped_column(nullable=False)
-    authority: Mapped[AUTHORITY_LEVELS] = mapped_column(nullable=False)
+    label: Mapped[AUTHORITY_LEVELS] = mapped_column(nullable=False)
 
     def __repr__(self):
         return (
             f"SemanticMemory(id={self.id!r}, fact_text={self.fact_text!r}, "
-            f"authority={self.authority!r})"
+            f"label={self.label!r})"
         )
 
 class EpisodicMemory(Base):

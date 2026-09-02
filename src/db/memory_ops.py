@@ -10,7 +10,7 @@ embedder = SentenceTransformer("all-MiniLM-L6-v2")
 # --- Semantic memory (persistent facts about the world/user) ---
 
 
-def store_fact(session: Session, text: str, authority: AUTHORITY_LEVELS = "unendorsed", role: ROLES = "system") -> int:
+def store_fact(session: Session, text: str, label: AUTHORITY_LEVELS = "unendorsed", role: ROLES = "system") -> int:
     vec = embedder.encode(text)
     existing = session.execute(
         select(SemanticMemory).where(
@@ -19,19 +19,21 @@ def store_fact(session: Session, text: str, authority: AUTHORITY_LEVELS = "unend
     ).scalars().first()
     if existing:
         return existing.id
-    record = SemanticMemory(role=role, fact_text=text, authority=authority, embedding=vec)
+    record = SemanticMemory(role=role, fact_text=text, label=label, embedding=vec)
     session.add(record)
     session.commit()
     return record.id
 
 
-def recall_facts(session: Session, query: str, top_k: int = 3) -> list[SemanticMemory]:
+def recall_facts(session: Session, query: str, label: AUTHORITY_LEVELS | None = None, top_k: int = 3) -> list[SemanticMemory]:
     q_vec = embedder.encode(query)
     stmt = (
         select(SemanticMemory)
         .order_by(SemanticMemory.embedding.cosine_distance(q_vec))
         .limit(top_k)
     )
+    if label:
+        stmt = stmt.where(SemanticMemory.label == label)
     return list(session.scalars(stmt).all())
 
 

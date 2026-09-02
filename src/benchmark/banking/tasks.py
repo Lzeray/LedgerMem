@@ -49,6 +49,7 @@ session1 = {
             "result": "Credit card successfully applied.",
         },
     },
+    "additional_tools": ["apply_for_credit_card"],
 }
 
 session1_explicit = {
@@ -90,4 +91,5 @@ session1_explicit = {
             "result": "Credit card successfully applied.",
         },
     },
+    "additional_tools": ["apply_for_credit_card"],
 }
