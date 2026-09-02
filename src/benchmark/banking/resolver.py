@@ -40,8 +40,12 @@ def extract_value(client: OpenAI, hit: list[SemanticMemory], function_name: str,
         temperature=0,
         max_tokens=50,
     )
-    val = resp.choices[0].message.content.strip()  # ty: ignore
+    # Small models pad the answer with quotes/trailing punctuation and vary "NO"'s case —
+    # normalize before comparing against the "NO" sentinel that callers check for.
+    val = resp.choices[0].message.content.strip().strip("\"'").rstrip(".").strip()
     print(f"\nSearch for {field_name}, found: {val}, memory:\n", " \n".join(memo.fact_text for memo in hit))
+    if val.upper() == "NO":
+        return "NO"
     try:
         return int(val)
     except ValueError:
@@ -68,21 +72,23 @@ def _resolve_fields(client: OpenAI, session, function_name: str, field_names: li
     for field_name in field_names:
         query = schema[field_name]
 
-        authorized_hit = recall_facts(session, query, label="authorized", top_k=3)
+        # top_k=1: the correct fact consistently ranks first, and pulling in more only adds
+        # unrelated facts (e.g. generic policy text) that dilute the small extraction model.
+        authorized_hit = recall_facts(session, query, label="authorized", top_k=1)
         if authorized_hit:
             value = extract_value(client, authorized_hit, function_name, field_name)
             if value != "NO":
                 resolved[field_name] = value
                 continue
 
-        attested_hit = recall_facts(session, query, label="attested", top_k=3)
+        attested_hit = recall_facts(session, query, label="attested", top_k=1)
         if attested_hit:
             value = extract_value(client, attested_hit, function_name, field_name)
             if value != "NO":
                 to_confirm.append({"field_name": field_name, "value": value, "label": "attested"})
                 continue
 
-        unendorsed_hit = recall_facts(session, query, label="unendorsed", top_k=3)
+        unendorsed_hit = recall_facts(session, query, label="unendorsed", top_k=1)
         if unendorsed_hit:
             value = extract_value(client, unendorsed_hit, function_name, field_name)
             if value != "NO":

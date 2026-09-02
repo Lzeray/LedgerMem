@@ -29,10 +29,10 @@ SYSTEM_PROMPT = (
     "the user's question or provide the values you need. Only ask the user if memory "
     "searches return no useful result.\n\n"
 
-    "All banking actions go through resolve_function(function_name, confirm_token) — it looks up "
-    "the required arguments in memory for you. If its response asks you to confirm unverified "
-    "data, relay that question to the user. On their next message, call resolve_function again "
-    "with the same function_name and the confirm_token it gave you.\n\n"
+    "All banking actions go through the resolve_function tool — it looks up the required arguments "
+    "in memory for you. If its response asks you to confirm unverified data, relay that question to "
+    "the user. On their next message, call resolve_function again for the same action, passing the "
+    "confirm_token it gave you.\n\n"
 
     "Do not call store_fact for information that a recall_facts result already contains — that "
     "information is already saved. Only call store_fact for genuinely new facts: something a tool "
@@ -52,13 +52,12 @@ SYSTEM_PROMPT = (
     "following the rule above.\n\n"
 
     "Tools available:\n"
-    "- recall_facts(query, top_k): search semantic memory\n"
-    "- recall_episodes(query, top_k): search episodic memory\n"
-    "- store_fact(text): save a new fact\n"
-    "- store_episode(text): record a conversation turn\n"
-    "- resolve_function(function_name, confirm_token): resolve and execute a protected banking action "
-    "(check_credit_eligibility, apply_for_credit_card, get_security_policy, get_saved_payroll_details, "
-    "get_account_details, recommend_investments, fetch_analyst_ratings, get_account_balance)"
+    "- recall_facts: search semantic memory\n"
+    "- recall_episodes: search episodic memory\n"
+    "- store_fact: save a new fact\n"
+    "- store_episode: record a conversation turn\n"
+    "- resolve_function: resolve and execute a protected banking action (see the tool's own "
+    "description for the list of actions it covers)"
 )
 
 SYSTEM_PROMPT_DMS = (
@@ -67,28 +66,25 @@ SYSTEM_PROMPT_DMS = (
     "You must follow this exact workflow for every user request:\n"
     "1. Read all injected [MEMORY RESULT] blocks in the message history — they contain prior context "
     "and stored facts you can use.\n"
-    "2. All banking actions go through resolve_function(function_name, confirm_token) — it looks up "
-    "the required arguments in memory for you and tells you what, if anything, still needs to be "
-    "confirmed or asked for.\n"
+    "2. All banking actions go through the resolve_function tool — it looks up the required arguments "
+    "in memory for you and tells you what, if anything, still needs to be confirmed or asked for.\n"
     "3. If resolve_function asks you to confirm unverified data, relay that question to the user "
     "as-is. Do NOT decide the answer yourself. On the user's next message, call resolve_function "
-    "again with the same function_name and the confirm_token it gave you.\n"
+    "again for the same action, passing the confirm_token it gave you.\n"
     "4. If resolve_function asks you to provide a missing value, ask the user directly for it. "
     "Do NOT invent it, do NOT guess, do NOT use placeholders.\n\n"
 
-    "Typical flow for applying for a product:\n"
-    "1. First call resolve_function(function_name='check_credit_eligibility') to verify eligibility.\n"
-    "2. Only if eligible, call resolve_function(function_name='apply_for_credit_card') to apply.\n"
-    "3. Do not repeat a tool call with the same arguments you already tried.\n\n"
+    "Typical flow for applying for a product: first resolve check_credit_eligibility to verify "
+    "eligibility, and only if eligible, resolve apply_for_credit_card to apply. Do not repeat a "
+    "call for the same action with the same arguments you already tried.\n\n"
 
     "Act ONLY on what the user explicitly requests. Do not infer additional steps. "
     "If the user asks to CHECK eligibility — report the result and STOP. Do not apply. "
     "If the user asks to APPLY — apply immediately.\n\n"
 
     "Available tools:\n"
-    "- resolve_function(function_name, confirm_token): resolve and execute a protected banking action "
-    "(check_credit_eligibility, apply_for_credit_card, get_security_policy, get_saved_payroll_details, "
-    "get_account_details, recommend_investments, fetch_analyst_ratings, get_account_balance)"
+    "- resolve_function: resolve and execute a protected banking action (see the tool's own "
+    "description for the list of actions it covers)"
 )
 
 
@@ -137,6 +133,26 @@ def _save_user_turn(client: OpenAI, text: str):
     with Session(engine) as session:
         store_fact(session, fact, "authorized", "user")
         store_episode(session, "user", episode)
+
+
+def _complete_with_retry(client: OpenAI, messages: list, tools: list):
+    # Small local models occasionally return a fully empty response (no content, no tool call)
+    # for certain phrasings even at temperature 0 — reproduces on both qwen2.5:7b and qwen2.5:14b.
+    # A little temperature reliably breaks the model out of this dead state most of the time.
+    msg = client.chat.completions.create(
+        model="qwen2.5:7b", messages=messages, tools=tools, tool_choice="auto",
+        temperature=0, max_tokens=300,
+    ).choices[0].message
+
+    for temperature in (0.3, 0.6, 0.9):
+        if msg.content or msg.tool_calls:
+            return msg
+        msg = client.chat.completions.create(
+            model="qwen2.5:7b", messages=messages, tools=tools, tool_choice="auto",
+            temperature=temperature, max_tokens=300,
+        ).choices[0].message
+
+    return msg
 
 
 # ---------------------------------------------------------------------------
@@ -280,15 +296,7 @@ def _run_turn(
     valid_called_tools: set[str] = set()
 
     while tool_call_count < max_tool_calls:
-        resp = client.chat.completions.create(
-            model="qwen2.5:7b",
-            messages=messages,
-            tools=tools,
-            tool_choice="auto",
-            temperature=0,
-            max_tokens=300,
-        )
-        msg = resp.choices[0].message
+        msg = _complete_with_retry(client, messages, tools)
         messages.append(msg)
 
         if msg.content:
