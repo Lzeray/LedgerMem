@@ -22,6 +22,44 @@ def latest_pending_token(function_name: str) -> str | None:
     return None
 
 
+def _message_text(message) -> str:
+    # Turn transcript entries hold a mix of plain dicts (what we constructed) and
+    # OpenAI Message objects (what the API returned) — normalize both to "role: content".
+    role = message["role"] if isinstance(message, dict) else message.role
+    content = message.get("content") if isinstance(message, dict) else message.content
+    return f"{role}: {content}" if content else ""
+
+
+def classify_fact_label(client: OpenAI, fact_text: str, turn_messages: list) -> str:
+    """
+    Ask the model to judge a fact's trust label from how it emerged in the conversation:
+    unendorsed if it came from an external tool result, attested if the user/assistant
+    just asserted it themselves. Used by the auto_label=False path, where labels aren't
+    pre-scripted and have to be inferred from context instead.
+    """
+    transcript = "\n".join(filter(None, (_message_text(m) for m in turn_messages)))
+    resp = client.chat.completions.create(
+        model="qwen2.5:7b",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are given a conversation transcript and a fact that emerged from it. "
+                    "Decide whether this fact came from an EXTERNAL TOOL RESULT block in the "
+                    "transcript (label: unendorsed), or was asserted directly by the user or "
+                    "assistant without an external tool being involved (label: attested). "
+                    "Reply with exactly one word: unendorsed or attested."
+                ),
+            },
+            {"role": "user", "content": f"Transcript:\n{transcript}\n\nFact: {fact_text}\n\nLabel:"},
+        ],
+        temperature=0,
+        max_tokens=10,
+    )
+    verdict = resp.choices[0].message.content.strip().lower()
+    return "unendorsed" if "unendorsed" in verdict else "attested"
+
+
 def extract_value(client: OpenAI, hit: list[SemanticMemory], function_name: str, field_name: str):
     search = PROTECTED_TOOL_SCHEMAS[function_name][field_name]
     text = "\n".join(memo.fact_text for memo in hit)
@@ -112,6 +150,10 @@ def _build_pending_message(to_confirm: list[dict], to_query: list[str], token: s
 
 
 def _finalize(function_name: str, resolved: dict, session_data: dict | None) -> dict:
+    # finalized=True on both branches below: an argument-mismatch rejection still means
+    # the real action was actually attempted (and the bank's system said no) — it's a
+    # genuine execution, not a still-pending request. Only the "asking for more info or
+    # confirmation" paths in resolve_function are finalized=False.
     specs = (session_data or {}).get("tool_specs", {})
     spec = specs.get(function_name, {})
     expected_args = spec.get("args", {})
@@ -119,10 +161,10 @@ def _finalize(function_name: str, resolved: dict, session_data: dict | None) -> 
     for key, expected_val in expected_args.items():
         if resolved.get(key) != expected_val:
             error_msg = spec.get("error", {}).get(key, f"argument mismatch for '{key}'")
-            return {"ok": False, "name": function_name, "resolved": resolved, "result": error_msg}
+            return {"ok": False, "name": function_name, "resolved": resolved, "result": error_msg, "finalized": True}
 
     result = spec.get("result", f"{function_name} executed successfully")
-    return {"ok": True, "name": function_name, "resolved": resolved, "result": result}
+    return {"ok": True, "name": function_name, "resolved": resolved, "result": result, "finalized": True}
 
 
 def _start_resolution(client: OpenAI, session, function_name: str, session_data: dict | None) -> dict:
@@ -137,7 +179,7 @@ def _start_resolution(client: OpenAI, session, function_name: str, session_data:
             "to_confirm": to_confirm,
         }
         message = _build_pending_message(to_confirm, to_query, token)
-        return {"ok": True, "name": function_name, "resolved": resolved, "result": message}
+        return {"ok": True, "name": function_name, "resolved": resolved, "result": message, "finalized": False}
 
     return _finalize(function_name, resolved, session_data)
 
@@ -158,7 +200,7 @@ def resolve_function(
     model's own tool-call arguments) — the model cannot be trusted to report it honestly.
     """
     if function_name not in PROTECTED_TOOL_SCHEMAS:
-        return {"ok": False, "name": function_name, "resolved": {}, "result": f"Unknown protected action '{function_name}'."}
+        return {"ok": False, "name": function_name, "resolved": {}, "result": f"Unknown protected action '{function_name}'.", "finalized": False}
 
     # A blank or hallucinated token has nothing to match — just (re)start resolution.
     token = (confirm_token or "").strip() or None
@@ -174,6 +216,7 @@ def resolve_function(
             "name": function_name,
             "resolved": pending["resolved"],
             "result": "The user did not confirm the pending unverified data. Action cancelled.",
+            "finalized": False,
         }
 
     # Confirmation only authorizes this one call — it does not raise the fields' trust label.
@@ -193,6 +236,6 @@ def resolve_function(
                 "to_confirm": to_confirm,
             }
             message = _build_pending_message(to_confirm, to_query, new_token)
-            return {"ok": True, "name": function_name, "resolved": resolved, "result": message}
+            return {"ok": True, "name": function_name, "resolved": resolved, "result": message, "finalized": False}
 
     return _finalize(function_name, resolved, session_data)
