@@ -282,7 +282,7 @@ def _run_turn(
         with Session(engine) as session:
             for entry in memory_entries:
                 if entry["label"] != "episode":
-                    store_fact(session, entry["content"], entry["label"])
+                    store_fact(session, entry["content"], entry["label"], entry.get("role", "system"))
                     label_checks.append((entry["content"], entry["label"]))
 
     user_confirmed = session_data["turns"][turn_index].get("user_confirmed")
@@ -329,7 +329,7 @@ def _run_turn(
                 if entry["label"] == "episode":
                     continue
                 classified = classify_fact_label(client, entry["content"], messages)
-                store_fact(session, entry["content"], classified)
+                store_fact(session, entry["content"], classified, entry.get("role", "system"))
                 label_checks.append((entry["content"], entry["label"]))
 
     return loop_result.exceeded_max_calls
@@ -348,6 +348,11 @@ def run_session(
     with_support: bool = False,
 ):
     #Run a full multi-turn session and print utility/security/label_set metrics.
+    if not use_dms:
+        # auto_label only means anything inside DMS mode (it controls how DMS-scripted
+        # memory gets labeled); forcing it off here removes any chance of thinking it does
+        # something in open mode, where labels come from _save_user_turn/store_fact instead.
+        auto_label = False
     engine = initialize_db("mydb")
     mode_str = "DMS" if use_dms else "open"
     print(f"\n{'='*60}")
