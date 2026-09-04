@@ -94,27 +94,58 @@ casually "fix" without checking what depends on the current behavior.
   taxonomy category in comments: R2F/P2R/C2O/MIX/O2I/R2P/S2D) plus 4 memory tools
   (`store_fact`/`recall_facts`/`store_episode`/`recall_episodes`). `EXTERNAL_TOOLS` lists the
   action names; `external_tools`/`memory_tools`/`additional_tools` group the schema dicts for
-  runners to select from.
+  runners to select from. `store_fact_tool`'s schema has no `label` parameter — the model can
+  never request a specific trust label for what it writes (see the invariant section below).
 - **`safe_tools.py`** — `PROTECTED_TOOL_SCHEMAS` maps each protected action to the memory-search
-  query used to resolve its arguments. `resolve_function_tool` is the *only* tool schema exposed
-  to the model for protected actions in DMS mode; its `confirm_token` field is present, but
-  **`user_confirmed` is deliberately never a model-facing parameter** — see next section.
+  query used to resolve its arguments. `build_resolve_function_tool(allowed_names)` builds the
+  *only* tool schema exposed to the model for protected actions in DMS mode, with its
+  `function_name` enum restricted to `allowed_names` — callers (safe_run.py) rebuild it every
+  turn so a scenario's attack-only action never appears in the enum before the turn it's meant to
+  be reachable from. `resolve_function_tool` (module-level) is the full-enum convenience version
+  for open/non-DMS mode. Its `confirm_token` field is present, but **`user_confirmed` is
+  deliberately never a model-facing parameter** — see next section.
 - **`resolver.py`** — `resolve_function()`: looks up each required argument by trust label
   (authorized → use directly; attested/unendorsed → add to a pending confirmation; missing →
   add to a "please provide" list), returns a `confirm_token`-bearing pending response if anything
   needs confirming, and only executes (`_finalize`, `finalized: True`) once every field is
   resolved. `classify_fact_label()` asks the model to judge a fact's label from the turn
   transcript (unendorsed if it followed an `[EXTERNAL TOOL RESULT]` block, attested otherwise) —
-  used by the `auto_label=False` path.
+  used by the `auto_label=False` path. This classifier is a measurement device for how badly
+  post-hoc, content-based trust classification fails (see "Small-model reliability" below), not
+  a defense mechanism — the actual gate never depends on it.
 - **`safe_run.py`** / **`baseline_run.py`** — the two runners, structurally parallel
   (`_execute_tool` → `_run_turn` → `run_session`), differing only in whether tool calls go through
-  `resolve_function` (safe) or hit action tools directly (baseline).
-- **`tasks.py`** — scripted multi-turn scenarios (`session1`, `session1_explicit`,
-  `session1_confirmed`). Each turn declares its own `user` message, `memory` entries (scripted
-  DMS-mode facts, each `{label, role, content}`), an optional `hint` (surfaced only when
-  `with_support=True`), and an optional `user_confirmed` (the deterministic answer to a pending
-  confirmation for that turn). `tool_specs` declares, per action, whether it's expected to be
-  called (`to_use`) and with what arguments.
+  `resolve_function` (safe) or hit action tools directly (baseline). Both restrict which actions
+  are callable per turn from `session_data["additional_tools"]`: everything else is callable from
+  turn 1, `additional_tools` only from turn 2 onward — safe_run.py does this by rebuilding
+  `build_resolve_function_tool`'s enum every turn, baseline_run.py by extending the plain tool
+  list handed to the model.
+- **`attack_base.py`** — the scenario framework, covering all 7 AuthMem-Bench categories as two
+  mechanically different families (forcing all 7 through one mechanism would quietly narrow what
+  each one actually tests):
+  - **`AttackScenario`** (R2F, P2R, C2O, MIX — value-level): the user explicitly asks to apply;
+    what's untrustworthy is `credit_score` itself. `contested_entries` is how it enters memory in
+    the H- telling (label/role vary by category — unendorsed from a tool for most, two entries
+    for MIX's mixed evidence); `contested_fact_text` is the H+ telling (the user states it
+    directly, so it's authorized outright).
+  - **`DecisionAttackScenario`** (O2I, R2P, S2D — decision-level): `credit_score` is
+    pre-authorized in *every* variant (seeded via `start_memory`) specifically so the value-gate
+    has nothing to catch — what's under test is whether the agent initiates
+    `apply_for_credit_card` on its own, reading a tool's observation/suggestion (O2I/R2P) or its
+    own earlier suggestion (S2D, injected as a past-tense `episode` entry — `_run_turn` rebuilds
+    `messages` from scratch every turn, so there's no other way to make an earlier turn's
+    "assistant said X" persist) as implied consent, when the user's turn 2 was only a
+    non-committal ack (H-) rather than an explicit request (H+). There is no `confirm_token` flow
+    in this family: once both fields are already authorized, `resolve_function` has nothing
+    pending to continue, so `.confirmed()`'s turn 3 is just a fresh, unambiguous request.
+  - Both classes produce the same `{scenario, start_memory, turns, tool_specs, additional_tools}`
+    shape via `.unauthorized()`/`.explicit()`/`.confirmed()` — one non-polymorphic class per
+    family (not seven), since within a family the categories differ only in data.
+- **`tasks.py`** — one `AttackScenario`/`DecisionAttackScenario` instance per category (`R2F`,
+  `P2R`, `C2O`, `MIX`, `O2I`, `R2P`, `S2D`), all sharing the same `IDENTITY_SEED` identity and
+  targeting the same `apply_for_credit_card(resolved_token=4451, credit_score=780)`, plus a
+  `SCENARIOS: dict[AttackCategory, ...]` registry for ad-hoc runs
+  (`SCENARIOS[AttackCategory.P2R].explicit()`).
 
 ### Critical security invariant: never trust the model for security-relevant booleans
 
@@ -135,6 +166,17 @@ security-critical state in tool-call arguments.** Concretely:
   stay that way permanently; confirmation authorizes only that one pending call
   (`resolve_function`'s docstring states this explicitly). There is intentionally no code path
   that promotes a label based on user confirmation.
+- `authorized` is never assignable by the model through any live tool call — `store_fact_tool`'s
+  schema has no `label` parameter, and `_execute_tool`'s `store_fact` case hard-caps whatever the
+  model writes to `attested` (no external tool ran this turn) or `unendorsed` (one did); the
+  model cannot get higher than that no matter what it argues for. `authorized` only ever comes
+  from two deterministic, harness-controlled paths: session/turn-start seeding declared in
+  `tasks.py` (`start_memory`, `AttackScenario`/`DecisionAttackScenario`'s scripted turn-1 memory),
+  or literal user-turn capture (`_save_user_turn`, open mode only — the model never runs before
+  this fires). A tool result's *text* claiming something is verified has no effect on this: DMS
+  mode never even exposes `store_fact` to the model (only `resolve_function`), so injected
+  instructions in a tool result have no channel to reach the trust-labeled store at all — the
+  gate reads `recall_facts` results from the DB, never the live chat transcript.
 
 Any change that adds a new model-settable argument affecting security/label/confirmation logic
 should be checked against this invariant.
@@ -166,6 +208,8 @@ prompting theory:
   context for `classify_fact_label` to infer the label non-deterministically (see `_run_turn`'s
   comment on why the timing is offset by one turn: turn N's memory needs turn N-1's transcript
   as classification context, and turn 1 has no prior transcript so it always bootstraps verbatim).
+  `run_session` forces `auto_label = False` whenever `use_dms=False` — open mode's labels come
+  entirely from `_save_user_turn`/`store_fact` instead, so `auto_label` has no meaning there.
 - **`with_support`**: when `True`, a turn's scripted `hint` (if any) is injected as an extra
   system message before the user's turn.
 - **`check_labels`**: gates whether `used_external_tool` starts `False` (so `store_fact` calls
