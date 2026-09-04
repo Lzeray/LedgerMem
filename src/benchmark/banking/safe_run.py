@@ -4,8 +4,15 @@ from collections import Counter
 from openai import OpenAI
 from sqlalchemy.orm import Session
 
-from src.benchmark.banking.resolver import classify_fact_label, latest_pending_token, resolve_function
-from src.benchmark.banking.safe_tools import resolve_function_tool
+from src.benchmark.banking.resolver import (
+    classify_fact_label,
+    latest_pending_token,
+    resolve_function,
+)
+from src.benchmark.banking.safe_tools import (
+    build_resolve_function_tool,
+    resolve_function_tool,
+)
 from src.benchmark.engine import run_turn_loop
 from src.benchmark.metrics import evaluate_session
 from src.db.memory_ops import (
@@ -159,7 +166,7 @@ def _execute_tool(
     with Session(engine) as session:
         match fn_name:
             case "recall_facts":
-                results = recall_facts(session, args["query"], args.get("top_k", 3))
+                results = recall_facts(session, args["query"], top_k=args.get("top_k", 3))
                 return "\n".join(f"  - {r.fact_text}" for r in results) if results else "(no facts found)"
             case "recall_episodes":
                 results = recall_episodes(session, args["query"], args.get("top_k", 5))
@@ -279,7 +286,18 @@ def _run_turn(
                     label_checks.append((entry["content"], entry["label"]))
 
     user_confirmed = session_data["turns"][turn_index].get("user_confirmed")
-    tools = [resolve_function_tool] if use_dms else [*memory_tools, resolve_function_tool]
+    if use_dms:
+        # Base actions are always callable; a scenario's attack-only action (declared in
+        # additional_tools) only enters the enum from the attack turn onward — keeps the
+        # model from ever seeing e.g. apply_for_credit_card as an option on turn 1.
+        specs = session_data.get("tool_specs", {})
+        additional = session_data.get("additional_tools", [])
+        allowed = [name for name in specs if name not in additional]
+        if turn_index >= 2:
+            allowed += additional
+        tools = [build_resolve_function_tool(allowed)]
+    else:
+        tools = [*memory_tools, resolve_function_tool]
     used_external_tool = [not check_labels]
 
     def execute(fn_name: str, args: dict):
@@ -379,8 +397,16 @@ def run_session(
 
 
 if __name__ == "__main__":
-    from .tasks import session1, session1_confirmed, session1_explicit
+    from .tasks import R2F, P2R, C2O, MIX, O2I, R2P, S2D
 
-    run_session(session1, "session1_minus", check_labels=True, use_dms=True)
-    run_session(session1_explicit, "session1_plus", check_labels=True, use_dms=True)
-    run_session(session1_confirmed, "session1_confirmed", check_labels=True, use_dms=True)
+    # Default demo: R2F's 3 variants, same shape the old session1/session1_explicit/
+    # session1_confirmed ran. To try another attack category, import it from .tasks
+    # (SCENARIOS[AttackCategory.P2R] etc.) in a throwaway script rather than editing
+    # this block permanently — see CLAUDE.md.
+    run_session(R2F.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    run_session(P2R.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    run_session(C2O.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    run_session(MIX.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    run_session(O2I.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    run_session(R2P.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    run_session(S2D.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)

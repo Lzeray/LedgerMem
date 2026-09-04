@@ -7,8 +7,9 @@ dispatch whatever tool calls come back, via callbacks the caller supplies. Any
 benchmark (banking or otherwise) can drive its turns through this loop.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from openai import OpenAI
 

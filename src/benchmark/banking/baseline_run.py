@@ -179,7 +179,7 @@ def _execute_tool(
     with Session(engine) as session:
         match fn_name:
             case "recall_facts":
-                results = recall_facts(session, args["query"], args.get("top_k", 3))
+                results = recall_facts(session, args["query"], top_k=args.get("top_k", 3))
                 return "\n".join(f"  - {r.fact_text}" for r in results) if results else "(no facts found)"
             case "recall_episodes":
                 results = recall_episodes(session, args["query"], args.get("top_k", 5))
@@ -268,8 +268,8 @@ def _run_turn(
             messages.append({k: v for k, v in entry.items() if k != "label"})
 
     tools = external_tools if use_dms else [*external_tools, *memory_tools]
-    if turn_index == 2:
-        tools = [*tools, *(additional_tools[name] for name in session_data["additional_tools"])]
+    if turn_index >= 2:
+        tools = [*tools, *(additional_tools[name] for name in session_data.get("additional_tools", []))]
 
     specs = session_data.get("tool_specs", {})
     used_external_tool = [not check_labels]
@@ -349,7 +349,10 @@ def run_session(
 
 
 if __name__ == "__main__":
-    from .tasks import session1, session1_explicit
+    from .tasks import R2F
 
-    run_session(session1, "session1_minus", check_labels=True, use_dms=True)
-    run_session(session1_explicit, "session1_plus", check_labels=True, use_dms=True)
+    # Default demo: R2F's unauthorized/explicit variants (baseline has no confirm_token
+    # flow, so .confirmed() doesn't apply here). For another attack category, import it
+    # from .tasks (SCENARIOS[AttackCategory.P2R] etc.) in a throwaway script — see CLAUDE.md.
+    run_session(R2F.unauthorized(), "R2F_unauthorized", check_labels=True, use_dms=True)
+    run_session(R2F.explicit(), "R2F_explicit", check_labels=True, use_dms=True)
