@@ -14,6 +14,7 @@ from src.benchmark.banking.safe_tools import (
     resolve_function_tool,
 )
 from src.benchmark.engine import run_turn_loop
+from src.benchmark.logging_utils import capture_run
 from src.benchmark.metrics import evaluate_session
 from src.db.memory_ops import (
     recall_episodes,
@@ -23,7 +24,7 @@ from src.db.memory_ops import (
 )
 from src.db.memory_seed import initialize_db
 
-from .task_suite import EXTERNAL_TOOLS, memory_tools
+from .task_suite import EXTERNAL_TOOLS, memory_tools_for
 
 engine = initialize_db("mydb")
 
@@ -159,6 +160,7 @@ def _execute_tool(
     used_external_tool: list[bool],
     user_confirmed: bool | None,
     label_checks: list[tuple[str, str]],
+    model_controls_label: bool = False,
 ):
     #Execute a tool and return its output string, or a result dict for resolve_function.
     #used_external_tool is a 1-element list used as a mutable box, so this closure can flip
@@ -172,7 +174,17 @@ def _execute_tool(
                 results = recall_episodes(session, args["query"], args.get("top_k", 5))
                 return "\n".join(f"  - {r.content}" for r in results) if results else "(no episodes found)"
             case "store_fact":
-                label = "unendorsed" if used_external_tool[0] else "attested"
+                if model_controls_label:
+                    # Deliberately unprotected model-baseline condition: the model's own
+                    # judgment IS the label, straight from its tool call. label_set against
+                    # this is not a meaningful correctness check (there is no independent
+                    # ground truth here to compare against — we'd just be reading back what
+                    # was just written); it only confirms the write round-trips.
+                    label = args.get("label")
+                    if label not in ("attested", "unendorsed"):
+                        label = "attested"
+                else:
+                    label = "unendorsed" if used_external_tool[0] else "attested"
                 store_fact(session, args["text"], label)
                 label_checks.append((args["text"], label))
                 return f"Stored: {args['text']}"
@@ -296,12 +308,21 @@ def _run_turn(
         if turn_index >= 2:
             allowed += additional
         tools = [build_resolve_function_tool(allowed)]
+        model_controls_label = False
     else:
-        tools = [*memory_tools, resolve_function_tool]
+        # Deliberately unprotected model-baseline condition: with no DMS scripting and no
+        # harness-side label tracking, the model gets store_fact's label-exposing variant
+        # and judges its own trust label for everything it writes — see task_suite.py's
+        # store_fact_tool_labeled docstring.
+        model_controls_label = not check_labels
+        tools = [*memory_tools_for(model_controls_label), resolve_function_tool]
     used_external_tool = [not check_labels]
 
     def execute(fn_name: str, args: dict):
-        return _execute_tool(client, fn_name, args, session_data, used_external_tool, user_confirmed, label_checks)
+        return _execute_tool(
+            client, fn_name, args, session_data, used_external_tool, user_confirmed,
+            label_checks, model_controls_label,
+        )
 
     loop_result = run_turn_loop(client, MODEL, messages, tools, execute, _format_output, max_tool_calls)
 
@@ -346,72 +367,87 @@ def run_session(
     use_dms: bool = True,
     auto_label: bool = True,
     with_support: bool = False,
+    policy: str = "gate",
 ):
-    #Run a full multi-turn session and print utility/security/label_set metrics.
+    #Run a full multi-turn session, print utility/security/label_set metrics, and persist
+    #a transcript + JSON summary under logs/<model>/<policy>/.
     if not use_dms:
         # auto_label only means anything inside DMS mode (it controls how DMS-scripted
         # memory gets labeled); forcing it off here removes any chance of thinking it does
         # something in open mode, where labels come from _save_user_turn/store_fact instead.
         auto_label = False
-    engine = initialize_db("mydb")
-    mode_str = "DMS" if use_dms else "open"
-    print(f"\n{'='*60}")
-    print(f"  Scenario:   {session_data.get('scenario', label)}")
-    mode_suffix = ", auto_label=off" if use_dms and not auto_label else ""
-    print(f"  Mode:       {mode_str}{mode_suffix}")
-    print(f"{'='*60}")
+    scenario_label = session_data.get("scenario", label)
+    with capture_run(MODEL, policy, scenario_label) as finish:
+        engine = initialize_db("mydb")
+        mode_str = "DMS" if use_dms else "open"
+        print(f"\n{'='*60}")
+        print(f"  Scenario:   {scenario_label}")
+        mode_suffix = ", auto_label=off" if use_dms and not auto_label else ""
+        print(f"  Mode:       {mode_str}{mode_suffix}")
+        print(f"  Policy:     {policy}")
+        print(f"{'='*60}")
 
-    n = len(session_data.get("start_memory", []))
-    with Session(engine) as session:
-        for text_ in session_data["start_memory"]:
-            store_fact(session=session, role="system", text=text_, label="authorized")
-        session.commit()
-    print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
+        n = len(session_data.get("start_memory", []))
+        with Session(engine) as session:
+            for text_ in session_data["start_memory"]:
+                store_fact(session=session, role="system", text=text_, label="authorized")
+            session.commit()
+        print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
 
-    client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-    sys.stdout.flush()
+        client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+        sys.stdout.flush()
 
-    finalized_counts: Counter = Counter()
-    finalized_with_expected_args: set[str] = set()
-    label_checks: list[tuple[str, str]] = []
-    max_exceeded = False
+        finalized_counts: Counter = Counter()
+        finalized_with_expected_args: set[str] = set()
+        label_checks: list[tuple[str, str]] = []
+        max_exceeded = False
 
-    turn_indices = sorted(session_data["turns"].keys())
-    for i, turn_index in enumerate(turn_indices):
-        turn = session_data["turns"][turn_index]["user"]
-        next_turn_index = turn_indices[i + 1] if i + 1 < len(turn_indices) else None
-        exceeded = _run_turn(
-            client, turn_index, i == 0, next_turn_index, turn, session_data,
-            check_labels, use_dms, auto_label, with_support,
-            finalized_counts, finalized_with_expected_args, label_checks,
-        )
-        max_exceeded = max_exceeded or exceeded
+        turn_indices = sorted(session_data["turns"].keys())
+        for i, turn_index in enumerate(turn_indices):
+            turn = session_data["turns"][turn_index]["user"]
+            next_turn_index = turn_indices[i + 1] if i + 1 < len(turn_indices) else None
+            exceeded = _run_turn(
+                client, turn_index, i == 0, next_turn_index, turn, session_data,
+                check_labels, use_dms, auto_label, with_support,
+                finalized_counts, finalized_with_expected_args, label_checks,
+            )
+            max_exceeded = max_exceeded or exceeded
 
-    with Session(engine) as session:
-        result = evaluate_session(
-            session, finalized_counts, finalized_with_expected_args,
-            session_data, label_checks, max_exceeded,
-        )
+        with Session(engine) as session:
+            result = evaluate_session(
+                session, finalized_counts, finalized_with_expected_args,
+                session_data, label_checks, max_exceeded,
+            )
 
-    print("\n  ── Metrics ──")
-    print(f"    utility    = {result.utility}")
-    print(f"    security   = {result.security}")
-    print(f"    label_set  = {result.label_set:.2f}")
+        print("\n  ── Metrics ──")
+        print(f"    utility    = {result.utility}")
+        print(f"    security   = {result.security}")
+        print(f"    label_set  = {result.label_set:.2f}")
 
-    _print_memories(label)
+        _print_memories(label)
+
+        finish({
+            "mode": mode_str,
+            "auto_label": auto_label,
+            "check_labels": check_labels,
+            "utility": result.utility,
+            "security": result.security,
+            "label_set": result.label_set,
+        })
 
 
 if __name__ == "__main__":
-    from .tasks import R2F, P2R, C2O, MIX, O2I, R2P, S2D
+    from .tasks import C2O, MIX, O2I, P2R, R2F, R2P, S2D
 
-    # Default demo: R2F's 3 variants, same shape the old session1/session1_explicit/
-    # session1_confirmed ran. To try another attack category, import it from .tasks
-    # (SCENARIOS[AttackCategory.P2R] etc.) in a throwaway script rather than editing
-    # this block permanently — see CLAUDE.md.
-    run_session(R2F.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
-    run_session(P2R.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
-    run_session(C2O.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
-    run_session(MIX.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
-    run_session(O2I.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
-    run_session(R2P.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
-    run_session(S2D.unauthorized(), "R2F_explicit", check_labels=True, use_dms=True, auto_label=True)
+    # Default demo: each category's first (of 5) instance, 3 variants for R2F. To try
+    # another instance/category, import it from .tasks (SCENARIOS[AttackCategory.P2R][2]
+    # etc.) in a throwaway script rather than editing this block permanently — see CLAUDE.md.
+    run_session(R2F[0].unauthorized(), "R2F", check_labels=True, use_dms=True, auto_label=True)
+    run_session(R2F[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
+    run_session(R2F[0].confirmed(), "R2F", check_labels=True, use_dms=True, auto_label=True)
+    run_session(P2R[0].unauthorized(), "P2R", check_labels=True, use_dms=True, auto_label=True)
+    run_session(C2O[0].unauthorized(), "C2O", check_labels=True, use_dms=True, auto_label=True)
+    run_session(MIX[0].unauthorized(), "MIX", check_labels=True, use_dms=True, auto_label=True)
+    run_session(O2I[0].unauthorized(), "O2I", check_labels=True, use_dms=True, auto_label=True)
+    run_session(R2P[0].unauthorized(), "R2P", check_labels=True, use_dms=True, auto_label=True)
+    run_session(S2D[0].unauthorized(), "S2D", check_labels=True, use_dms=True, auto_label=True)

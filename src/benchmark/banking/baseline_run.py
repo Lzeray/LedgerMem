@@ -5,6 +5,7 @@ from openai import OpenAI
 from sqlalchemy.orm import Session
 
 from src.benchmark.engine import run_turn_loop
+from src.benchmark.logging_utils import capture_run
 from src.benchmark.metrics import evaluate_session
 from src.db.memory_ops import (
     recall_episodes,
@@ -14,7 +15,7 @@ from src.db.memory_ops import (
 )
 from src.db.memory_seed import initialize_db
 
-from .task_suite import EXTERNAL_TOOLS, additional_tools, external_tools, memory_tools
+from .task_suite import EXTERNAL_TOOLS, additional_tools, external_tools, memory_tools_for
 
 engine = initialize_db("mydb")
 
@@ -170,6 +171,7 @@ def _execute_tool(
     session_data: dict,
     used_external_tool: list[bool],
     label_checks: list[tuple[str, str]],
+    model_controls_label: bool = False,
 ) -> str:
     #Execute a tool and return its output string. used_external_tool is a 1-element mutable
     #box so this closure can flip it and have later calls in the same turn see the update.
@@ -185,7 +187,14 @@ def _execute_tool(
                 results = recall_episodes(session, args["query"], args.get("top_k", 5))
                 return "\n".join(f"  - {r.content}" for r in results) if results else "(no episodes found)"
             case "store_fact":
-                label = "unendorsed" if used_external_tool[0] else "attested"
+                if model_controls_label:
+                    # Deliberately unprotected model-baseline condition — see
+                    # task_suite.py's store_fact_tool_labeled docstring.
+                    label = args.get("label")
+                    if label not in ("attested", "unendorsed"):
+                        label = "attested"
+                else:
+                    label = "unendorsed" if used_external_tool[0] else "attested"
                 store_fact(session, args["text"], label)
                 label_checks.append((args["text"], label))
                 return f"Stored: {args['text']}"
@@ -267,7 +276,8 @@ def _run_turn(
         for entry in session_data["turns"][turn_index]["memory"]:
             messages.append({k: v for k, v in entry.items() if k != "label"})
 
-    tools = external_tools if use_dms else [*external_tools, *memory_tools]
+    model_controls_label = not use_dms and not check_labels
+    tools = external_tools if use_dms else [*external_tools, *memory_tools_for(model_controls_label)]
     if turn_index >= 2:
         tools = [*tools, *(additional_tools[name] for name in session_data.get("additional_tools", []))]
 
@@ -275,7 +285,7 @@ def _run_turn(
     used_external_tool = [not check_labels]
 
     def execute(fn_name: str, args: dict):
-        return _execute_tool(fn_name, args, session_data, used_external_tool, label_checks)
+        return _execute_tool(fn_name, args, session_data, used_external_tool, label_checks, model_controls_label)
 
     loop_result = run_turn_loop(client, MODEL, messages, tools, execute, _format_output, max_tool_calls)
 
@@ -300,59 +310,73 @@ def run_session(
     check_labels: bool,
     use_dms: bool = True,
     with_support: bool = False,
+    policy: str = "baseline",
 ):
-    #Run a full multi-turn session and print utility/security/label_set metrics.
-    mode_str = "DMS" if use_dms else "open"
-    print(f"\n{'='*60}")
-    print(f"  Scenario:   {session_data.get('scenario', label)}")
-    print(f"  Mode:       {mode_str}")
-    print(f"{'='*60}")
+    #Run a full multi-turn session, print utility/security/label_set metrics, and persist
+    #a transcript + JSON summary under logs/<model>/<policy>/.
+    scenario_label = session_data.get("scenario", label)
+    with capture_run(MODEL, policy, scenario_label) as finish:
+        mode_str = "DMS" if use_dms else "open"
+        print(f"\n{'='*60}")
+        print(f"  Scenario:   {scenario_label}")
+        print(f"  Mode:       {mode_str}")
+        print(f"  Policy:     {policy}")
+        print(f"{'='*60}")
 
-    if not use_dms:
-        n = len(session_data.get("start_memory", []))
+        if not use_dms:
+            n = len(session_data.get("start_memory", []))
+            with Session(engine) as session:
+                for text_ in session_data["start_memory"]:
+                    store_fact(session=session, role="system", text=text_, label="authorized")
+                session.commit()
+            print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
+
+        client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+        sys.stdout.flush()
+
+        finalized_counts: Counter = Counter()
+        finalized_with_expected_args: set[str] = set()
+        label_checks: list[tuple[str, str]] = []
+        max_exceeded = False
+
+        turns = session_data["turns"]
+        for turn_index in sorted(turns.keys()):
+            turn = turns[turn_index]["user"]
+            exceeded = _run_turn(
+                client, turn_index, turn, session_data, check_labels, use_dms, with_support,
+                finalized_counts, finalized_with_expected_args, label_checks,
+            )
+            max_exceeded = max_exceeded or exceeded
+
         with Session(engine) as session:
-            for text_ in session_data["start_memory"]:
-                store_fact(session=session, role="system", text=text_, label="authorized")
-            session.commit()
-        print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
+            result = evaluate_session(
+                session, finalized_counts, finalized_with_expected_args,
+                session_data, label_checks, max_exceeded,
+            )
 
-    client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-    sys.stdout.flush()
+        print("\n  ── Metrics ──")
+        print(f"    utility    = {result.utility}")
+        print(f"    security   = {result.security}")
+        print(f"    label_set  = {result.label_set:.2f}")
 
-    finalized_counts: Counter = Counter()
-    finalized_with_expected_args: set[str] = set()
-    label_checks: list[tuple[str, str]] = []
-    max_exceeded = False
+        if not use_dms:
+            _print_memories(label)
 
-    turns = session_data["turns"]
-    for turn_index in sorted(turns.keys()):
-        turn = turns[turn_index]["user"]
-        exceeded = _run_turn(
-            client, turn_index, turn, session_data, check_labels, use_dms, with_support,
-            finalized_counts, finalized_with_expected_args, label_checks,
-        )
-        max_exceeded = max_exceeded or exceeded
-
-    with Session(engine) as session:
-        result = evaluate_session(
-            session, finalized_counts, finalized_with_expected_args,
-            session_data, label_checks, max_exceeded,
-        )
-
-    print("\n  ── Metrics ──")
-    print(f"    utility    = {result.utility}")
-    print(f"    security   = {result.security}")
-    print(f"    label_set  = {result.label_set:.2f}")
-
-    if not use_dms:
-        _print_memories(label)
+        finish({
+            "mode": mode_str,
+            "check_labels": check_labels,
+            "utility": result.utility,
+            "security": result.security,
+            "label_set": result.label_set,
+        })
 
 
 if __name__ == "__main__":
     from .tasks import R2F
 
-    # Default demo: R2F's unauthorized/explicit variants (baseline has no confirm_token
-    # flow, so .confirmed() doesn't apply here). For another attack category, import it
-    # from .tasks (SCENARIOS[AttackCategory.P2R] etc.) in a throwaway script — see CLAUDE.md.
-    run_session(R2F.unauthorized(), "R2F_unauthorized", check_labels=True, use_dms=True)
-    run_session(R2F.explicit(), "R2F_explicit", check_labels=True, use_dms=True)
+    # Default demo: R2F's first (of 5) instance, unauthorized/explicit (baseline has no
+    # confirm_token flow, so .confirmed() doesn't apply here). For another instance/category,
+    # import it from .tasks (SCENARIOS[AttackCategory.P2R][2] etc.) in a throwaway script —
+    # see CLAUDE.md.
+    run_session(R2F[0].unauthorized(), "R2F_unauthorized", check_labels=True, use_dms=True)
+    run_session(R2F[0].explicit(), "R2F_explicit", check_labels=True, use_dms=True)

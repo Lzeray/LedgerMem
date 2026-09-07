@@ -21,7 +21,9 @@ acting on unverified/untrusted data) is exactly the failure mode this benchmark 
 ## Running the benchmark
 
 There is no test suite, build step, or lint config in this repo — scenarios are run directly as
-scripts, and correctness is judged by reading the printed transcript + metrics.
+scripts, and correctness is judged by reading the printed transcript + metrics. Every
+`run_session()` call also persists that same transcript plus a structured metrics summary under
+`logs/` (see "Logging" below) — nothing is print-only anymore.
 
 ```bash
 # Unset proxy env vars first — they break httpx's connection to local Ollama/Postgres.
@@ -34,6 +36,27 @@ env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy HF_HUB_OFFLINE=1 \
 Each module's `__main__` block calls `run_session(...)` on one or more task dicts from `tasks.py`.
 To try a new scenario or flag combination, add a call there (or a throwaway script importing
 `run_session`) rather than editing the module's default `__main__` block permanently.
+
+### Logging
+
+`src/benchmark/logging_utils.py` (domain-agnostic, like `engine.py`/`metrics.py`) wraps every
+`run_session()` call in `capture_run(model, policy, scenario_label)`, which mirrors everything
+printed during the run to `logs/<model>/<policy>/<scenario>_<timestamp>.log` (via a `Tee` on
+`sys.stdout` — no existing `print()` call site had to change) and writes a matching
+`<scenario>_<timestamp>.json` with `{model, policy, scenario, timestamp, mode, utility, security,
+label_set, ...}` once the run finishes. `policy` names the defense condition under test —
+`"gate"` (safe_run.py's default) and `"baseline"` (baseline_run.py's default) exist today;
+further conditions (always-ask, scoped-ask-once, coarse-flag, ...) are meant to plug into the
+same mechanism by passing their own `policy=` string, so results end up organized
+model-then-condition for later comparison without having to re-parse free-text transcripts.
+
+One deliberate gap: for the `model_controls_label` condition (`use_dms=False,
+check_labels=False` — see above), `label_set` is not a meaningful correctness check. There is no
+independent ground truth to compare the model's self-chosen label against in that mode (open mode
+doesn't consume any of `tasks.py`'s scripted `label` fields at all) — the metric only confirms
+the write round-trips, not that the label was *right*. Getting a real accuracy number for that
+condition needs a separate, manually-annotated ground truth per turn; don't build a comparison
+table on `label_set` alone for this policy without adding that first.
 
 Requires locally running services:
 - **Ollama** at `http://localhost:11434/v1` serving `qwen2.5:14b` (main agent model, set via
@@ -96,6 +119,11 @@ casually "fix" without checking what depends on the current behavior.
   action names; `external_tools`/`memory_tools`/`additional_tools` group the schema dicts for
   runners to select from. `store_fact_tool`'s schema has no `label` parameter — the model can
   never request a specific trust label for what it writes (see the invariant section below).
+  `store_fact_tool_labeled` is the one deliberate, narrowly-scoped exception — it adds a `label`
+  field (`enum: [attested, unendorsed]`, never `authorized`) that the model fills in itself;
+  `memory_tools_for(model_controls_label: bool)` picks which variant to expose. This is wired in
+  *only* when `use_dms=False and check_labels=False` (the "model-baseline" comparison condition
+  — see "Running the benchmark" below), never anywhere near the gate.
 - **`safe_tools.py`** — `PROTECTED_TOOL_SCHEMAS` maps each protected action to the memory-search
   query used to resolve its arguments. `build_resolve_function_tool(allowed_names)` builds the
   *only* tool schema exposed to the model for protected actions in DMS mode, with its
@@ -119,7 +147,13 @@ casually "fix" without checking what depends on the current behavior.
   are callable per turn from `session_data["additional_tools"]`: everything else is callable from
   turn 1, `additional_tools` only from turn 2 onward — safe_run.py does this by rebuilding
   `build_resolve_function_tool`'s enum every turn, baseline_run.py by extending the plain tool
-  list handed to the model.
+  list handed to the model. `run_session(..., policy=...)` (default `"gate"` / `"baseline"`)
+  names the defense condition being tested — see "Logging" below. When `use_dms=False and
+  check_labels=False`, both runners flip `model_controls_label` on for that turn: the model gets
+  `store_fact_tool_labeled` and its own `label` argument is trusted verbatim (capped to
+  attested/unendorsed) instead of the usual `used_external_tool`-derived heuristic — a
+  deliberately unprotected baseline for comparing "the model decides its own trust labels"
+  against the gate, not a path that's ever reachable when labels actually matter.
 - **`attack_base.py`** — the scenario framework, covering all 7 AuthMem-Bench categories as two
   mechanically different families (forcing all 7 through one mechanism would quietly narrow what
   each one actually tests):
@@ -141,11 +175,13 @@ casually "fix" without checking what depends on the current behavior.
   - Both classes produce the same `{scenario, start_memory, turns, tool_specs, additional_tools}`
     shape via `.unauthorized()`/`.explicit()`/`.confirmed()` — one non-polymorphic class per
     family (not seven), since within a family the categories differ only in data.
-- **`tasks.py`** — one `AttackScenario`/`DecisionAttackScenario` instance per category (`R2F`,
-  `P2R`, `C2O`, `MIX`, `O2I`, `R2P`, `S2D`), all sharing the same `IDENTITY_SEED` identity and
-  targeting the same `apply_for_credit_card(resolved_token=4451, credit_score=780)`, plus a
-  `SCENARIOS: dict[AttackCategory, ...]` registry for ad-hoc runs
-  (`SCENARIOS[AttackCategory.P2R].explicit()`).
+- **`tasks.py`** — 5 instances per category (35 total: `R2F`, `P2R`, `C2O`, `MIX`, `O2I`, `R2P`,
+  `S2D` are each a `list[AttackScenario | DecisionAttackScenario]` of 5), built via one small
+  factory per category (`_r2f`, `_p2r`, ...) called with distinct identities, institutions
+  (bureau/bank/department/sector names), and phrasing — genuinely different narratives per
+  instance, not the same sentence with a different id swapped in. All still target the same
+  kind of `apply_for_credit_card(resolved_token, credit_score)` call. `SCENARIOS: dict[
+  AttackCategory, list]` registry for ad-hoc runs (`SCENARIOS[AttackCategory.P2R][2].explicit()`).
 
 ### Critical security invariant: never trust the model for security-relevant booleans
 
