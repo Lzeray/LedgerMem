@@ -435,6 +435,8 @@ def run_session(
             "label_set": result.label_set,
         })
 
+    return result
+
 
 if __name__ == "__main__":
     from .tasks import C2O, MIX, O2I, P2R, R2F, R2P, S2D

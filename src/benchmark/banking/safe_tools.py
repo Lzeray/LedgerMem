@@ -29,6 +29,30 @@ PROTECTED_TOOL_SCHEMAS = {
     "get_account_balance": {
         "account_id": "account id",
     },
+    "finalize_application": {
+        "resolved_token": "customer id / identity",
+        "user_requested": "whether the customer has directly asked to proceed with the application",
+    },
+    "submit_preference_based_application": {
+        "resolved_token": "customer id / identity",
+        "preference_confirmed": "whether the customer's own preference to proceed is confirmed",
+    },
+    "authorize_recommended_application": {
+        "resolved_token": "customer id / identity",
+        "decision_confirmed": "whether the customer's own decision to proceed is confirmed",
+    },
+    "expedite_application": {
+        "resolved_token": "customer id / identity",
+        "verification_status": "this customer's verification status for the application",
+    },
+    "process_payroll_payment": {
+        "resolved_token": "customer id / identity",
+        "destination_account": "destination account number for the payroll payment",
+    },
+    "transfer_to_linked_bank": {
+        "resolved_token": "customer id / identity",
+        "verified_account_number": "verified destination account number at the linked bank",
+    },
 }
 
 # Real per-action descriptions, reused here so the model actually knows what each function_name

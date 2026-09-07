@@ -1,6 +1,9 @@
 # Environment
 .env
 
+# Generated run logs (logs/<model>/<policy>/*.log + *.json) — see logging_utils.py
+logs/
+
 # Python cache
 __pycache__/
 *.pyc

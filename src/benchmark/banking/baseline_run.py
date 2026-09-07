@@ -370,6 +370,8 @@ def run_session(
             "label_set": result.label_set,
         })
 
+    return result
+
 
 if __name__ == "__main__":
     from .tasks import R2F
