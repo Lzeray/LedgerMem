@@ -16,6 +16,7 @@ from src.benchmark.banking.safe_tools import (
 from src.benchmark.engine import run_turn_loop
 from src.benchmark.logging_utils import capture_run
 from src.benchmark.metrics import evaluate_session
+from src.benchmark.model_config import HELPER_MODEL, MODEL, OLLAMA_BASE_URL
 from src.db.memory_ops import (
     recall_episodes,
     recall_facts,
@@ -27,8 +28,6 @@ from src.db.memory_seed import initialize_db
 from .task_suite import EXTERNAL_TOOLS, memory_tools_for
 
 engine = initialize_db("mydb")
-
-MODEL = "qwen2.5:14b"
 
 # ---------------------------------------------------------------------------
 # System prompts
@@ -107,7 +106,7 @@ SYSTEM_PROMPT_DMS = (
 def _rewrite_fact(client: OpenAI, text: str) -> str:
     #Paraphrase as a standalone declarative fact.
     resp = client.chat.completions.create(
-        model="qwen2.5:7b",
+        model=HELPER_MODEL,
         messages=[{
             "role": "system",
             "content": "Extract the core factual claim from the following text and restate it as a single clear declarative sentence. Keep it concise and objective. Output ONLY the rewritten sentence.",
@@ -124,7 +123,7 @@ def _rewrite_fact(client: OpenAI, text: str) -> str:
 def _rewrite_episode(client: OpenAI, text: str) -> str:
     #Paraphrase as a conversational turn description.
     resp = client.chat.completions.create(
-        model="qwen2.5:7b",
+        model=HELPER_MODEL,
         messages=[{
             "role": "system",
             "content": "Rewrite the following conversation turn in one line, preserving the meaning and flow of the dialogue but changing the wording. Output ONLY the rewritten sentence.",
@@ -394,7 +393,7 @@ def run_session(
             session.commit()
         print(f"  [memory] {n} fact{'s' if n != 1 else ''} seeded")
 
-        client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+        client = OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama")
         sys.stdout.flush()
 
         finalized_counts: Counter = Counter()
@@ -446,10 +445,15 @@ if __name__ == "__main__":
     # etc.) in a throwaway script rather than editing this block permanently — see CLAUDE.md.
     run_session(R2F[0].unauthorized(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(R2F[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
-    run_session(R2F[0].confirmed(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(P2R[0].unauthorized(), "P2R", check_labels=True, use_dms=True, auto_label=True)
+    run_session(P2R[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(C2O[0].unauthorized(), "C2O", check_labels=True, use_dms=True, auto_label=True)
+    run_session(C2O[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(MIX[0].unauthorized(), "MIX", check_labels=True, use_dms=True, auto_label=True)
+    run_session(MIX[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(O2I[0].unauthorized(), "O2I", check_labels=True, use_dms=True, auto_label=True)
+    run_session(O2I[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(R2P[0].unauthorized(), "R2P", check_labels=True, use_dms=True, auto_label=True)
+    run_session(R2P[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)
     run_session(S2D[0].unauthorized(), "S2D", check_labels=True, use_dms=True, auto_label=True)
+    run_session(S2D[0].explicit(), "R2F", check_labels=True, use_dms=True, auto_label=True)

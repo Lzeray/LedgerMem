@@ -58,14 +58,18 @@ the write round-trips, not that the label was *right*. Getting a real accuracy n
 condition needs a separate, manually-annotated ground truth per turn; don't build a comparison
 table on `label_set` alone for this policy without adding that first.
 
-Requires locally running services:
-- **Ollama** at `http://localhost:11434/v1` serving `qwen2.5:14b` (main agent model, set via
-  `MODEL` in `safe_run.py`/`baseline_run.py`) and `qwen2.5:7b` (used internally for memory
-  paraphrasing, value extraction, and label classification — see Architecture below).
+Requires a running Ollama and Postgres:
+- **Ollama** — `src/benchmark/model_config.py` reads `OLLAMA_BASE_URL` (default
+  `http://localhost:11434/v1`), `OLLAMA_MODEL` (default `qwen2.5:14b`, the main agent model) and
+  `OLLAMA_HELPER_MODEL` (default `qwen2.5:7b`, used internally for memory paraphrasing, value
+  extraction, and label classification — see Architecture below) from the environment, so the
+  exact same code can point at a remote Ollama (e.g. a home GPU box over Tailscale) by exporting
+  these three vars before running — no code edit needed, and any model already pulled on the
+  target host works, not just the two named above.
 - **Postgres + pgvector** at `postgresql://lenaz:lenaz210607@localhost/mydb` (connection string is
-  hardcoded in `src/db/memory_seed.py`). `initialize_db("mydb")` truncates and reseeds both memory
-  tables on every call — the DB never accumulates cruft across runs, but does not persist state
-  between them either.
+  hardcoded in `src/db/memory_seed.py`, stays local — only the Ollama side is meant to move
+  remote). `initialize_db("mydb")` truncates and reseeds both memory tables on every call — the DB
+  never accumulates cruft across runs, but does not persist state between them either.
 
 No `requirements.txt`/`pyproject.toml` exists; dependencies (openai, sqlalchemy, psycopg2-binary,
 pgvector, sentence-transformers, torch, numpy) are installed directly into `.venv`.
@@ -79,6 +83,12 @@ depend on an OpenAI-compatible chat-completions client and a generic `session_da
 shape (`{tool_name: {to_use, args, error, result}}`). This split is deliberate so future
 non-banking benchmarks can reuse the turn loop and scoring without touching banking code:
 
+- **`model_config.py`** — the only place `OLLAMA_BASE_URL`/`OLLAMA_MODEL`/`OLLAMA_HELPER_MODEL`
+  are read from the environment (see "Running the benchmark" above); `safe_run.py`/
+  `baseline_run.py`/`resolver.py` import `MODEL`/`HELPER_MODEL`/`OLLAMA_BASE_URL` from here
+  instead of constructing their own `OpenAI(base_url=...)` or hardcoding a model string — the
+  only two places an `OpenAI` client actually gets constructed are `safe_run.py`'s and
+  `baseline_run.py`'s `run_session()` (`resolver.py`'s functions take `client` as a parameter).
 - **`engine.py`** — `run_turn_loop()` drives the request → tool-dispatch → response cycle via
   caller-supplied `execute_tool(name, args)` / `format_output(name, result)` callbacks, appending
   to `messages` in place. `complete_with_retry()` retries at escalating temperature when the model

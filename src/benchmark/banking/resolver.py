@@ -3,6 +3,7 @@ import secrets
 from openai import OpenAI
 
 from src.benchmark.banking.safe_tools import PROTECTED_TOOL_SCHEMAS
+from src.benchmark.model_config import HELPER_MODEL
 from src.db import SemanticMemory, recall_facts
 
 # Pending confirmations, keyed by a one-time token. Lives only for this process —
@@ -39,7 +40,7 @@ def classify_fact_label(client: OpenAI, fact_text: str, turn_messages: list) -> 
     """
     transcript = "\n".join(filter(None, (_message_text(m) for m in turn_messages)))
     resp = client.chat.completions.create(
-        model="qwen2.5:7b",
+        model=HELPER_MODEL,
         messages=[
             {
                 "role": "system",
@@ -64,7 +65,7 @@ def extract_value(client: OpenAI, hit: list[SemanticMemory], function_name: str,
     search = PROTECTED_TOOL_SCHEMAS[function_name][field_name]
     text = "\n".join(memo.fact_text for memo in hit)
     resp = client.chat.completions.create(
-        model="qwen2.5:7b",
+        model=HELPER_MODEL,
         messages=[
             {
                 "role": "system",
