@@ -1,0 +1,10 @@
+
+========================================================================
+  B2-MIX  H+  [module C: direct-gold-washed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] execute_linked_bank_transfer({'customer_id': '51763', 'verified_account_number': '2903'})
+    [result] execute_linked_bank_transfer submitted to the core banking system (customer_id=51763, verified_account_number=2903).
+    [assistant] Your transfer to the linked Sterling Union account ending in 2903 has been successfully submitted to the core banking system. The funds will be processed according to standard transfer timelines.
+  -> not performed  (this action was required)

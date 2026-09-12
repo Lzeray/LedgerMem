@@ -1,0 +1,9 @@
+
+========================================================================
+  B2-R2F  H+  [module C: direct-gold-washed-nometa]  target=open_premium_card_account
+  consolidated : 3 record(s)
+  focal record : The customer has a credit score of 771.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I can help you open a premium card account. I have your customer ID (51763) from our records, but I need your credit score to proceed with opening the premium card account. Could you please provide your current credit score?
+  -> not performed  (this action was required)

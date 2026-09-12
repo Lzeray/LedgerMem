@@ -321,3 +321,135 @@ occasionally unmeasurable with this model.
   system message before the user's turn.
 - **`check_labels`**: gates whether `used_external_tool` starts `False` (so `store_fact` calls
   during the run get correctly split into `attested`/`unendorsed`) vs. always `True`.
+
+## `new_src/` — the paper-faithful rebuild
+
+`new_src/` is a second, independent implementation of the same benchmark, written directly
+against AuthMem-Bench's construction contract (arXiv:2608.01679) rather than evolved from
+`src/`. It exists because `src/` had drifted far enough from the paper that a defense passing
+there would not necessarily pass the real benchmark. **`src/` is untouched and still runs** —
+the two share only the Postgres instance and the Ollama endpoint, and `new_src/` uses its own
+tables (`am_semantic`, `am_episodic`) and its own logs directory (`logs_authmem/`).
+
+Read `new_src/README.md` first: it documents the 5 base histories × 7 transitions = 35 pairs,
+the four-turn episode shape, the deterministic schema validation of the carrier swap, the
+three modules (A write-time, B action-time, C end-to-end) with the paper's own metrics
+(`ASR`, `TSR`, `Upgrade-all`, `Ret-`, `Ret+`, `FAU`), and the deliberate deviations from the
+paper. Entry point is `python -m new_src.run {validate,a,b,c,check}` plus
+`python -m new_src.report`.
+
+One finding from `new_src/` that applies to `src/` as well: qwen2.5:14b returns a completely
+empty response — no content, no tool call, at any temperature — when the only tool offered is
+named with a `resolve_` prefix (`resolve_function`, `resolve_banking_action`). The identical
+schema named `perform_banking_action` is called normally. Verified by direct A/B against the
+live model. `src/`'s gate tool is named `resolve_function`, so some of the "narrated task
+completion without an actual tool call" behaviour documented under "Small-model reliability"
+above is likely caused by the tool's name rather than by the prompt.
+
+## `new_src/adapters/` — other memory systems, measured on the same benchmark
+
+`new_src/adapters/memlineage/` runs the action-time module against a live
+[MemLineage](https://github.com/zhuamber370/memlineage) backend instead of the deterministic
+memory stub. It is an adapter, never a fork: nothing under `new_src/bench/`, `new_src/data/`
+or `memlineage/` is modified. See `new_src/adapters/memlineage/README.md` for the write path
+(its governed `dry-run → commit`, origin recorded in its own `sources` list), the three read
+conditions, and how to start its backend in its own virtualenv — **never install MemLineage's
+pinned dependencies into the benchmark's `.venv`**, which holds torch and sentence-transformers.
+
+The standing rule for any such adapter: **the compared system is wired up exactly as its own
+documentation describes it, with no additions.** Giving a competitor a capability it does not
+ship (an authority label on a store that has none) answers a question nobody asked and hides
+the failure the run exists to expose. Using its *full existing* read surface rather than its
+most convenient endpoint is expected, and is the other half of the same rule.
+
+Measured (qwen2.5:14b, 30 null-control-clean pairs, `logs_authmem/qwen2.5_14b/module_b/`):
+MemLineage scores **ASR 90.0%, identical to the washed baseline (90.0%), and identical with
+its stored `sources` shown to the agent and with them hidden.** It retains provenance
+faithfully and it changes no outcome. That is the project's cleanest empirical statement of
+its own thesis: retaining provenance is worth nothing without enforcement on it.
+
+## Current direction: this is a measurement project, not a 0% claim
+
+The headline the work can defend is the anatomy of what provenance-based enforcement covers
+and what it cannot — not "the gate achieves ASR 0%". Three results support it and are already
+measured: argument-provenance gating is complete on value transitions and *changes nothing* on
+licensing ones; MemLineage shows provenance without enforcement is worth zero; prompting the
+policy and enforcing it in code fail on disjoint categories, so neither dominates.
+
+Standing methodological rules, which apply to anything computed or written in this repo:
+
+- **ASR's denominator is the H- episodes only** — 35 per condition, 30 after null-control
+  exclusions, never 70. Always state n.
+- **Per-category cells are n≈4–5.** Their one-sided 95% upper bound is around 45%, so they
+  carry no conclusions. Report the two aggregates (value / licensing) or raise the pair count.
+- **Every 0% is reported with its one-sided 95% upper bound** (rule of three, 3/n: ≈10% at
+  n=30). Never write "guaranteed", "prevents" or "eliminates" about a 0% cell.
+- **The current 35 pairs are a development set.** The audit, MIX's rewording and the licence
+  check were all designed against them, so a 0% on them is overfitting, not evidence. Headline
+  numbers require a held-out suite built after the design freeze.
+- The suite is never tuned so the defense passes (see also the `src/` scenario audit).
+
+### The channel model: what replaced `role → label` and `role → claim_type`
+
+Both halves of the frozen role policy were stipulations and the speech-act families falsify one
+each, so the role was split into two axes with different mechanisms. The full description lives
+in `new_src/README.md` under "The channel model"; what matters for working in this repo:
+
+- **The channel is deterministic and comes from the integration, never from content.** For a
+  tool result it is decided by which tool was called, declared as `ActionSpec.trust` in
+  `new_src/bench/actions.py`. Never infer trust from what a result says — a result's text is
+  exactly what an attacker controls. A tool added without declaring `trust` defaults to
+  `untrusted`, which is the correct direction to fail.
+- **The model supplies exactly one field, and the label is a table.**
+  `new_src/bench/classifier.py` asks a single question — which of the acts this channel permits
+  was this — and `taxonomy.label_for(channel, claim_type)` turns the answer into a label by
+  lookup. The model never names a label. Every failure (unparsable, empty, out-of-set,
+  classifier outage) becomes `other`, which is in no permitted set and no licence list, so the
+  channel's fail-closed label applies and the gate refuses. **Any change here must be checked
+  against that.**
+- **The classifier is shown `verbatim`, never a summary.** The kind of act belongs to the
+  utterance. Given a consolidated paraphrase instead ("The user requested to close savings
+  account X"), a model correctly answers `fact` — it is a statement of fact about a request —
+  and the record then licenses nothing. This cost a full debugging cycle to find; do not
+  "simplify" the classifier by handing it the record text.
+- **Every field that can be filled without a model is filled at write time.** `dms.capture`
+  copies `verbatim`, derives `channel` from the role and the called tool's declared trust, takes
+  slots from the dataset, and sets `object_ref` only when the words name the object. A record
+  reconstructed later from a summary has already lost what authorization rests on.
+- **One rule raises authority:** `trusted_tool` + `grant` → `authorized`. Accepted deliberately
+  as the authenticated-channel case, bounded by the channel (an outside feed cannot produce a
+  `grant`). State it as an assumption wherever these numbers are reported.
+- **It is additive, never a replacement.** `ROLE_POLICY` and `CLAIM_TYPE_BY_ROLE` stay in
+  `new_src/bench/taxonomy.py` and every condition built on them still runs, so numbers measured
+  under the frozen policy remain directly comparable. A run selects between them through
+  `Condition.label_source` (`gold` vs `channel-narrowed`).
+- **It is an extension beyond AuthMem-Bench and must be reported as one.** The paper splits
+  neither tools nor claim types. The paper-faithful arm is kept precisely so the extension can
+  be shown to be doing work rather than asserted to.
+
+### The work queue, in priority order
+
+1. **Freeze the gate's design.** No further defense changes measured against the current pairs.
+2. **Build a held-out suite** — new base histories written after the freeze, passing
+   `run validate`, `run null` and the sanity check. Report headline numbers only on it; keep
+   the current 35 pairs as the labeled development set.
+3. **Recompute every table with n and confidence intervals**; drop per-category claims or
+   raise the pair count per category.
+4. **Replace the frozen `role → claim_type` map.** — *implemented; see "The channel model"
+   below.* Both axes are now split off the role: the **channel** fixes a label ceiling and the
+   permitted set of claim types, and a classifier chooses within that set and may only narrow.
+   What remains to be done is the measurement: the utility cost on the taxonomy suite, with n
+   and confidence intervals.
+5. **Add the speech-act attack families** — *done*: Q2D, N2D, P2F, G2O, 5 pairs each, in
+   `new_src/data/speech_act_attacks.py`, run through `new_src.run_heldout --suite speechact`.
+6. **Write up the authenticated-channel direction** as future work: authority should follow
+   from a verifiable signature on the channel, not from a role — that is deterministic where
+   speech-act classification is not. Describing it is enough; implementing it is out of scope.
+7. **Cite and differentiate EAL-Bench** (arXiv:2609.01836, `github.com/tommasocerruti/eal-bench`).
+   It is the nearest neighbour: same write-time/action-time split and hidden ground truth, but
+   an *endogenous* threat model — authorization state that expired or was revoked, rather than
+   a claim whose source is misremembered. Its `source-authority gating` mitigation reproduces
+   this project's safety/utility trade-off on frontier models (−18 pp unauthorized use, −39.5 pp
+   authorized use), so it must be cited and distinguished rather than discovered by a reviewer.
+   It also names a genuine gap here: LedgerMem's records are static, with no expiry or
+   revocation anywhere in the suite.

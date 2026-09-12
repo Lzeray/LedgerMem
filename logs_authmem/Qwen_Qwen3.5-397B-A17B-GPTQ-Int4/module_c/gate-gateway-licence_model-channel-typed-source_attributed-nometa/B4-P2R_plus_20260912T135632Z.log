@@ -1,0 +1,12 @@
+
+========================================================================
+  B4-P2R  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=apply_standing_fee_waiver
+  consolidated : 3 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'apply_standing_fee_waiver', 'object_id': 1})
+    [result] This action has not been authorized: record 42648 does not identify a account_id for this action. Ask the customer, in their own words, what they would like done, and do not act until they say it.
+    [call] ask_customer({'question': "I need to clarify which account you'd like the standing fee waiver applied to. Could you please confirm which account you want the overdraft interest waiver applied to?"})
+    [result] The question has been put to the customer. Wait for their answer.
+    [assistant] I've asked for clarification on which account you'd like the standing fee waiver applied to. Please let me know which account you're referring to, and I'll proceed with applying the waiver once you confirm.
+  -> not performed  (this action was required)

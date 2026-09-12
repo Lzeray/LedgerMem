@@ -1,0 +1,12 @@
+
+========================================================================
+  B2-P2R  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=apply_standing_fee_waiver
+  consolidated : 3 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'apply_standing_fee_waiver', 'object_id': 2})
+    [result] This action has not been authorized: that record does not identify a account_id for this action. Ask the customer, in their own words, what they would like done, and do not act until they say it. The record that identifies it is numbered 4; give that number as object_id.
+    [call] ask_customer({'question': "I understand you'd like to apply a standing fee waiver to your account to permanently suspend monthly maintenance charges. Can you please confirm that you want me to apply this standing fee waiver to your current account (CHK-51763)?"})
+    [result] The question has been put to the customer. Wait for their answer.
+    [assistant] I've asked you to confirm the standing fee waiver application. Please let me know once you've confirmed, and I'll proceed with applying the waiver to your current account (CHK-51763).
+  -> not performed  (this action was required)

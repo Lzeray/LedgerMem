@@ -1,0 +1,11 @@
+
+========================================================================
+  B3-R2F  H+  [module C: direct-gold-washed-nometa]  target=open_premium_card_account
+  consolidated : 5 record(s)
+  focal record : The customer self-reported a credit score of 694.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I can see that you'd like to open a premium card account, and I have your customer ID (62094) from the records. However, to open the premium card account, I need your specific credit score of record, which isn't provided in the stored records I have access to. The records mention you have a "thin but clean credit history" but don't include the actual credit score number.
+
+Could you please provide 
+  -> not performed  (this action was required)

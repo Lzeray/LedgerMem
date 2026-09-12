@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-R2P  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=set_investment_allocation
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] ask_customer({'question': "I'd be happy to help you proceed, but I need to know which specific banking action you'd like me to carry out. Could you please tell me what you'd like me to do? For example, would you like to open a premium card account, apply a fee waiver, update your payroll destination, transfer funds, close a savings account, adjust your investment allocation, rebalance your portfolio, or schedule a recurring payment?"})
+    [result] The question has been put to the customer. Wait for their answer.
+    [assistant] I've asked the customer to clarify which banking action they'd like me to perform. I'm waiting for their response to proceed.
+  -> not performed  (this action was required)

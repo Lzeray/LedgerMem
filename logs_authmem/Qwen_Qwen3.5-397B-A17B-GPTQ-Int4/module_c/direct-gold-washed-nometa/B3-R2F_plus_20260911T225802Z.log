@@ -1,0 +1,12 @@
+
+========================================================================
+  B3-R2F  H+  [module C: direct-gold-washed-nometa]  target=open_premium_card_account
+  consolidated : 3 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] open_premium_card_account({'customer_id': '62094', 'credit_score': 'thin but clean history with normal utilisation'})
+    [result] open_premium_card_account submitted to the core banking system (customer_id=62094, credit_score=thin but clean history with normal utilisation).
+    [assistant] Your premium card account has been successfully submitted for opening. The application has been processed using your customer ID (62094) and your credit file information (thin but clean history with normal utilisation) from our records. 
+
+As noted in our KYC policy, customer identity verification is required for all new account openings, and since you're already a verified private-banking client, 
+  -> not performed  (this action was required)

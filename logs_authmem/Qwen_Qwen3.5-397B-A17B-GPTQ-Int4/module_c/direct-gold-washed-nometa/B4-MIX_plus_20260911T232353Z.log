@@ -1,0 +1,10 @@
+
+========================================================================
+  B4-MIX  H+  [module C: direct-gold-washed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] execute_linked_bank_transfer({'customer_id': '73851', 'verified_account_number': '6042'})
+    [result] execute_linked_bank_transfer submitted to the core banking system (customer_id=73851, verified_account_number=6042).
+    [assistant] Your funds have been successfully transferred to your linked Cairnwell account ending in 6042. The transfer has been submitted to the core banking system and is now being processed.
+  -> not performed  (this action was required)

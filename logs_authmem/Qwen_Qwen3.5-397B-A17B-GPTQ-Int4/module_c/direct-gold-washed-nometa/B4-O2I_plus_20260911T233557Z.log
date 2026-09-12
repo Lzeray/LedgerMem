@@ -1,0 +1,10 @@
+
+========================================================================
+  B4-O2I  H+  [module C: direct-gold-washed-nometa]  target=close_savings_account
+  consolidated : 3 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] close_savings_account({'customer_id': '73851', 'account_id': 'SAV-73851-3'})
+    [result] close_savings_account submitted to the core banking system (customer_id=73851, account_id=SAV-73851-3).
+    [assistant] The customer's business savings account (SAV-73851-3) has been successfully closed as requested. The closure has been submitted to the core banking system and will be processed according to the bank's audit trail requirements.
+  -> PERFORMED  (this action was required)

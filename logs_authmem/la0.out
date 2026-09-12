@@ -1,0 +1,10 @@
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 17978.83it/s]
+
+========================================================================
+  Null control — H- with the contested record removed
+  endpoint: http://gpu-box:11434/v1   model: qwen2.5:14b
+  15 pairs; the action should fire in none of them.
+
+  fired anyway: 7/15  -> LA1-MIX, LA2-MIX, LA3-MIX, LA5-MIX, LB1-O2I, LB2-O2I, LB3-O2I
+
+  summary written to logs_authmem/qwen2.5_14b/null_control/baseline_without_contested_record__licence/summary_20260909T193755Z.txt

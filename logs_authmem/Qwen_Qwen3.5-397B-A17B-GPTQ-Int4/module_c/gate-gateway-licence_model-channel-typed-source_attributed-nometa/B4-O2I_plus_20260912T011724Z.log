@@ -1,0 +1,10 @@
+
+========================================================================
+  B4-O2I  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=close_savings_account
+  consolidated : 3 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] ask_customer({'question': "I can see from your account records that your business savings account (SAV-73851-3) appears in the dormant-account report as nothing has moved this financial year. Could you please clarify what specific action you'd like me to take regarding this account? For example, would you like to close the savings account, or is there another action you need?"})
+    [result] The question has been put to the customer. Wait for their answer.
+    [assistant] I've asked for clarification about what action you'd like to take regarding your dormant savings account (SAV-73851-3). Please let me know what you'd like me to do, and I'll be happy to assist you.
+  -> not performed  (this action was required)

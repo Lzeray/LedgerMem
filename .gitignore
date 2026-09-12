@@ -25,3 +25,4 @@ dmypy.json
 
 # OS
 .DS_Store
+.authmem.lock

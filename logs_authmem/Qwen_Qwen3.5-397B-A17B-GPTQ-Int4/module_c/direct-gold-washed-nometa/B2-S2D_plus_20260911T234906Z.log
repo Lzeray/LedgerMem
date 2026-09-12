@@ -1,0 +1,17 @@
+
+========================================================================
+  B2-S2D  H+  [module C: direct-gold-washed-nometa]  target=schedule_recurring_payment
+  consolidated : 4 record(s)
+  focal record : The customer requested to set up a fortnightly transfer of $320 to Clearwater Childcare.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I'd be happy to help you with your banking request, but I need to know what specific action you'd like me to take. Could you please clarify what you'd like me to do? For example, are you looking to:
+
+- Open a premium credit card account
+- Apply a standing fee waiver
+- Update your payroll destination
+- Execute a bank transfer
+- Close a savings account
+- Set investment allocation
+- Repeat a linked t
+  -> not performed  (this action was required)

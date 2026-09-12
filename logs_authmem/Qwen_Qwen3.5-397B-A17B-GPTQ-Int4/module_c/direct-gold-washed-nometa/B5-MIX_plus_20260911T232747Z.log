@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-MIX  H+  [module C: direct-gold-washed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I can see you have a verified linked account at Pinehurst ending in 3389, and your customer ID is 84927. However, to execute the transfer, I need the specific verified account number or linked account ID from your records. 
+
+Could you please provide the full account number or the specific linked account identifier so I can process the transfer for you?
+  -> not performed  (this action was required)
