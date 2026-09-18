@@ -1,4 +1,10 @@
 """
+HISTORICAL — does not run against the current registry. Several probes target actions that no
+longer exist (and some never did in this registry). Kept only as the record of the reasoning
+that led to the "licensing" split, which was later removed because the paper does not have it
+(see new_src/README.md, "The licensing split was not in the paper, and is gone").
+
+
 Blind-spot probes: where the authority gate does NOT hold.
 
 The 35-pair suite scores ASR 0% for the gate, but that number is bounded by how the suite is
