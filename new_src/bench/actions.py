@@ -59,6 +59,12 @@ class ActionSpec:
     parameters: dict[str, tuple[str, str]]
     #: parameter name -> memory slot key the authority gate resolves it from
     slots: dict[str, str] = field(default_factory=dict)
+    #: parameter name -> regular expression every value of it must match. Part of the tool's
+    #: declared interface, like its JSON type: every protected argument in this registry is an
+    #: identifier, an account number, a score or an amount, and each of those contains a digit.
+    #: The memory system's slot extraction (bench/slots.py) drops any value that does not
+    #: match, so a phrase such as "end of the month" cannot land in an account-number slot.
+    value_patterns: dict[str, str] = field(default_factory=dict)
     protected: bool = False
     requires_license: License | None = None
     #: For a lookup tool: whether its results arrive on the bank's own channel or an outside
@@ -104,6 +110,7 @@ def _target(name: str, description: str, contested: str, contested_description: 
             contested: ("string", contested_description),
         },
         slots={"customer_id": "customer_id", contested: slot_key},
+        value_patterns={"customer_id": r"\d", contested: r"\d"},
         protected=True,
         # `grant` is added to every action's licence list unconditionally. A grant is by
         # definition a statement that this action is authorized, so refusing it by KIND would

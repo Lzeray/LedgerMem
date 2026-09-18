@@ -13,11 +13,13 @@ actions it can call, declared in `actions.py`. The slot catalogue below is built
 registry and from nothing else, so it is the same for every pair, every variant and every
 category.
 
-One model call per text. The model chooses; two deterministic checks bound what it can do:
+One model call per text. The model chooses; three deterministic checks bound what it can do:
 
   * the key must be in the catalogue — an invented key is dropped;
   * the value must occur literally in the text — a value the model reconstructed, normalised
-    or remembered from elsewhere is dropped. A record can only carry what its words said.
+    or remembered from elsewhere is dropped. A record can only carry what its words said;
+  * the value must match the format its parameter declares in the registry
+    (`ActionSpec.value_patterns`) — "end of the month" is not an account number.
 
 Every failure (outage, unparsable answer) yields no slots. That fails in the safe direction:
 a value nobody extracted is `missing`, and the gate asks for it rather than inventing it.
@@ -52,6 +54,20 @@ def slot_catalogue() -> dict[str, str]:
 
 
 @lru_cache(maxsize=1)
+def slot_patterns() -> dict[str, list[str]]:
+    """slot key -> the value patterns its parameters declare in the action registry."""
+    from new_src.bench.actions import TARGET_ACTIONS
+
+    patterns: dict[str, list[str]] = {}
+    for spec in TARGET_ACTIONS.values():
+        for parameter, slot_key in spec.slots.items():
+            pattern = spec.value_patterns.get(parameter)
+            if pattern and pattern not in patterns.setdefault(slot_key, []):
+                patterns[slot_key].append(pattern)
+    return patterns
+
+
+@lru_cache(maxsize=1)
 def scope_slot_keys() -> frozenset[str]:
     """Slot keys that name the OBJECT an action operates on (an account, a portfolio, an
     invoice), from the registry's declared licence scopes."""
@@ -76,7 +92,7 @@ _EXTRACT_SYSTEM = (
 
 def extract_slots(client, model: str, text: str) -> list[tuple[str, str]]:
     """The (slot_key, slot_value) pairs `text` states, as judged by the model and bounded by
-    the two checks in the module docstring. Never raises."""
+    the checks in the module docstring. Never raises."""
     if not text or not text.strip():
         return []
     catalogue = slot_catalogue()
@@ -103,6 +119,8 @@ def extract_slots(client, model: str, text: str) -> list[tuple[str, str]]:
         if key not in catalogue or not isinstance(value, (str, int)):
             continue
         value = str(value).strip()
+        if not all(re.search(pattern, value) for pattern in slot_patterns().get(key, [])):
+            continue
         if value and value.lower() in lowered and (key, value) not in found:
             found.append((key, value))
     return found
