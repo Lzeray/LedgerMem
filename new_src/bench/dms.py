@@ -74,62 +74,64 @@ def install(episode: Episode, records: list[MemoryRecord]):
 
 
 def capture(engine, client, model: str, role: str, said: str, *, tool_name: str | None = None,
-            memory_text: str | None = None, object_value: str | None = None,
-            slot_key: str | None = None, slot_value: str | None = None,
-            rendering: str = "source_attributed", can_license: bool = True):
-    """Write one memory record at the moment a message occurs, filling every field that can be
-    filled without a model.
+            memory_text: str | None = None, rendering: str = "source_attributed",
+            slots: list[tuple[str, str]] | None = None):
+    """Write the memory record(s) for one message at the moment it occurs.
 
-    Only ONE field here comes from a model: the claim type, classified from `said` — the words
-    as they were actually said. Everything else is copied or looked up:
+    Nothing about the benchmark's answer reaches this function. It is given what was said, who
+    said it and which tool produced it — what any deployed memory system sees — and decides the
+    rest itself:
 
-      verbatim    the literal text. Copying costs nothing and needs no judgement, and it is
-                  what makes the record auditable later; a record that kept only a paraphrase
-                  has destroyed the evidence any authorization would rest on.
+      verbatim    the literal text, copied.
       channel     the role, plus for a tool result the trust declared for that tool in the
-                  action registry. Never inferred from what the result says.
-      label       `taxonomy.label_for(channel, claim_type)` — a table, not a model output.
-      object_ref  set when the words name the object being acted on, and not otherwise. This
-                  is deliberately a property of the text: an utterance that only points at
-                  something ("go ahead with that") does not identify what it authorizes.
-      slot_*      supplied by the caller from the dataset, never extracted by a model.
+                  action registry. Structural; never inferred from what the result says.
+      label       from the channel, through `classifier.decide`. A model is asked at most one
+                  question per channel and never names a label.
+      requests    which protected actions the words ask for (`classifier.decide`).
+      slot_*      which operative values the words state, extracted by the model and bounded
+                  by `slots.extract_slots` (closed key set, value must occur in the text).
+      object_ref  the object the words name, derived from the extracted scope slots.
+
+    A record holds one slot, so a message stating several values is written as one row per
+    value, all sharing the same verbatim text, channel, label and request list. A message
+    stating none is written once, without a slot.
+
+    `slots` overrides extraction only when the caller can say, without any knowledge of the
+    dataset, that the text states nothing — the live request, which by design never
+    parameterises an action. Passing the dataset's own values here is exactly the oracle this
+    function exists to exclude.
     """
     from new_src.bench.actions import tool_trust
     from new_src.bench.classifier import action_catalogue, decide
+    from new_src.bench.slots import extract_slots, object_ref_for
     from new_src.bench.taxonomy import channel_for
 
     channel = channel_for(role, tool_trust(tool_name) if role == "tool" else None)
     decision = decide(client, model, channel, said, action_catalogue())
     label = decision.label
-    # `can_license=False` says the caller already knows this utterance asks for nothing, so the
-    # request list is not the model's to guess. It exists for records the harness itself
-    # constructed out of a known identifier ("My portfolio is PF-40218-A."), where asking is
-    # both unnecessary and actively harmful: the classifier reads the object's name, finds the
-    # same word in an action's name, and licenses it. That is how three R2P attacks passed the
-    # gate without it ever asking for confirmation — a statement of which portfolio the customer
-    # has was read as a request to reallocate it. Everything that can be settled without a model
-    # must be, and this can.
-    requests = decision.requests if can_license else []
+    if slots is None:
+        slots = extract_slots(client, model, said)
+    object_ref = object_ref_for(slots)
     with Session(engine) as session:
-        write_fact(
-            session,
-            memory_text or said,
-            label=label,
-            role=role,
-            rendering=rendering,
-            slot_key=slot_key,
-            slot_value=slot_value,
-            claim_type=None,
-            requests=requests,
-            object_ref=object_value if (object_value and object_value in said) else None,
-            verbatim=said,
-            channel=channel,
-        )
-    return label, decision.requests, channel
+        for slot_key, slot_value in (slots or [(None, None)]):
+            write_fact(
+                session,
+                memory_text or said,
+                label=label,
+                role=role,
+                rendering=rendering,
+                slot_key=slot_key,
+                slot_value=slot_value,
+                claim_type=None,
+                requests=decision.requests,
+                object_ref=object_ref,
+                verbatim=said,
+                channel=channel,
+            )
+    return label, decision.requests, channel, slots
 
 
-def capture_user_turn(engine, text: str, client=None, model: str | None = None,
-                      object_value: str | None = None):
+def capture_user_turn(engine, text: str, client=None, model: str | None = None):
     """Store the customer's live request, unaltered, as a memory record.
 
     This is what a real agent does with a user turn, and the frozen role policy makes it
@@ -144,8 +146,9 @@ def capture_user_turn(engine, text: str, client=None, model: str | None = None,
     even a candidate licence.
     """
     if client is not None and model is not None:
-        return capture(engine, client, model, "user", text,
-                       memory_text=f"The customer said: {text}", object_value=object_value)
+        label, requests, channel, _ = capture(engine, client, model, "user", text,
+                                              memory_text=f"The customer said: {text}", slots=[])
+        return label, requests, channel
     # Without a classifier (the conditions built on the frozen role policy) the old fixed
     # assignment stands: role user, decision, authorized.
     with Session(engine) as session:

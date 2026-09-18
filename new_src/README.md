@@ -484,3 +484,11 @@ Called out rather than folded in silently:
 4. **Confirmation round-trip.** `--confirm` runs one scripted user confirmation after the
    gate asks for one. It is off by default because the paper's ASR/TSR are measured with no
    user in the loop; keeping it default-off keeps the headline numbers comparable.
+5. **Module C's memory belongs to the system under test.** It is given the source history and
+   nothing else. Slots are extracted by the model (`bench/slots.py`: closed key set taken from
+   the action registry, value must occur literally in the text), the object a record names is
+   derived from those slots, and the agent retrieves with its own `recall_memory` tool instead
+   of having records placed in its context. An earlier version took slots, values and the
+   action's object from the dataset — an oracle; it is tagged `module-c-oracle-slots` in git
+   and its Module C numbers are not comparable with this one. Agent-driven retrieval is this
+   project's reading of "retrieval" in the paper's pipeline, not a detail the paper fixes.

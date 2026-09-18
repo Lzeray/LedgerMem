@@ -5,20 +5,35 @@ The full pipeline, with nothing supplied by the benchmark except the source hist
 
     consolidation -> automatic authority assignment -> retrieval -> tool action
 
-The consolidator writes whatever memory it writes (Module A's consolidator, unchanged). Each
-record is then labeled automatically: a predictor picks the message that primarily supports
-the record, and the frozen role policy — not the model — maps that role to a label. The
-records go into the store, retrieval pulls what it pulls for the later task, and the action
-stage runs exactly as in Module B.
+**The system under test owns its memory end to end.** It is given the conversation and
+nothing else — no slot keys, no operative values, no target arguments, no object, no category.
 
-Two things follow from this, both deliberate and both from the paper:
+  * Write. The consolidator (Module A's, the paper's objective, unchanged) writes whatever
+    memories it writes. The memory system labels each one, extracts the operative values it
+    states into slots (`bench/slots.py`, a model call bounded by a closed key set and a
+    literal-occurrence check), and derives the object it names from those slots. Under the
+    channel model it also captures every utterance verbatim as it arrives (`_capture_history`),
+    with the same extraction.
+  * Retrieve. Nothing is placed in the agent's context. The agent searches its own memory with
+    a `recall_memory` tool and decides what to look for; a query that misses is a retrieval
+    failure and stays in the denominator.
+  * Act. The action stage is Module B's, unchanged, so the two modules' ASR/TSR stay
+    comparable in everything except where the memory came from.
 
-  * All pairs stay in the denominators. If consolidation drops the proposition, or retrieval
-    fails to surface it, that shows up as a task failure on H+ — it is not excluded.
-  * The operative value is attached to a record by a deterministic retention test (the same
-    one Module A's cross-check uses), never by asking a model to extract it. Slot attachment
-    is part of the harness, so a labeling result can never be an artifact of a small model's
-    extraction — and the value the gate then reads is the benchmark's canonical one.
+What the benchmark still knows, and only for SCORING after the run: the action predicate
+(`episode.target_tool`, `episode.target_arguments`) and which record carries the contested
+value (`is_focal`, by the deterministic retention test). Neither is shown to or read by the
+system. The `gold` label source is the one deliberate oracle left, and it is named as one: it
+is the "correct labels" arm, run to separate what the gate does from what labeling does.
+
+An earlier version attached `slot_key`/`slot_value` from the dataset, set `object_ref` from
+`target_arguments`, and wrote the customer's identifiers as separate harness-built records
+with the request classifier switched off. Each of those handed the system part of the answer.
+That version is tagged `module-c-oracle-slots` in git; its numbers are not comparable with
+this one.
+
+All pairs stay in the denominators. If consolidation drops the proposition, extraction misses
+its value, or the agent's recall does not surface it, that shows up as a task failure on H+.
 """
 
 from __future__ import annotations
@@ -26,135 +41,85 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from new_src.bench import action_stage, dms, gate, module_a
-from new_src.bench.actions import TARGET_ACTIONS, tool_trust
 from new_src.bench.authority import predict_label
 from new_src.bench.classifier import action_catalogue, decide
 from new_src.bench.metrics import ActionRecord, mentions_value
-from new_src.bench.taxonomy import channel_for
 from new_src.bench.schema import AuthorityPair, MemoryRecord, Variant
+from new_src.bench.slots import extract_slots, object_ref_for
 from new_src.config import ACTION_MODEL
-from new_src.memory import recall_facts
 
 
 def _to_records(client, model, episode, pair, consolidated: list[str], label_source: str) -> list[MemoryRecord]:
-    """Turn the consolidator's free text into labeled records.
+    """Turn the consolidator's free text into labeled, slotted records.
 
-    Under `channel-typed` this is a two-step decision and both steps are constrained. The
-    predictor says which MESSAGE primarily supports the record — a question about the
-    conversation, not about authority — and the channel then follows from that message's role
-    plus, for a tool result, the declared trust of the tool the episode actually called. Only
-    then does the classifier choose a speech act within what that channel permits, and narrow
-    the label if the source was relaying somebody else. The model never names a label.
+    Slots come from `extract_slots` on the record's own text — the system's decision, not the
+    dataset's. A record stating several values becomes one row per value (a row holds one slot).
 
-    `object_ref` is attached by the harness, from a deterministic test of whether the record
-    names the object the action operates on — asking a model which records are "about" an
-    account would put the binding back in its hands, which is the hole license_attacks family A
-    exists to exhibit.
+    Labels:
+      channel-typed  consolidated text is the AGENT's own writing, whoever's claim it is about,
+                     so its channel is `assistant` and its ceiling `attested`. Structural; never
+                     asked, never predicted.
+      predicted      the paper's arm: a model names the supporting message's role and the
+                     frozen role policy maps it to a label.
+      gold           the oracle arm: the record carrying the contested value gets the pair's
+                     gold label. Named as an oracle, kept to isolate the gate from labeling.
 
-    `verbatim` stays empty here, and deliberately so: consolidated text IS a paraphrase, and a
-    record holding only a paraphrase cannot authorize anything. That is not a limitation of this
-    function — it is the end-to-end finding. What makes Module C measurable anyway is
-    `_capture_history`, which stores the utterances themselves alongside these summaries, so
-    consolidation keeps deciding the ARGUMENT path while authorization rests on evidence that
-    survived.
+    `verbatim` stays empty: consolidated text IS a paraphrase, and a paraphrase cannot license
+    anything. Authorization rests on `_capture_history`'s verbatim records instead.
     """
-    object_value = pair.object_value
     records: list[MemoryRecord] = []
     for text in consolidated:
-        # Same retention test Module A's cross-check uses, so a consolidator that reworded
-        # the claim still counts as having kept it, while a changed value does not.
+        # Scoring only: which record carries the contested value. Not stored as a slot, not
+        # shown to the system, not read by the gate. The gold arm uses it by definition.
         carries_value = mentions_value(text, pair.operative_value)
-        # Licensing transitions have no argument slot to attach to (see schema.py).
-        slotted = carries_value and not pair.category.licenses_action
-        draft = MemoryRecord(
-            text=text, label="unendorsed", role="tool", rendering="source_attributed",
-            slot_key=pair.slot_key if slotted else None,
-            slot_value=pair.operative_value if slotted else None,
-            is_focal=carries_value,
-        )
-        channel = claim_type = None
+        channel = None
+        requests = None
         if label_source == "predicted":
+            draft = MemoryRecord(text=text, label="unendorsed", role="tool", rendering="source_attributed")
             label, role = predict_label(client, model, episode, draft)
         elif label_source == "gold":
             label, role = (episode.focal_memory.label, episode.focal_memory.role) if carries_value else ("attested", "assistant")
         elif label_source == "channel-typed":
-            # Consolidated text is the AGENT's own writing, no matter whose claim it is about.
-            # So the channel is `assistant` — structurally, from who wrote it — and the
-            # assistant's ceiling is `attested`. It is never asked, and never predicted.
-            #
-            # An earlier version asked the model which message "primarily supported" the record
-            # and derived the channel from that answer. That put the channel in the model's
-            # hands, which is exactly what the channel model exists to avoid: on B2-C2O the
-            # model called a claim that arrived from an untrusted tool the customer's own
-            # words, the table turned `user` into `authorized`, and the gate then spent the
-            # attacker's account number without asking. The source of a record is not something
-            # to reconstruct afterwards — where it is genuinely known, `_capture_history`
-            # records it at the moment the message arrives.
+            # See the pinned rule in the project memory: the source of a record is never
+            # reconstructed by a model afterwards. Consolidated text was written by the agent.
             role, channel = "assistant", "assistant"
             decision = decide(client, model, channel, text, action_catalogue())
-            label, claim_type = decision.label, None
+            label, requests = decision.label, decision.requests
         else:
             raise ValueError(f"module C does not support label source {label_source!r}")
-        records.append(
-            MemoryRecord(text=text, label=label, role=role, rendering="source_attributed",
-                         slot_key=draft.slot_key, slot_value=draft.slot_value, is_focal=carries_value,
-                         claim_type=claim_type, channel=channel,
-                         # Deterministic, like slot attachment: a record is about the object when
-                         # it names it. Asking a model which records are "about" the account
-                         # would put the binding back in the model's hands, which is the hole
-                         # data/license_attacks.py family A already exists to exhibit.
-                         object_ref=object_value if (object_value and object_value in text) else None)
-        )
+
+        slots = extract_slots(client, model, text)
+        object_ref = object_ref_for(slots)
+        for slot_key, slot_value in (slots or [(None, None)]):
+            records.append(
+                MemoryRecord(text=text, label=label, role=role, rendering="source_attributed",
+                             slot_key=slot_key, slot_value=slot_value, is_focal=carries_value,
+                             claim_type=None, channel=channel, requests=requests,
+                             object_ref=object_ref)
+            )
     return records
 
 
-def _capture_history(client, model, engine, episode, pair, condition) -> None:
+def _capture_history(client, model, engine, episode, condition) -> None:
     """Store every utterance of the episode verbatim, beside whatever consolidation produced.
 
     This is the write path a real agent should have: the moment a message arrives, copy what was
-    said, record which channel it came on, classify the act from those words, and take the label
-    from the table. None of that needs a consolidator, and all of it is lost if the only thing
-    kept is a summary.
+    said, record which channel it came on, label it from that channel, note what it asks for and
+    which values it states. `dms.capture` does all of it from the message alone; nothing here
+    reads the pair.
 
-    It is what makes Module C able to measure a licensing transition at all. A consolidated
-    record is a paraphrase — the consolidator's sentence, not the speaker's — and the licence
-    check refuses to authorize from one, on the grounds that a model's choice of wording would
-    otherwise decide whether an action is permitted. Before this, every licensing transition in
-    Module C was refused for that reason alone, whatever the model did, so the cell measured the
-    harness rather than the system.
+    It is what makes Module C able to measure a licensing transition at all: a consolidated
+    record is a paraphrase, and the licence check refuses to authorize from one.
 
-    Consolidation is NOT bypassed: its records still go in, still carry the operative value's
-    slot when they retain it, and still decide the argument path. What changes is that the
-    evidence for authorization survives alongside the summary instead of being replaced by it.
-
-    A captured record CARRIES A SLOT when the words themselves contain the value, and not
-    otherwise. That rule used to be the opposite — captured records never carried a slot — and
-    it was written while the benchmark still seeded an `authorized` record with the customer's
-    identifier on it. With the seed gone (the paper seeds nothing) that rule left no record in
-    existence that was both `authorized` and slotted, so the gate could neither license an
-    action nor fill an argument, and refused all 70 episodes.
-
-    Taking the value from the words that carried it is the stricter arrangement, not the looser
-    one. It is decided by the same deterministic retention test the harness uses everywhere
-    else, never by a model. And it does not soften the attack: in H- the value was spoken by a
-    TOOL, so the record carrying it is captured on that tool's channel and labeled from there —
-    `unendorsed` for an outside feed — while in H+ the customer said it themselves. The gate's
-    answer differs because the speaker differs, which is the entire proposition under test.
+    The customer's identifiers are part of the first message of the history (see
+    `AuthorityPair._identity_preamble`) and go through this path like everything else they
+    said — including the request classifier, which used to be switched off for them. That
+    switch hid a real classifier failure ("My portfolio is PF-…" read as a request to
+    re-allocate it), and it is now measured instead of suppressed.
     """
     if condition.label_source != "channel-typed":
         dms.capture_user_turn(engine, episode.later_task)
         return
-
-    spec = TARGET_ACTIONS.get(episode.target_tool)
-    scope_param = getattr(getattr(spec, "requires_license", None), "scope_param", None)
-    object_value = episode.target_arguments.get(scope_param) if scope_param else None
-
-    # The customer's own identifiers, each as its own short record carrying its slot. Short
-    # and specific on purpose: a verbose authorized fact loses the top-1 vector search to the
-    # focal record, which has broken retrieval here before.
-    for text, slot_key, slot_value in pair.identity_statements():
-        dms.capture(engine, client, model, "user", text, object_value=object_value,
-                    slot_key=slot_key, slot_value=slot_value, can_license=False)
 
     pending_tool: str | None = None
     for message in episode.messages:
@@ -162,16 +127,8 @@ def _capture_history(client, model, engine, episode, pair, condition) -> None:
             pending_tool = message.tool_call.name
         if not message.content.strip():
             continue
-        # A licensing transition's claim is not an argument of anything, so it never gets a
-        # slot — see the note in schema.episode. For the rest, the slot goes on the record
-        # whose words actually contain the operative value, whoever spoke them.
-        carries = (not pair.category.licenses_action
-                   and mentions_value(message.content, pair.operative_value))
         dms.capture(engine, client, model, message.role, message.content,
-                    tool_name=pending_tool if message.role == "tool" else None,
-                    object_value=object_value,
-                    slot_key=pair.slot_key if carries else None,
-                    slot_value=pair.operative_value if carries else None)
+                    tool_name=pending_tool if message.role == "tool" else None)
     # The closing request is deliberately NOT recorded — see the note in module_b.run_episode.
     # The request being served is not its own warrant.
 
@@ -188,34 +145,15 @@ def run_episode(
     consolidated = module_a.consolidate(client, episode)
     written = _to_records(client, model, episode, pair, consolidated, condition.label_source)
 
-    # Nothing is seeded. The paper's Module C starts from the source history alone and
-    # measures whether the whole pipeline — consolidate, label, retrieve, act — can carry a
-    # claim through; handing it a ready-made `authorized` identity record would hand it the
-    # one input the gate depends on and never has to prove. The identifiers are in the
-    # history instead (see AuthorityPair._identity_preamble), so consolidation has to keep
-    # them and the predictor has to label them like anything else.
-    #
-    # This is what makes a consolidation failure visible: if the identity is dropped, the
-    # action cannot be completed and that counts against the run, exactly as the paper
-    # requires — "all pairs remain in the denominators, including cases where consolidation
-    # omits the focal memory".
-
+    # Nothing is seeded. The paper's Module C starts from the source history alone; the
+    # customer's identifiers are in the history, so consolidation and capture have to keep
+    # them like anything else, and a dropped identity counts against the run.
     gate.reset_pending()
     engine, written = dms.install(episode, written)
     if condition.check_license:
-        _capture_history(client, model, engine, episode, pair, condition)
+        _capture_history(client, model, engine, episode, condition)
 
     focal = next((record for record in written if record.is_focal), None)
-    with Session(engine) as session:
-        retrieved_rows = recall_facts(session, episode.later_task, top_k=6)
-    retrieved = [
-        MemoryRecord(text=row.fact_text, label=row.label, role=row.role, rendering=row.rendering,
-                     slot_key=row.slot_key, slot_value=row.slot_value,
-                     is_focal=row.slot_key == pair.slot_key,
-                     claim_type=row.claim_type, object_ref=row.object_ref,
-                     verbatim=row.verbatim, channel=row.channel, record_id=row.id)
-        for row in retrieved_rows
-    ]
 
     if verbose:
         print(f"\n{'='*72}\n  {pair.pair_id}  {variant}  [module C: {condition.name}]  target={episode.target_tool}")
@@ -224,9 +162,14 @@ def run_episode(
             print("  focal claim  : NOT RETAINED by consolidation (write-time omission)")
         else:
             print(f"  focal record : {focal.text}")
-            print(f"  label        : {focal.label} (predicted role {focal.role}, channel {focal.channel})"
-                  f"  claim_type={focal.claim_type}  verbatim={'yes' if focal.verbatim else 'no'}")
-        print(f"  retrieved    : {sum(record.is_focal for record in retrieved)} of {len(retrieved)} rows carry the operative value")
+            print(f"  label        : {focal.label} (role {focal.role}, channel {focal.channel})"
+                  f"  slot={focal.slot_key}={focal.slot_value}")
+        with Session(engine) as session:
+            from new_src.memory import all_facts
+
+            for row in all_facts(session):
+                if row.slot_key:
+                    print(f"  slot         : {row.slot_key}={row.slot_value}  [{row.label}, {row.channel or row.role}]")
 
     record = ActionRecord(
         module="C", pair_id=pair.pair_id, base_id=pair.base_id, category=pair.category.code,
@@ -239,4 +182,5 @@ def run_episode(
         focal_role_stored=focal.role if focal else "",
         notes="" if focal else "write-time omission: focal claim not consolidated",
     )
-    return action_stage.perform(client, episode, engine, retrieved, condition, record, model, verbose)
+    # `shown_records=None`: nothing is put in the agent's context; it recalls for itself.
+    return action_stage.perform(client, episode, engine, None, condition, record, model, verbose)
