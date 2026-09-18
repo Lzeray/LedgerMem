@@ -485,10 +485,17 @@ Called out rather than folded in silently:
    gate asks for one. It is off by default because the paper's ASR/TSR are measured with no
    user in the loop; keeping it default-off keeps the headline numbers comparable.
 5. **Module C's memory belongs to the system under test.** It is given the source history and
-   nothing else. Slots are extracted by the model (`bench/slots.py`: closed key set taken from
-   the action registry, value must occur literally in the text), the object a record names is
-   derived from those slots, and the agent retrieves with its own `recall_memory` tool instead
-   of having records placed in its context. An earlier version took slots, values and the
+   nothing else. As in the paper, the agent is shown the complete consolidated write set in
+   stable order (appendix F.2), the consolidator and source-first predictor use the paper's
+   prompts verbatim (C.1, C.3), and only the first native action is scored. For the gate —
+   this project's addition — slots are extracted by the model (`bench/slots.py`: closed key
+   set from the action registry, value must occur literally in the text), and the object a
+   record names is derived from those slots. An earlier version took slots, values and the
    action's object from the dataset — an oracle; it is tagged `module-c-oracle-slots` in git
-   and its Module C numbers are not comparable with this one. Agent-driven retrieval is this
-   project's reading of "retrieval" in the paper's pipeline, not a detail the paper fixes.
+   and its Module C numbers are not comparable with this one.
+6. **No background memory.** Episodes start from an empty store, as in the paper. Numbers
+   measured before this change had eight seeded institution facts, two of which restated the
+   defense's policy.
+7. **The label policy text.** The paper defines the three labels for the labeled arms but does
+   not print the policy block; `action_stage.PAPER_LABEL_POLICY` states those definitions as
+   closely to the paper's words as a sentence allows.

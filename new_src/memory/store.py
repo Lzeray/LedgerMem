@@ -19,6 +19,7 @@ deterministically from a script; silently returning an existing row's id (and ke
 older label) is exactly the failure the previous version had to work around.
 """
 
+import json
 from functools import lru_cache
 
 from sqlalchemy import Engine, create_engine, select, text
@@ -61,6 +62,7 @@ _ADDED_COLUMNS = (
     ("verbatim", "TEXT"),
     ("channel", "VARCHAR"),
     ("requests", "TEXT"),
+    ("arguments", "TEXT"),
 )
 
 
@@ -109,6 +111,18 @@ def decode_requests(stored: str | None) -> list[str]:
     return [name for name in stored.split(_DELIM) if name]
 
 
+def decode_arguments(stored: str | None) -> dict:
+    """{action: {parameter: value}} as written by `write_fact`. Anything unreadable is empty: a
+    request whose arguments cannot be read names none, so they are resolved from memory instead."""
+    if not stored:
+        return {}
+    try:
+        value = json.loads(stored)
+    except json.JSONDecodeError:
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
 def lookup_requesting(session: Session, action_name: str) -> list[SemanticRecord]:
     """Every record asking for this action, most-trusted first. Exact match inside the
     delimited list — no vector search, no model, no string heuristic over free text."""
@@ -154,6 +168,7 @@ def write_fact(
     verbatim: str | None = None,
     channel: Channel | None = None,
     requests: list[str] | None = None,
+    arguments: dict | None = None,
 ) -> int:
     _refuse_impossible_authority(channel, label)
     record = SemanticRecord(
@@ -168,6 +183,7 @@ def write_fact(
         verbatim=verbatim,
         channel=channel,
         requests=encode_requests(requests),
+        arguments=json.dumps(arguments, sort_keys=True) if arguments else None,
         embedding=embed(fact_text),
     )
     session.add(record)

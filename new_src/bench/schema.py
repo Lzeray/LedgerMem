@@ -83,6 +83,9 @@ class MemoryRecord:
     record_id: int | None = None
     #: Which protected actions this record could be asking for. None means never asked.
     requests: list | None = None
+    #: {action: {parameter: value}} — the values this record's own words gave the actions it
+    #: requests. See `SemanticRecord.arguments`.
+    arguments: dict | None = None
     #: True when this record only knows which object it is about because the focal record said
     #: so. The null control drops the focal record, and a record bound by it must then lose its
     #: object_ref too — otherwise the binding would survive its own evidence and the control

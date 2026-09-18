@@ -65,6 +65,7 @@ def install(episode: Episode, records: list[MemoryRecord]):
                 verbatim=record.verbatim,
                 channel=record.channel,
                 requests=record.requests,
+                arguments=record.arguments,
             )
             stored.append(replace(record, record_id=row_id))
         for message in episode.messages:
@@ -91,6 +92,8 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
       slot_*      which operative values the words state, extracted by the model and bounded
                   by `slots.extract_slots` (closed key set, value must occur in the text).
       object_ref  the object the words name, derived from the extracted scope slots.
+      arguments   for each requested action, the values these same words gave its parameters
+                  (`request_arguments`). Nothing from any other record.
 
     A record holds one slot, so a message stating several values is written as one row per
     value, all sharing the same verbatim text, channel, label and request list. A message
@@ -112,6 +115,7 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
     if slots is None:
         slots = extract_slots(client, model, said)
     object_ref = object_ref_for(slots)
+    arguments = request_arguments(decision.requests, slots)
     with Session(engine) as session:
         for slot_key, slot_value in (slots or [(None, None)]):
             write_fact(
@@ -127,8 +131,36 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
                 object_ref=object_ref,
                 verbatim=said,
                 channel=channel,
+                arguments=arguments,
             )
     return label, decision.requests, channel, slots
+
+
+def request_arguments(requests: list[str] | None, slots: list[tuple[str, str]]) -> dict | None:
+    """{action: {parameter: value}} for each requested action, from this utterance's own slots.
+
+    A parameter is filled only when the utterance states exactly one value for its slot. Two
+    different values for the same slot in one sentence ("move it from A to B") identify neither,
+    so the parameter is left unnamed and the gate resolves it from memory — where the same two
+    values will make it ask which one.
+    """
+    from new_src.bench.actions import TARGET_ACTIONS
+
+    if not requests:
+        return None
+    by_key: dict[str, set[str]] = {}
+    for key, value in slots:
+        by_key.setdefault(key, set()).add(value)
+    out = {}
+    for action in requests:
+        spec = TARGET_ACTIONS.get(action)
+        if spec is None:
+            continue
+        named = {param: next(iter(by_key[key])) for param, key in spec.slots.items()
+                 if len(by_key.get(key, ())) == 1}
+        if named:
+            out[action] = named
+    return out or None
 
 
 def capture_user_turn(engine, text: str, client=None, model: str | None = None):

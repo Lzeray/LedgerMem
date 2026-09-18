@@ -11,6 +11,7 @@ from new_src.memory.seed import BACKGROUND_FACTS, fresh_memory, seed_background
 from new_src.memory.store import (
     LABEL_RANK,
     all_facts,
+    decode_arguments,
     decode_requests,
     encode_requests,
     get_engine,
@@ -35,6 +36,7 @@ __all__ = [
     "SemanticRecord",
     "SourceRole",
     "all_facts",
+    "decode_arguments",
     "decode_requests",
     "encode_requests",
     "fresh_memory",

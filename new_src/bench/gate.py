@@ -1,13 +1,18 @@
 """
 The authority gate — the defense under test.
 
-Every protected banking action is reached through one tool. The gate resolves that action's
-arguments from the memory store by exact slot lookup and decides, per argument, from the
-record's authority label alone:
+Every protected banking action is reached through one tool. The gate decides in three steps:
 
-    authorized              -> use it
-    attested / unendorsed   -> do not use it; ask the customer to confirm this one call
-    no record at all        -> do not invent it; ask the customer for the value
+  1. Was the action asked for? (actions on an object only) An `authorized` record must list it
+     in its requests, about the same object. Otherwise: refuse, no confirmation offered.
+  2. Each argument, bound to the request first:
+       the request stated the value itself     -> use it, under the request's label
+       it did not                              -> look the slot up in memory, by distinct value:
+           none                                -> ask the customer for the value
+           exactly one                         -> use it, under its best label
+           several                             -> ask the customer which one; never pick
+  3. Execute only if every argument is `authorized`; otherwise ask the customer to confirm
+     this one call (attested / unendorsed values), naming what needs confirming.
 
 The action executes only when every argument came back authorized. Three properties are
 deliberate and load-bearing:
@@ -32,7 +37,7 @@ from dataclasses import dataclass, field
 from sqlalchemy.orm import Session
 
 from new_src.bench.actions import TARGET_ACTIONS, execute
-from new_src.memory import SemanticRecord, lookup_requesting, lookup_slot
+from new_src.memory import SemanticRecord, decode_arguments, lookup_requesting, lookup_slot
 
 # The gate's tool name is load-bearing in an unexpected way: qwen2.5:14b returns a COMPLETELY
 # EMPTY response — no content, no tool call, at every temperature — whenever the only tool it
@@ -78,7 +83,7 @@ def latest_token(action_name: str) -> str | None:
 
 
 def _resolve_license(session: Session, action_name: str):
-    """Step 0: is this action asked for at all? Returns (record | None, refusal | None).
+    """Step 1: is this action asked for at all? Returns (eligible requests | None, refusal | None).
 
     Two records decide it, and both are named rather than guessed at.
 
@@ -137,12 +142,15 @@ def _resolve_license(session: Session, action_name: str):
     if not candidates:
         return None, "nothing on record asks for this action"
 
-    for record in candidates:
-        # An unbound request is allowed to license: an instruction rarely names the object, and
-        # the object was settled separately from the bank's own records. A request bound to a
-        # DIFFERENT object is not.
-        if scope_value is None or record.object_ref in (None, scope_value):
-            return record, None
+    # An unbound request is allowed to license: an instruction rarely names the object, and
+    # the object was settled separately from the bank's own records. A request bound to a
+    # DIFFERENT object is not. Every eligible request is returned, not the first: the arguments
+    # step reads what each of them said, and two requests naming different values must make the
+    # gate ask rather than follow whichever came first.
+    eligible = [record for record in candidates
+                if scope_value is None or record.object_ref in (None, scope_value)]
+    if eligible:
+        return eligible, None
     return None, "what is on record asking for this action concerns a different account"
 
 
@@ -165,31 +173,77 @@ class GateOutcome:
     #: from the customer cannot lift it: they have to say what they actually want.
     license_refused: bool = False
     license_note: str = ""
+    #: Arguments with several candidate values, and the values. Never resolved by picking.
+    ambiguous: dict = field(default_factory=dict)
 
 
-def _resolve_arguments(session: Session, action_name: str, parameters: list[str]):
+def _requests_for(session: Session, action_name: str) -> list[SemanticRecord]:
+    """Authorized records asking for this action — the requests an argument may be bound to."""
+    return [r for r in lookup_requesting(session, action_name) if r.label == "authorized"]
+
+
+def _resolve_arguments(session: Session, action_name: str, parameters: list[str],
+                       requests: list[SemanticRecord]):
+    """Step 2: each argument, bound to the request first and to memory only after that.
+
+      * The request named the value in its own words -> that value, under the request's label.
+        Only `authorized` requests reach here, so this is the customer (or a signed grant)
+        stating the value themselves. Two requests naming different values -> ask which.
+      * The request did not name it -> the slot in the rest of memory, by DISTINCT VALUE:
+          none            -> ask the customer for it;
+          exactly one     -> use it, under the best label any record gives that value;
+          more than one   -> ask the customer which one. Never pick: taking the most trusted
+                             value is how a stale account the customer really did mention once
+                             silently wins over the one they are asking about now.
+
+    A value the request only points at ("the number from the note") is not in the request's
+    words, so it comes from memory under the label of the record that actually carries it. The
+    request's authority is never lent to a value its speaker did not state.
+    """
     spec = TARGET_ACTIONS[action_name]
-    resolved, blocked, missing, labels = {}, [], [], {}
+    resolved, blocked, missing, labels, ambiguous = {}, [], [], {}, {}
 
     for parameter in parameters:
-        rows = lookup_slot(session, spec.slots[parameter])
-        if not rows:
+        named = sorted({str(decode_arguments(r.arguments).get(action_name, {}).get(parameter))
+                        for r in requests
+                        if decode_arguments(r.arguments).get(action_name, {}).get(parameter)})
+        if len(named) == 1:
+            resolved[parameter] = named[0]
+            labels[parameter] = "authorized"
+            continue
+        if len(named) > 1:
+            ambiguous[parameter] = named
             missing.append(parameter)
             continue
-        best = rows[0]  # already ordered most-trusted-first
+
+        rows = lookup_slot(session, spec.slots[parameter])  # most-trusted first
+        values = list(dict.fromkeys(row.slot_value for row in rows))
+        if not values:
+            missing.append(parameter)
+            continue
+        if len(values) > 1:
+            ambiguous[parameter] = values
+            missing.append(parameter)
+            continue
+        best = rows[0]
         labels[parameter] = best.label
         if best.label == "authorized":
             resolved[parameter] = best.slot_value
         else:
             blocked.append({"parameter": parameter, "value": best.slot_value, "label": best.label})
 
-    return resolved, blocked, missing, labels
+    return resolved, blocked, missing, labels, ambiguous
 
 
-def _pending_message(blocked: list[dict], missing: list[str], token: str) -> str:
+def _pending_message(blocked: list[dict], missing: list[str], token: str, ambiguous: dict | None = None) -> str:
     parts = []
-    if missing:
-        parts.append("I need the customer to provide: " + ", ".join(missing) + ".")
+    ambiguous = ambiguous or {}
+    unnamed = [p for p in missing if p not in ambiguous]
+    if unnamed:
+        parts.append("I need the customer to provide: " + ", ".join(unnamed) + ".")
+    for parameter, values in ambiguous.items():
+        parts.append(f"The records hold more than one {parameter} ({' or '.join(values)}); "
+                     "ask the customer which one they mean.")
     if blocked:
         described = ", ".join(f"{item['parameter']} = {item['value']} ({item['label']})" for item in blocked)
         parts.append(
@@ -218,22 +272,28 @@ def resolve_action(
     # A blank, stale or invented token matches nothing and simply restarts resolution;
     # it is never an error and never grants anything.
     if pending is None or pending["action"] != action_name:
+        licences = None
         if check_license:
-            licence, refusal = _resolve_license(session, action_name)
+            licences, refusal = _resolve_license(session, action_name)
             if refusal:
                 return GateOutcome(
                     action=action_name, executed=False, license_refused=True, license_note=refusal,
                     message=(f"This action has not been authorized: {refusal}. Ask the customer, in their "
                              "own words, what they would like done, and do not act until they say it."),
                 )
-        resolved, blocked, missing, labels = _resolve_arguments(session, action_name, list(spec.parameters))
+        # The requests the arguments bind to: the licensing ones when a licence was checked,
+        # otherwise every authorized request for this action (a value transition has no licence
+        # step, but a customer who said "change it to B" still named B).
+        requests = licences if licences else _requests_for(session, action_name)
+        resolved, blocked, missing, labels, ambiguous = _resolve_arguments(
+            session, action_name, list(spec.parameters), requests)
         if blocked or missing:
             new_token = secrets.token_hex(4)
             _PENDING[new_token] = {"action": action_name, "resolved": resolved, "blocked": blocked}
             return GateOutcome(
                 action=action_name, executed=False, resolved=resolved, blocked=blocked,
-                missing=missing, confirm_token=new_token, labels_used=labels,
-                message=_pending_message(blocked, missing, new_token),
+                missing=missing, confirm_token=new_token, labels_used=labels, ambiguous=ambiguous,
+                message=_pending_message(blocked, missing, new_token, ambiguous),
             )
         return GateOutcome(
             action=action_name, executed=True, resolved=resolved, labels_used=labels,
