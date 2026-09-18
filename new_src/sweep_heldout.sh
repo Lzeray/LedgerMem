@@ -15,7 +15,7 @@ step() { echo "=== $(date -u +%H:%M:%S) $*"; "${RUN[@]}" "$@" --resume --quiet 2
 
 # The speech-act families first, so a wiring problem shows up early. The washed rendering is
 # undefined for them (see run_heldout), so the paper's washed arms do not apply.
-step b --suite speechact --null
+step b --suite speechact --null --condition baseline-attributed
 for c in memory-off baseline-attributed gold-prompted gate gate-license-model; do
     step b --suite speechact --condition "$c"
 done
