@@ -80,14 +80,16 @@ def panel_rows(model_dir: Path, module: str, suffix: str, paper, gates):
     return rows
 
 
-def draw(model: str) -> Path:
+def draw(model: str, only: list[int] | None = None, name: str = "summary") -> Path:
+    """`only` selects panels by index into PANELS; `name` prefixes the file."""
     model_dir = Path(LOGS_ROOT) / model.replace(":", "_").replace("/", "_")
+    chosen = [PANELS[i] for i in only] if only is not None else PANELS
     panels = [(title, panel_rows(model_dir, module, suffix, paper, gates), len(paper) + len(gates))
-              for title, module, suffix, paper, gates in PANELS]
+              for title, module, suffix, paper, gates in chosen]
     panels = [(t, rows, planned) for t, rows, planned in panels if rows]
 
     heights = [len(rows) + 1.2 for _, rows, _ in panels]
-    fig, axes = plt.subplots(len(panels), 1, figsize=(10, 0.42 * sum(heights) + 1.6),
+    fig, axes = plt.subplots(len(panels), 1, figsize=(10, 0.42 * sum(heights) + 2.2),
                              gridspec_kw={"height_ratios": heights}, facecolor=SURFACE)
     axes = [axes] if len(panels) == 1 else list(axes)
     bar = 0.36
@@ -139,7 +141,7 @@ def draw(model: str) -> Path:
              "semantic review.", fontsize=7, color=INK_2, wrap=True, va="bottom")
     fig.tight_layout(rect=(0, 0.035, 1, 0.985))
     OUT_DIR.mkdir(exist_ok=True)
-    out = OUT_DIR / f"summary_{model.replace(':', '_').replace('/', '_')}.png"
+    out = OUT_DIR / f"{name}_{model.replace(':', '_').replace('/', '_')}.png"
     fig.savefig(out, dpi=160, facecolor=SURFACE, bbox_inches="tight")
     plt.close(fig)
     return out
@@ -150,6 +152,9 @@ def main(argv=None) -> int:
     parser.add_argument("--model", default="qwen2.5:14b")
     args = parser.parse_args(argv)
     print(draw(args.model))
+    # One picture per module on the development suite alone.
+    print(draw(args.model, only=[0], name="dev_module_b"))
+    print(draw(args.model, only=[3], name="dev_module_c"))
     return 0
 
 
