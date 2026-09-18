@@ -46,6 +46,10 @@ from new_src.config import (
     DUTY_REST_MAX,
     DUTY_WORK,
     MAX_RETRIES,
+    JUDGE_API_KEYS,
+    JUDGE_BASE_URL,
+    JUDGE_MIN_REQUEST_INTERVAL,
+    JUDGE_PROXY,
     MIN_REQUEST_INTERVAL,
     REQUEST_TIMEOUT,
     TEMP_HIGH,
@@ -53,24 +57,49 @@ from new_src.config import (
 )
 
 
-#: One client per configured key. Built once, lazily, so importing this module does not open
-#: connections. With a single key — the local case — the pool is one entry long and every
-#: mechanism below collapses to "use that client".
-_POOL: list[OpenAI] = []
+class _KeyPool:
+    """One OpenAI client per key for one endpoint, with that endpoint's own rotation state.
+
+    There are two: the MAIN pool (the action agent, the consolidator, the write-path
+    classifiers — AUTHMEM_BASE_URL / AUTHMEM_API_KEYS) and an optional JUDGE pool (Module A's
+    judge and Module C's reference labeler — AUTHMEM_JUDGE_*). They are kept apart because they
+    are usually different services: the agent on a local Ollama with no proxy, the judge on a
+    hosted API that is only reachable through one. A request is always issued through the pool
+    of the client it was given, so a caller holding the judge client can never end up talking to
+    the agent's endpoint, or the other way round.
+    """
+
+    def __init__(self, base_url: str, keys: list[str], interval: float, proxy: str | None = None):
+        self.base_url, self.keys, self.interval, self.proxy = base_url, keys, interval, proxy
+        self.clients: list[OpenAI] = []
+        self.dead: set[int] = set()
+        self.cursor = 0
+        self.last_request: dict[int, float] = {}
+
+    def build(self) -> list[OpenAI]:
+        with _POOL_LOCK:
+            if not self.clients:
+                http_client = None
+                if self.proxy:
+                    import httpx
+
+                    http_client = httpx.Client(proxy=self.proxy, timeout=REQUEST_TIMEOUT)
+                self.clients.extend(
+                    OpenAI(base_url=self.base_url, api_key=key, timeout=REQUEST_TIMEOUT,
+                           max_retries=MAX_RETRIES, http_client=http_client)
+                    for key in self.keys
+                )
+            return self.clients
+
+
 _POOL_LOCK = threading.Lock()
-_CURSOR = [0]
-_LAST_REQUEST: dict[int, float] = {}
+_MAIN = _KeyPool(BASE_URL, API_KEYS, MIN_REQUEST_INTERVAL)
+_JUDGE = _KeyPool(JUDGE_BASE_URL, JUDGE_API_KEYS, JUDGE_MIN_REQUEST_INTERVAL, JUDGE_PROXY) \
+    if JUDGE_BASE_URL else None
 
 
 def _pool() -> list[OpenAI]:
-    with _POOL_LOCK:
-        if not _POOL:
-            _POOL.extend(
-                OpenAI(base_url=BASE_URL, api_key=key,
-                       timeout=REQUEST_TIMEOUT, max_retries=MAX_RETRIES)
-                for key in API_KEYS
-            )
-        return _POOL
+    return _MAIN.build()
 
 
 def make_client() -> OpenAI:
@@ -81,7 +110,19 @@ def make_client() -> OpenAI:
     rather than reading a global is deliberate: the call sites stay explicit about which
     endpoint they are talking to.
     """
-    return _pool()[0]
+    return _MAIN.build()[0]
+
+
+def make_judge_client() -> OpenAI:
+    """The judge's client: its own endpoint when AUTHMEM_JUDGE_BASE_URL is set, otherwise the
+    main one (the judge then runs wherever the agent runs, as before)."""
+    return _JUDGE.build()[0] if _JUDGE is not None else make_client()
+
+
+def _pool_of(client: OpenAI) -> _KeyPool:
+    if _JUDGE is not None and client in _JUDGE.build():
+        return _JUDGE
+    return _MAIN
 
 
 #: Errors that mean "not now" rather than "not ever". A hosted endpoint answers 429 when the
@@ -94,9 +135,8 @@ _TRANSIENT = (RateLimitError, InternalServerError, APITimeoutError, APIConnectio
 #: denied. Waiting does not help and every request dealt to it would fail, so it leaves the
 #: rotation for the rest of the process instead of costing an episode each time it comes round.
 _REFUSED = (AuthenticationError, PermissionDeniedError)
-_DEAD: set[int] = set()
 
-def _throttle(index: int) -> None:
+def _throttle(pool: _KeyPool, index: int) -> None:
     """Space this key's requests out by MIN_REQUEST_INTERVAL seconds.
 
     Reactive back-off alone is the wrong shape for a per-minute quota: it learns the limit by
@@ -106,14 +146,14 @@ def _throttle(index: int) -> None:
     The interval is per key, not global, because the quota is: two keys spaced four seconds
     apart each is eight requests a minute more than one key can send, not the same eight.
     """
-    if MIN_REQUEST_INTERVAL <= 0:
+    if pool.interval <= 0:
         return
     with _POOL_LOCK:
-        wait = _LAST_REQUEST.get(index, 0.0) + MIN_REQUEST_INTERVAL - time.monotonic()
+        wait = pool.last_request.get(index, 0.0) + pool.interval - time.monotonic()
     if wait > 0:
         time.sleep(wait)
     with _POOL_LOCK:
-        _LAST_REQUEST[index] = time.monotonic()
+        pool.last_request[index] = time.monotonic()
 
 
 #: When the current stretch of work began. Reset by every pause.
@@ -182,21 +222,21 @@ def _duty_cycle() -> None:
         _rest(f"{worked / 60:.0f} min of work")
 
 
-def _next_index() -> int:
+def _next_index(pool: _KeyPool) -> int:
     """The next key in rotation, skipping any that has been refused outright."""
     with _POOL_LOCK:
-        size = len(_POOL) or 1
-        live = [i for i in range(size) if i not in _DEAD]
+        size = len(pool.clients) or 1
+        live = [i for i in range(size) if i not in pool.dead]
         if not live:
             raise RuntimeError(
-                "every configured API key was refused (401/403). Check AUTHMEM_API_KEYS."
+                f"every configured API key for {pool.base_url} was refused (401/403)."
             )
-        index = live[_CURSOR[0] % len(live)]
-        _CURSOR[0] += 1
+        index = live[pool.cursor % len(live)]
+        pool.cursor += 1
     return index
 
 
-def _request(make_call: Callable[[OpenAI], object], attempts: int = 5):
+def _request(make_call: Callable[[OpenAI], object], attempts: int = 5, key_pool: _KeyPool | None = None):
     """One request, waiting out transient refusals before giving up.
 
     Each attempt is dealt to the next key in turn, so a retry after a 429 lands on a different
@@ -205,21 +245,22 @@ def _request(make_call: Callable[[OpenAI], object], attempts: int = 5):
     because of what happens downstream: an exception here fails the episode, and five failed
     episodes in a row stop the phase. A rate limit must never be able to end a run.
     """
-    pool = _pool()
+    key_pool = key_pool or _MAIN
+    pool = key_pool.build()
     for attempt in range(attempts):
         _duty_cycle()
-        index = _next_index()
-        _throttle(index)
+        index = _next_index(key_pool)
+        _throttle(key_pool, index)
         try:
             return make_call(pool[index])
         except _REFUSED as error:
             with _POOL_LOCK:
-                first = index not in _DEAD
-                _DEAD.add(index)
+                first = index not in key_pool.dead
+                key_pool.dead.add(index)
             if first:
                 print(f"    [key {index + 1}/{len(pool)} refused: {type(error).__name__}] "
                       f"dropping it from the rotation for this run", flush=True)
-            if len(_DEAD) >= len(pool):
+            if len(key_pool.dead) >= len(pool):
                 raise
             continue
         except _TRANSIENT as error:
@@ -275,18 +316,20 @@ def _create(client: OpenAI, kwargs: dict, thinking: bool):
     agent.
     """
     base = str(getattr(client, "base_url", ""))
+    key_pool = _pool_of(client)
     if thinking or _NO_THINK_SUPPORTED.get(base) is False:
-        return _request(lambda c: c.chat.completions.create(**kwargs))
+        return _request(lambda c: c.chat.completions.create(**kwargs), key_pool=key_pool)
     try:
         response = _request(lambda c: c.chat.completions.create(**kwargs,
-                                                                    extra_body=_NO_THINK_BODY))
+                                                                    extra_body=_NO_THINK_BODY),
+                            key_pool=key_pool)
     except _TRANSIENT:
         # A rate limit says nothing about whether the server understands the option. Recording
         # it as "unsupported" would silently turn thinking back on for the rest of the run.
         raise
     except Exception:  # noqa: BLE001 - any refusal of the option, not just BadRequest
         _NO_THINK_SUPPORTED[base] = False
-        return _request(lambda c: c.chat.completions.create(**kwargs))
+        return _request(lambda c: c.chat.completions.create(**kwargs), key_pool=key_pool)
     _NO_THINK_SUPPORTED[base] = True
     return response
 

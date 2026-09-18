@@ -219,7 +219,9 @@ def judge_outcome(client, pair: AuthorityPair, variant: Variant, records: list[s
 def run_episode(client, pair: AuthorityPair, variant: Variant, verbose: bool = True) -> WriteRecord:
     episode = pair.episode(variant)
     records = consolidate(client, episode)
-    judged = judge_outcome(client, pair, variant, records)
+    from new_src.bench.engine import make_judge_client
+
+    judged = judge_outcome(make_judge_client(), pair, variant, records)
     rule = rule_based_outcome(pair, variant, records)
 
     if verbose:

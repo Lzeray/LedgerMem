@@ -87,6 +87,22 @@ ACTION_MODEL = os.getenv("AUTHMEM_ACTION_MODEL", os.getenv("OLLAMA_MODEL", "qwen
 CONSOLIDATOR_MODEL = os.getenv("AUTHMEM_CONSOLIDATOR_MODEL", ACTION_MODEL)
 JUDGE_MODEL = os.getenv("AUTHMEM_JUDGE_MODEL", ACTION_MODEL)
 
+# The judge's own endpoint (Module A's judge, Module C's reference labeler). Unset, the judge
+# shares the agent's endpoint, as it always did. Set, it gets a separate key pool — typically a
+# hosted API behind a proxy while the agent runs on a local Ollama that must not be proxied.
+# The paper uses a different, stronger model for these roles than for the action agent; a judge
+# that is the same checkpoint as the agent makes the Oracle arm a copy of the Predicted arm.
+#
+#   AUTHMEM_JUDGE_BASE_URL          OpenAI-compatible endpoint of the judge
+#   AUTHMEM_JUDGE_API_KEYS          comma-separated keys for it (rotated)
+#   AUTHMEM_JUDGE_PROXY             HTTP proxy the judge's requests go through, if any
+#   AUTHMEM_JUDGE_MIN_REQUEST_INTERVAL  per-key spacing, for hosted free tiers
+JUDGE_BASE_URL = os.getenv("AUTHMEM_JUDGE_BASE_URL", "")
+JUDGE_API_KEYS = [key.strip() for key in os.getenv("AUTHMEM_JUDGE_API_KEYS", "").split(",") if key.strip()] \
+    or ["none"]
+JUDGE_PROXY = os.getenv("AUTHMEM_JUDGE_PROXY", "") or None
+JUDGE_MIN_REQUEST_INTERVAL = float(os.getenv("AUTHMEM_JUDGE_MIN_REQUEST_INTERVAL", "0"))
+
 # Own tables in the same Postgres instance (see memory/models.py) — src/ keeps its own
 # semanticMemory/episodicMemory and the two suites can no longer truncate each other.
 DB_URL = os.getenv("AUTHMEM_DB_URL", "postgresql://lenaz:lenaz210607@localhost/mydb")

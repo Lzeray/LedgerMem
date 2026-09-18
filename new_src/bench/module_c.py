@@ -99,8 +99,11 @@ def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]
         # played by the configured judge model, running the one published attribution prompt
         # (C.3) at temperature zero. It reads nothing from the dataset's answer key. When the
         # judge and the action model are the same checkpoint, Oracle and Predicted coincide —
-        # set AUTHMEM_JUDGE_MODEL to the strongest model available to separate them.
-        predicted = predict_sources(client, JUDGE_MODEL, episode, consolidated)
+        # set AUTHMEM_JUDGE_MODEL (and AUTHMEM_JUDGE_BASE_URL for a separate endpoint) to the
+        # strongest model available to separate them.
+        from new_src.bench.engine import make_judge_client
+
+        predicted = predict_sources(make_judge_client(), JUDGE_MODEL, episode, consolidated)
     for position, (text, _memory_type) in enumerate(consolidated):
         # Scoring only: which record carries the contested value. Not stored as a slot, not
         # shown to the system, not read by the gate. The gold arm uses it by definition.
