@@ -35,16 +35,18 @@ from new_src.config import LOGS_ROOT  # noqa: E402
 
 OUT_DIR = Path("logs_result")
 CATEGORIES = ["R2F", "P2R", "C2O", "MIX", "O2I", "R2P", "S2D"]
-#: Condition directory fragment -> the name shown on the picture.
-ARMS = [
-    # The paper's own arm first: consolidation, a predictor picking the supporting message,
-    # the frozen role policy, no gate and no seeded memory. Everything to its right is measured
-    # against it, so it belongs at the left edge of the table rather than appended.
-    ("direct-predicted-source_attributed-nometa", "paper"),
-    ("direct-gold-washed-nometa", "baseline"),
-    ("direct-gold-source_attributed-meta", "prompted"),
-    ("gate-gateway-licence_model", "gate"),
-]
+#: Per module: (condition key in run.CONDITIONS, column name). The paper's conditions first,
+#: this project's gate arms last. Memory-off is left out of the table (it is 0/0 everywhere by
+#: construction) and stated in the footnote instead.
+ARMS = {
+    "b": [("baseline", "W/N"), ("baseline-attributed", "S/N"), ("sanitizer", "Sanitize"),
+          ("conservative-join", "W/Join"), ("gold-washed", "W/G"), ("gold-prompted", "S/G"),
+          ("gate", "gate"), ("gate-license-model", "gate+channels")],
+    "c": [("c-no-label", "No label"), ("c-naive-join", "Naive join"), ("c-predicted", "Predicted"),
+          ("c-oracle", "Oracle"), ("gate", "gate (ref.)"), ("gate-predicted", "gate (pred.)"),
+          ("gate-license-model", "gate+channels")],
+}
+GATE_KEYS = {"gate", "gate-predicted", "gate-license-model"}
 
 
 def _by_pair(rows: list[dict], variant: str) -> dict[str, float]:
@@ -57,29 +59,25 @@ def _by_pair(rows: list[dict], variant: str) -> dict[str, float]:
 
 
 def collect(model_dir: Path, module: str, suffix: str) -> tuple[dict, set[str]]:
-    """{arm: {category: (h_minus_through, h_minus_total, h_plus_done, h_plus_total)}}."""
-    module_dir = model_dir / f"module_{module}"
+    """{column: {category: (h_minus_through, h_minus_total, h_plus_done, h_plus_total)}}, read
+    from the exact directory each condition writes to, plus the pairs whose null control fired."""
+    from new_src.run import CONDITIONS
+
     nulls: set[str] = set()
-    for candidate in (model_dir / "null_control", module_dir):
-        for path in candidate.rglob("episodes.jsonl") if candidate.exists() else []:
-            if "null_control" in str(path):
-                nulls |= {r["pair_id"] for r in load_jsonl(path) if r["performed"]}
+    null_dir = "null_control__heldout" if suffix else "null_control"
+    for path in model_dir.rglob(f"{null_dir}*/episodes.jsonl"):
+        if path.parent.name == null_dir or path.parent.name.startswith("baseline_without"):
+            nulls |= {r["pair_id"] for r in load_jsonl(path) if r["performed"]}
+    if not suffix:
+        for path in (model_dir / "null_control").rglob("episodes.jsonl") if (model_dir / "null_control").exists() else []:
+            nulls |= {r["pair_id"] for r in load_jsonl(path) if r["performed"]}
 
     out: dict[str, dict] = {}
-    if not module_dir.exists():
-        return out, nulls
-    for fragment, label in ARMS:
-        rows: list[dict] = []
-        for path in module_dir.glob("*/episodes.jsonl"):
-            name = path.parent.name
-            if not name.startswith(fragment):
-                continue
-            is_heldout = name.endswith("__heldout")
-            if (suffix == "__heldout") != is_heldout:
-                continue
-            rows += load_jsonl(path)
-        if not rows:
+    for key, label in ARMS[module]:
+        path = model_dir / f"module_{module}" / f"{CONDITIONS[key].name}{suffix}" / "episodes.jsonl"
+        if not path.exists():
             continue
+        rows = load_jsonl(path)
         minus, plus = _by_pair(rows, "H-"), _by_pair(rows, "H+")
         per_category = {}
         for category in CATEGORIES:
@@ -90,8 +88,9 @@ def collect(model_dir: Path, module: str, suffix: str) -> tuple[dict, set[str]]:
     return out, nulls
 
 
-def draw(data: dict, nulls: set[str], title: str, path: Path) -> None:
-    arms = [label for _, label in ARMS if label in data]
+def draw(data: dict, nulls: set[str], title: str, path: Path, module: str) -> None:
+    arms = [label for _, label in ARMS[module] if label in data]
+    gate_labels = {label for key, label in ARMS[module] if key in GATE_KEYS}
     fig, ax = plt.subplots(figsize=(3.0 + 2.6 * len(arms), 5.2))
     ax.axis("off")
     ax.set_title(title, fontsize=13, fontweight="bold", pad=18)
@@ -135,15 +134,21 @@ def draw(data: dict, nulls: set[str], title: str, path: Path) -> None:
     table.auto_set_font_size(False)
     table.set_fontsize(9.5)
     table.scale(1, 1.9)
-    for (row, _), cell in table.get_celld().items():
+    for (row, column), cell in table.get_celld().items():
         if row == 0:
             cell.set_text_props(fontweight="bold")
-            cell.set_facecolor("#dddddd")
+            cell.set_height(cell.get_height() * 1.6)
+            # This project's gate columns get a darker header, so they are never read as one of
+            # the paper's conditions.
+            arm = arms[(column - 1) // 2] if column else None
+            cell.set_facecolor("#b9c7d8" if arm in gate_labels else "#dddddd")
         if row == len(body):
             cell.set_text_props(fontweight="bold")
 
-    note = ("H− through = attacks the defense let run (lower is better)\n"
-            "H+ done = required tasks completed (higher is better)")
+    note = ("H− through = attacks the defense let run (lower is better)    "
+            "H+ done = required tasks completed (higher is better)\n"
+            "Grey headers: the paper's conditions. Blue headers: this project's gate. "
+            "Memory off is 0/0 in every category and is not shown.")
     if nulls:
         note += (f"\n{len(nulls)} pairs failed the null control: their H− side is not evidence "
                  "about authority")
@@ -158,7 +163,7 @@ def draw(data: dict, nulls: set[str], title: str, path: Path) -> None:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--module", default="c", help="b or c")
+    parser.add_argument("--module", default="both", help="b, c or both")
     parser.add_argument("--logs", default=LOGS_ROOT)
     args = parser.parse_args(argv)
 
@@ -167,6 +172,17 @@ def main(argv=None) -> int:
         print(f"  no {root}")
         return 1
     made = 0
+    modules = ["b", "c"] if args.module == "both" else [args.module]
+    for module in modules:
+        args.module = module
+        made += _draw_module(root, args)
+    if not made:
+        print("  nothing to draw yet — no episodes recorded for that module")
+    return 0
+
+
+def _draw_module(root: Path, args) -> int:
+    made = 0
     for model_dir in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
         for suffix, dataset in (("", "dataset 1 (dev)"), ("__heldout", "dataset 2 (held-out)")):
             data, nulls = collect(model_dir, args.module, suffix)
@@ -174,11 +190,9 @@ def main(argv=None) -> int:
                 continue
             title = f"Module {args.module.upper()} — {dataset}\n{model_dir.name}"
             name = f"module_{args.module}_{'heldout' if suffix else 'dev'}_{model_dir.name}.png"
-            draw(data, nulls, title, OUT_DIR / name)
+            draw(data, nulls, title, OUT_DIR / name, args.module)
             made += 1
-    if not made:
-        print("  nothing to draw yet — no episodes recorded for that module")
-    return 0
+    return made
 
 
 if __name__ == "__main__":
