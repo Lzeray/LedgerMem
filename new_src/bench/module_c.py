@@ -112,8 +112,9 @@ def _capture_history(client, model, engine, episode, condition) -> None:
     which values it states. `dms.capture` does all of it from the message alone; nothing here
     reads the pair.
 
-    It is what makes Module C able to measure a licensing transition at all: a consolidated
-    record is a paraphrase, and the licence check refuses to authorize from one.
+    It is the gate's evidence store: a consolidated record is a paraphrase written by the agent,
+    and neither its channel nor its licence can be trusted. The system message is not captured:
+    system policy is not a durable memory source (paper, appendix C.3).
 
     The customer's identifiers are part of the first message of the history (see
     `AuthorityPair._identity_preamble`) and go through this path like everything else they
@@ -129,7 +130,7 @@ def _capture_history(client, model, engine, episode, condition) -> None:
     for message in episode.messages:
         if message.tool_call is not None:
             pending_tool = message.tool_call.name
-        if not message.content.strip():
+        if not message.content.strip() or message.role == "system":
             continue
         dms.capture(engine, client, model, message.role, message.content,
                     tool_name=pending_tool if message.role == "tool" else None)
