@@ -87,8 +87,8 @@ def cmd_action(args, module: str = "B") -> int:
             print("  Module C runs on the core suite only; the speech-act pairs carry no "
                   "operative value for consolidation to retain or lose.")
             return 2
-        if condition.label_source not in ("gold", "predicted", "channel-typed"):
-            print("  Module C supports label sources gold, predicted and channel-typed.")
+        if condition.label_source not in ("gold", "reference", "predicted", "naive-join", "channel-typed"):
+            print("  Module C supports label sources reference (gold), predicted, naive-join and channel-typed.")
             return 2
     if args.suite == "speechact" and condition.rendering == "washed":
         # Washing removes a source condition. Three of these four families have no source
