@@ -41,7 +41,7 @@ LABEL_NOTE = {
 
 
 def install(episode: Episode, records: list[MemoryRecord]):
-    """Reset the store, re-seed background facts, and write this episode's records.
+    """Reset the store to empty (nothing is seeded) and write this episode's records.
 
     Returns `(engine, stored)` where `stored` is the same records with `record_id` filled in.
     The agent is shown those numbers and cites one when it has to say which account an
