@@ -14,10 +14,13 @@ nothing else — no slot keys, no operative values, no target arguments, no obje
     literal-occurrence check), and derives the object it names from those slots. Under the
     channel model it also captures every utterance verbatim as it arrives (`_capture_history`),
     with the same extraction.
-  * Retrieve. Nothing is placed in the agent's context. The agent searches its own memory with
-    a `recall_memory` tool and decides what to look for; a query that misses is a retrieval
-    failure and stays in the denominator.
-  * Act. The action stage is Module B's, unchanged, so the two modules' ASR/TSR stay
+  * Retrieve. As in the paper (appendix F.2): "a deterministic bounded in-memory store that
+    returns the complete product-generated write set in stable order". The agent is shown every
+    consolidated memory, in the order the consolidator wrote them. The verbatim records
+    `_capture_history` adds are the gate's evidence store and are never shown to the agent: the
+    paper's write set is the consolidator's output, and nothing else.
+  * Act. The action stage is Module B's, unchanged — the paper's instruction, its memory
+    block, and only the first native action scored — so the two modules' ASR/TSR stay
     comparable in everything except where the memory came from.
 
 What the benchmark still knows, and only for SCORING after the run: the action predicate
@@ -33,7 +36,7 @@ That version is tagged `module-c-oracle-slots` in git; its numbers are not compa
 this one.
 
 All pairs stay in the denominators. If consolidation drops the proposition, extraction misses
-its value, or the agent's recall does not surface it, that shows up as a task failure on H+.
+its value, or the agent does not use it, that shows up as a task failure on H+.
 """
 
 from __future__ import annotations
@@ -41,7 +44,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from new_src.bench import action_stage, dms, gate, module_a
-from new_src.bench.authority import predict_label
+from new_src.bench.authority import predict_sources
 from new_src.bench.classifier import action_catalogue, decide
 from new_src.bench.metrics import ActionRecord, mentions_value
 from new_src.bench.schema import AuthorityPair, MemoryRecord, Variant
@@ -49,7 +52,7 @@ from new_src.bench.slots import extract_slots, object_ref_for
 from new_src.config import ACTION_MODEL
 
 
-def _to_records(client, model, episode, pair, consolidated: list[str], label_source: str) -> list[MemoryRecord]:
+def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]], label_source: str) -> list[MemoryRecord]:
     """Turn the consolidator's free text into labeled, slotted records.
 
     Slots come from `extract_slots` on the record's own text — the system's decision, not the
@@ -59,8 +62,9 @@ def _to_records(client, model, episode, pair, consolidated: list[str], label_sou
       channel-typed  consolidated text is the AGENT's own writing, whoever's claim it is about,
                      so its channel is `assistant` and its ceiling `attested`. Structural; never
                      asked, never predicted.
-      predicted      the paper's arm: a model names the supporting message's role and the
-                     frozen role policy maps it to a label.
+      predicted      the paper's arm (appendix C.3): one source-first call over the whole write
+                     set names each memory's supporting message; the frozen role policy maps
+                     that message's role to a label in code.
       gold           the oracle arm: the record carrying the contested value gets the pair's
                      gold label. Named as an oracle, kept to isolate the gate from labeling.
 
@@ -68,15 +72,15 @@ def _to_records(client, model, episode, pair, consolidated: list[str], label_sou
     anything. Authorization rests on `_capture_history`'s verbatim records instead.
     """
     records: list[MemoryRecord] = []
-    for text in consolidated:
+    predicted = predict_sources(client, model, episode, consolidated) if label_source == "predicted" else None
+    for position, (text, _memory_type) in enumerate(consolidated):
         # Scoring only: which record carries the contested value. Not stored as a slot, not
         # shown to the system, not read by the gate. The gold arm uses it by definition.
         carries_value = mentions_value(text, pair.operative_value)
         channel = None
         requests = None
         if label_source == "predicted":
-            draft = MemoryRecord(text=text, label="unendorsed", role="tool", rendering="source_attributed")
-            label, role = predict_label(client, model, episode, draft)
+            label, role = predicted[position]
         elif label_source == "gold":
             label, role = (episode.focal_memory.label, episode.focal_memory.role) if carries_value else ("attested", "assistant")
         elif label_source == "channel-typed":
@@ -142,7 +146,7 @@ def run_episode(
     verbose: bool = True,
 ) -> ActionRecord:
     episode = pair.episode(variant)
-    consolidated = module_a.consolidate(client, episode)
+    consolidated = module_a.consolidate_items(client, episode)
     written = _to_records(client, model, episode, pair, consolidated, condition.label_source)
 
     # Nothing is seeded. The paper's Module C starts from the source history alone; the
@@ -182,5 +186,5 @@ def run_episode(
         focal_role_stored=focal.role if focal else "",
         notes="" if focal else "write-time omission: focal claim not consolidated",
     )
-    # `shown_records=None`: nothing is put in the agent's context; it recalls for itself.
-    return action_stage.perform(client, episode, engine, None, condition, record, model, verbose)
+    # The complete write set, in the consolidator's order (the paper's retrieval).
+    return action_stage.perform(client, episode, engine, written, condition, record, model, verbose)

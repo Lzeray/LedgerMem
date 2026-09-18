@@ -164,19 +164,3 @@ def capture_user_turn(engine, text: str, client=None, model: str | None = None):
             channel="user",
         )
     return "authorized", "decision", "user"
-
-
-def memory_block(records: list[MemoryRecord], show_metadata: bool) -> str:
-    """The [MEMORY] section injected into the action agent's context."""
-    lines = []
-    for record in records:
-        # Plain bullets again. Records were briefly numbered so the agent could cite one as the
-        # object of an action; with the gate resolving that itself, nothing cites them, and the
-        # numbers were only noise in the prompt — and a prompt difference between arms that had
-        # to be explained away.
-        marker = "- "
-        if show_metadata:
-            lines.append(f"{marker}{record.text}  [authority: {LABEL_NOTE[record.label]}]")
-        else:
-            lines.append(f"{marker}{record.text}")
-    return "\n".join(lines)
