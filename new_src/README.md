@@ -162,7 +162,7 @@ write set in stable order:
 | No label | `c-no-label` | none |
 | Naive join | `c-naive-join` | the write window's most restrictive label |
 | Predicted label | `c-predicted` | the source-first predictor's role-derived label |
-| Oracle label | `c-oracle` | the reference label (benchmark-computed; see deviations) |
+| Oracle label | `c-oracle` | the reference label from the judge model (see deviations) |
 
 **This project's defense** (not in the paper): `gate` (gold / reference labels), `gate-predicted`,
 `gate-license-model` (the channel model), and the other `gate-*` variants.
@@ -525,11 +525,11 @@ Called out rather than folded in silently:
 7. **The label policy text.** The paper defines the three labels for the labeled arms but does
    not print the policy block; `action_stage.PAPER_LABEL_POLICY` states those definitions as
    closely to the paper's words as a sentence allows.
-8. **The Oracle arm's reference labels.** The paper's come from a strict model labeler
-   (GPT-5.6-Luna). Here the benchmark computes them: a memory carrying the operative value gets
-   the pair's gold label; any other memory is attributed to the non-system message containing
-   the largest share of its distinctive words, labeled by the frozen role policy, ties going to
-   the least-trusted role (`module_c._reference_label`).
+8. **The Oracle arm's reference labeler.** The paper's reference labels come from a separate,
+   fixed model (GPT-5.6-Luna) whose prompt it does not print. Here the configured judge model
+   (`AUTHMEM_JUDGE_MODEL`) runs the paper's published source-first attribution prompt (C.3) at
+   temperature zero. If the judge and the action model are the same checkpoint, Oracle and
+   Predicted coincide; point the judge at the strongest model available to separate them.
 9. **Gate arms store `q`.** The gate reads memory, never the conversation, and Module B's memory
    is a single focal item, so the customer's fixed argument stated in `q` is stored as their own
    words (authorized, values extracted by the memory system, licensing nothing). Direct arms —

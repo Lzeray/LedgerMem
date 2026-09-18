@@ -26,8 +26,8 @@ nothing else — no slot keys, no operative values, no target arguments, no obje
 What the benchmark still knows, and only for SCORING after the run: the action predicate
 (`episode.target_tool`, `episode.target_arguments`) and which record carries the contested
 value (`is_focal`, by the deterministic retention test). Neither is shown to or read by the
-system. The `gold` label source is the one deliberate oracle left, and it is named as one: it
-is the "correct labels" arm, run to separate what the gate does from what labeling does.
+system. Nothing in the write or read path reads the answer key — including the Oracle arm,
+whose reference labels come from a model, as in the paper.
 
 An earlier version attached `slot_key`/`slot_value` from the dataset, set `object_ref` from
 `target_arguments`, and wrote the customer's identifiers as separate harness-built records
@@ -46,11 +46,11 @@ from sqlalchemy.orm import Session
 from new_src.bench import action_stage, dms, gate, module_a
 from new_src.bench.authority import predict_sources
 from new_src.bench.classifier import action_catalogue, decide
-from new_src.bench.metrics import ActionRecord, distinctive_tokens, mentions_value
+from new_src.bench.metrics import ActionRecord, mentions_value
 from new_src.bench.schema import AuthorityPair, MemoryRecord, Variant
 from new_src.bench.taxonomy import label_for_role, worst_label
 from new_src.bench.slots import extract_slots, object_ref_for
-from new_src.config import ACTION_MODEL
+from new_src.config import ACTION_MODEL, JUDGE_MODEL
 
 
 def _source_roles(episode) -> list[str]:
@@ -69,36 +69,6 @@ def _naive_join_label(episode) -> tuple[str, str]:
     return label, next(role for role in roles if label_for_role(role) == label)
 
 
-def _reference_label(episode, pair, text: str) -> tuple[str, str]:
-    """The Oracle arm's reference label, computed by the benchmark rather than a model.
-
-    The paper's reference labels come from a strict model labeler (GPT-5.6-Luna) that this
-    project does not have. The benchmark knows the answer for the focal proposition exactly,
-    so a memory that carries the operative value gets the pair's gold label. Any other memory
-    is attributed to the non-system message that contains the largest share of its distinctive
-    words — the message that establishes it — and the frozen role policy labels it. Ties go to
-    the least-trusted role, never upward. This is an oracle by construction: it reads the
-    pair's answer key, which is exactly what an oracle arm is for.
-    """
-    if mentions_value(text, pair.operative_value):
-        return episode.focal_memory.label, episode.focal_memory.role
-    tokens = distinctive_tokens(text)
-    best, best_share = [], 0.0
-    for message in episode.messages:
-        if message.role == "system" or not message.content.strip() or not tokens:
-            continue
-        lowered = message.content.lower()
-        share = sum(token in lowered for token in tokens) / len(tokens)
-        if share > best_share:
-            best, best_share = [message.role], share
-        elif share == best_share and share > 0:
-            best.append(message.role)
-    if not best:
-        return label_for_role("assistant"), "assistant"
-    label = worst_label(*(label_for_role(role) for role in best))
-    return label, next(role for role in best if label_for_role(role) == label)
-
-
 def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]], label_source: str) -> list[MemoryRecord]:
     """Turn the consolidator's free text into labeled, slotted records.
 
@@ -112,15 +82,25 @@ def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]
       predicted      the paper's arm (appendix C.3): one source-first call over the whole write
                      set names each memory's supporting message; the frozen role policy maps
                      that message's role to a label in code.
-      reference      the paper's Oracle arm (`gold` is accepted as the same thing): see
-                     `_reference_label`.
+      reference      the paper's Oracle arm (`gold` is accepted as the same thing): the same
+                     source-first attribution, run by the configured judge model.
       naive-join     the paper's Naive-join arm: the write window's most restrictive label.
 
     `verbatim` stays empty: consolidated text IS a paraphrase, and a paraphrase cannot license
     anything. Authorization rests on `_capture_history`'s verbatim records instead.
     """
     records: list[MemoryRecord] = []
-    predicted = predict_sources(client, model, episode, consolidated) if label_source == "predicted" else None
+    predicted = None
+    if label_source == "predicted":
+        predicted = predict_sources(client, model, episode, consolidated)
+    elif label_source in ("reference", "gold"):
+        # The Oracle arm. The paper's reference labels come from a separate, fixed model
+        # labeler (GPT-5.6-Luna, appendix C.4) whose prompt it does not print; here that role is
+        # played by the configured judge model, running the one published attribution prompt
+        # (C.3) at temperature zero. It reads nothing from the dataset's answer key. When the
+        # judge and the action model are the same checkpoint, Oracle and Predicted coincide —
+        # set AUTHMEM_JUDGE_MODEL to the strongest model available to separate them.
+        predicted = predict_sources(client, JUDGE_MODEL, episode, consolidated)
     for position, (text, _memory_type) in enumerate(consolidated):
         # Scoring only: which record carries the contested value. Not stored as a slot, not
         # shown to the system, not read by the gate. The gold arm uses it by definition.
@@ -130,7 +110,7 @@ def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]
         if label_source == "predicted":
             label, role = predicted[position]
         elif label_source in ("reference", "gold"):
-            label, role = _reference_label(episode, pair, text)
+            label, role = predicted[position]
         elif label_source == "naive-join":
             label, role = _naive_join_label(episode)
         elif label_source == "channel-typed":
