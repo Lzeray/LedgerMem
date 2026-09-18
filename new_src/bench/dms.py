@@ -76,7 +76,7 @@ def install(episode: Episode, records: list[MemoryRecord]):
 def capture(engine, client, model: str, role: str, said: str, *, tool_name: str | None = None,
             memory_text: str | None = None, object_value: str | None = None,
             slot_key: str | None = None, slot_value: str | None = None,
-            rendering: str = "source_attributed"):
+            rendering: str = "source_attributed", can_license: bool = True):
     """Write one memory record at the moment a message occurs, filling every field that can be
     filled without a model.
 
@@ -101,6 +101,15 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
     channel = channel_for(role, tool_trust(tool_name) if role == "tool" else None)
     decision = decide(client, model, channel, said, action_catalogue())
     label = decision.label
+    # `can_license=False` says the caller already knows this utterance asks for nothing, so the
+    # request list is not the model's to guess. It exists for records the harness itself
+    # constructed out of a known identifier ("My portfolio is PF-40218-A."), where asking is
+    # both unnecessary and actively harmful: the classifier reads the object's name, finds the
+    # same word in an action's name, and licenses it. That is how three R2P attacks passed the
+    # gate without it ever asking for confirmation — a statement of which portfolio the customer
+    # has was read as a request to reallocate it. Everything that can be settled without a model
+    # must be, and this can.
+    requests = decision.requests if can_license else []
     with Session(engine) as session:
         write_fact(
             session,
@@ -111,7 +120,7 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
             slot_key=slot_key,
             slot_value=slot_value,
             claim_type=None,
-            requests=decision.requests,
+            requests=requests,
             object_ref=object_value if (object_value and object_value in said) else None,
             verbatim=said,
             channel=channel,
@@ -157,18 +166,12 @@ def capture_user_turn(engine, text: str, client=None, model: str | None = None,
 def memory_block(records: list[MemoryRecord], show_metadata: bool) -> str:
     """The [MEMORY] section injected into the action agent's context."""
     lines = []
-    for position, record in enumerate(records, 1):
-        # A position in this list, NOT the database row id. Row ids here run in the tens of
-        # thousands and grow, which puts them in the same range as the account and customer
-        # numbers written inside the records — and the first live test showed exactly the
-        # predictable failure: asked for a record number, the agent answered 40218, the
-        # CUSTOMER's number, which it had read out of a record's text. Worse than losing the
-        # action, a row id that large eventually exists, so a plausible-looking number picked
-        # out of prose would one day address a real and arbitrary record.
-        #
-        # Small ordinals cannot be confused with anything in the data. The harness translates
-        # back to the row id before the gate sees it.
-        marker = f"[{position}] "
+    for record in records:
+        # Plain bullets again. Records were briefly numbered so the agent could cite one as the
+        # object of an action; with the gate resolving that itself, nothing cites them, and the
+        # numbers were only noise in the prompt — and a prompt difference between arms that had
+        # to be explained away.
+        marker = "- "
         if show_metadata:
             lines.append(f"{marker}{record.text}  [authority: {LABEL_NOTE[record.label]}]")
         else:

@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from new_src.bench import module_b
+from new_src.bench import module_b, module_c
 from new_src.bench.actions import REGISTRY
 from new_src.bench.engine import make_client
 from new_src.bench.logging_utils import run_dir, transcript, write_summary
@@ -77,8 +77,19 @@ def cmd_validate(args) -> int:
     return 1 if failures else 0
 
 
-def cmd_action(args) -> int:
+def cmd_action(args, module: str = "B") -> int:
     condition = CONDITIONS[args.condition]
+    if module == "C":
+        if args.suite == "speechact":
+            # The speech-act families are SpeechActPair, not AuthorityPair: they carry no
+            # operative value and no slot, because their contested claim is never an argument.
+            # Module C's record-building reads both, so there is nothing for it to do here.
+            print("  Module C runs on the core suite only; the speech-act pairs carry no "
+                  "operative value for consolidation to retain or lose.")
+            return 2
+        if condition.label_source not in ("gold", "predicted", "channel-typed"):
+            print("  Module C supports label sources gold, predicted and channel-typed.")
+            return 2
     if args.suite == "speechact" and condition.rendering == "washed":
         # Washing removes a source condition. Three of these four families have no source
         # condition to remove, and N2D's H- claim is a refusal, whose "washed" form would
@@ -87,6 +98,7 @@ def cmd_action(args) -> int:
               "use --condition baseline-attributed as the unprotected arm.")
         return 2
 
+    module_dir = f"module_{module.lower()}"
     directory_name = f"{condition.name}__heldout" + ("_speechact" if args.suite == "speechact" else "")
     if args.null:
         # Null-control episodes get their own directory, exactly as new_src.run does. Sharing a
@@ -97,7 +109,7 @@ def cmd_action(args) -> int:
     client = make_client()
     pairs = select_pairs(args)
     variants = [value.strip() for value in args.variants.split(",")]
-    directory = run_dir(args.model, "module_b", directory_name)
+    directory = run_dir(args.model, module_dir, directory_name)
     records: list = []
 
     done: set[tuple[str, str]] = set()
@@ -117,10 +129,14 @@ def cmd_action(args) -> int:
                 continue
             name = f"{pair.pair_id}_{'minus' if variant == 'H-' else 'plus'}"
             try:
-                with transcript(args.model, "module_b", directory_name, name, echo=not args.quiet):
-                    record = module_b.run_episode(client, pair, variant, condition,
-                                                  model=args.model, module="B", verbose=True,
-                                                  drop_focal=args.null)
+                with transcript(args.model, module_dir, directory_name, name, echo=not args.quiet):
+                    if module == "C":
+                        record = module_c.run_episode(client, pair, variant, condition,
+                                                      model=args.model, verbose=True)
+                    else:
+                        record = module_b.run_episode(client, pair, variant, condition,
+                                                      model=args.model, module="B", verbose=True,
+                                                      drop_focal=args.null)
             except Exception as error:  # noqa: BLE001 - one episode must not end the suite
                 if not failures.record(name, error):
                     stop = True
@@ -136,7 +152,7 @@ def cmd_action(args) -> int:
     summary = action_summary([_as_record(r) for r in records])
     lines = [
         f"{'='*72}",
-        f"  Module B — held-out {args.suite} suite — condition '{args.condition}' ({condition.name})",
+        f"  Module {module} — held-out {args.suite} suite — condition '{args.condition}' ({condition.name})",
         f"  endpoint: {BASE_URL}   model: {args.model}",
         f"  {len(records)} episodes, records appended to {directory / 'episodes.jsonl'}",
         "",
@@ -149,7 +165,7 @@ def cmd_action(args) -> int:
             f"   asked for confirmation: H-={_pct(values['confirmation_rate_minus'])}"
             f" H+={_pct(values['confirmation_rate_plus'])}"
         )
-    path = write_summary(args.model, "module_b", directory_name, lines)
+    path = write_summary(args.model, module_dir, directory_name, lines)
     print("\n" + "\n".join(lines))
     print(f"\n  summary written to {path}")
     return 0
@@ -158,7 +174,7 @@ def cmd_action(args) -> int:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="new_src.run_heldout", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["validate", "b"])
+    parser.add_argument("command", choices=["validate", "b", "c"])
     parser.add_argument("--suite", default="core", choices=["core", "speechact", "all"])
     parser.add_argument("--condition", default="baseline", choices=sorted(CONDITIONS))
     parser.add_argument("--categories", default="")
@@ -178,7 +194,7 @@ def main(argv=None) -> int:
         print("  --suite all is for validate only; run each suite separately.")
         return 2
     with exclusive_run():
-        return cmd_action(args)
+        return cmd_action(args, "C" if args.command == "c" else "B")
 
 
 if __name__ == "__main__":

@@ -82,6 +82,13 @@ HEURISTIC_WASHED = Condition(policy="direct", label_source="heuristic", renderin
 # The defense: enforcement in code, from stored labels.
 GATE_GOLD = Condition(policy="gate", label_source="gold", rendering="source_attributed")
 GATE_GOLD_WASHED = Condition(policy="gate", label_source="gold", rendering="washed")
+# The paper's own Module C arm, end to end: consolidation writes the records, a predictor
+# picks the message that primarily supports each one, and the frozen role policy maps that
+# role to a label — "we then map its source role deterministically to Authorized, Attested or
+# Unendorsed". No gate, no metadata shown, no seeded memory, no verbatim capture. This is the
+# unprotected reproduction every extension in this project has to be measured against.
+BASELINE_PREDICTED = Condition(policy="direct", label_source="predicted",
+                               rendering="source_attributed")
 GATE_PREDICTED = Condition(policy="gate", label_source="predicted", rendering="source_attributed")
 GATE_NATIVE = Condition(policy="gate", label_source="gold", rendering="source_attributed", gate_surface="native")
 GATE_NATIVE_PREDICTED = Condition(policy="gate", label_source="predicted", rendering="source_attributed", gate_surface="native")

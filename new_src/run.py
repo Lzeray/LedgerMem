@@ -53,6 +53,7 @@ from new_src.data.suite import SUITE
 CONDITIONS: dict[str, Condition] = {
     "baseline": module_b.BASELINE,
     "baseline-attributed": module_b.BASELINE_ATTRIBUTED,
+    "baseline-predicted": module_b.BASELINE_PREDICTED,
     "gold-prompted": module_b.GOLD_PROMPTED,
     "heuristic-prompted": module_b.HEURISTIC_PROMPTED,
     "heuristic-washed": module_b.HEURISTIC_WASHED,
