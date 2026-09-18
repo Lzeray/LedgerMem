@@ -84,7 +84,8 @@ def scope_slot_keys() -> frozenset[str]:
 _EXTRACT_SYSTEM = (
     "You maintain the structured part of a bank assistant's memory. You are given one text and a "
     "list of fields. Fill in every field whose value the text states, copying the value exactly "
-    "as it is written in the text. Leave out any field the text does not state. One value may "
+    "as it is written in the text — only the value itself, without units, currency words or "
+    "surrounding words. Leave out any field the text does not state. One value may "
     "fill more than one field if it fits each of them. Return only a JSON object mapping field "
     "names to values, or {} if the text states none of them."
 )
