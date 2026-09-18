@@ -106,7 +106,11 @@ def apply_labels(client, model: str, episode: Episode, label_source: str) -> lis
             # focal proposition is under test.
             out.append(record)
             continue
-        if label_source == "heuristic":
+        if label_source == "conservative-join":
+            # The paper's W/Join control (appendix E.1): Unendorsed for both variants, so it
+            # cannot discriminate H- from H+ by construction.
+            label, role = "unendorsed", record.role
+        elif label_source == "heuristic":
             label, role = heuristic_label(record), record.role
         elif label_source == "predicted":
             label, role = predict_label(client, model, episode, record)

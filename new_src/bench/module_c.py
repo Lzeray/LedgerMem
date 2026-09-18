@@ -46,10 +46,57 @@ from sqlalchemy.orm import Session
 from new_src.bench import action_stage, dms, gate, module_a
 from new_src.bench.authority import predict_sources
 from new_src.bench.classifier import action_catalogue, decide
-from new_src.bench.metrics import ActionRecord, mentions_value
+from new_src.bench.metrics import ActionRecord, distinctive_tokens, mentions_value
 from new_src.bench.schema import AuthorityPair, MemoryRecord, Variant
+from new_src.bench.taxonomy import label_for_role, worst_label
 from new_src.bench.slots import extract_slots, object_ref_for
 from new_src.config import ACTION_MODEL
+
+
+def _source_roles(episode) -> list[str]:
+    """Roles of the messages that can source a durable memory: every non-system message with
+    content. The paper: "The system role supplies policy context and cannot be the direct
+    source of a durable item"."""
+    return [m.role for m in episode.messages if m.role != "system" and m.content.strip()]
+
+
+def _naive_join_label(episode) -> tuple[str, str]:
+    """The paper's Naive-join arm (appendix F.2): "every memory receives the most restrictive
+    label appearing anywhere in the write window"."""
+    roles = _source_roles(episode)
+    labels = [label_for_role(role) for role in roles]
+    label = worst_label(*labels)
+    return label, next(role for role in roles if label_for_role(role) == label)
+
+
+def _reference_label(episode, pair, text: str) -> tuple[str, str]:
+    """The Oracle arm's reference label, computed by the benchmark rather than a model.
+
+    The paper's reference labels come from a strict model labeler (GPT-5.6-Luna) that this
+    project does not have. The benchmark knows the answer for the focal proposition exactly,
+    so a memory that carries the operative value gets the pair's gold label. Any other memory
+    is attributed to the non-system message that contains the largest share of its distinctive
+    words — the message that establishes it — and the frozen role policy labels it. Ties go to
+    the least-trusted role, never upward. This is an oracle by construction: it reads the
+    pair's answer key, which is exactly what an oracle arm is for.
+    """
+    if mentions_value(text, pair.operative_value):
+        return episode.focal_memory.label, episode.focal_memory.role
+    tokens = distinctive_tokens(text)
+    best, best_share = [], 0.0
+    for message in episode.messages:
+        if message.role == "system" or not message.content.strip() or not tokens:
+            continue
+        lowered = message.content.lower()
+        share = sum(token in lowered for token in tokens) / len(tokens)
+        if share > best_share:
+            best, best_share = [message.role], share
+        elif share == best_share and share > 0:
+            best.append(message.role)
+    if not best:
+        return label_for_role("assistant"), "assistant"
+    label = worst_label(*(label_for_role(role) for role in best))
+    return label, next(role for role in best if label_for_role(role) == label)
 
 
 def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]], label_source: str) -> list[MemoryRecord]:
@@ -65,8 +112,9 @@ def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]
       predicted      the paper's arm (appendix C.3): one source-first call over the whole write
                      set names each memory's supporting message; the frozen role policy maps
                      that message's role to a label in code.
-      gold           the oracle arm: the record carrying the contested value gets the pair's
-                     gold label. Named as an oracle, kept to isolate the gate from labeling.
+      reference      the paper's Oracle arm (`gold` is accepted as the same thing): see
+                     `_reference_label`.
+      naive-join     the paper's Naive-join arm: the write window's most restrictive label.
 
     `verbatim` stays empty: consolidated text IS a paraphrase, and a paraphrase cannot license
     anything. Authorization rests on `_capture_history`'s verbatim records instead.
@@ -81,8 +129,10 @@ def _to_records(client, model, episode, pair, consolidated: list[tuple[str, str]
         requests = None
         if label_source == "predicted":
             label, role = predicted[position]
-        elif label_source == "gold":
-            label, role = (episode.focal_memory.label, episode.focal_memory.role) if carries_value else ("attested", "assistant")
+        elif label_source in ("reference", "gold"):
+            label, role = _reference_label(episode, pair, text)
+        elif label_source == "naive-join":
+            label, role = _naive_join_label(episode)
         elif label_source == "channel-typed":
             # See the pinned rule in the project memory: the source of a record is never
             # reconstructed by a model afterwards. Consolidated text was written by the agent.
@@ -123,7 +173,6 @@ def _capture_history(client, model, engine, episode, condition) -> None:
     re-allocate it), and it is now measured instead of suppressed.
     """
     if condition.label_source != "channel-typed":
-        dms.capture_user_turn(engine, episode.later_task)
         return
 
     pending_tool: str | None = None
@@ -157,6 +206,10 @@ def run_episode(
     engine, written = dms.install(episode, written)
     if condition.check_license:
         _capture_history(client, model, engine, episode, condition)
+    if condition.policy == "gate":
+        # The fixed argument the customer states in q reaches the gate's store as their own
+        # words, never licensing anything (see dms.capture_live_request).
+        dms.capture_live_request(engine, client, model, episode.later_task)
 
     focal = next((record for record in written if record.is_focal), None)
 
@@ -187,5 +240,7 @@ def run_episode(
         focal_role_stored=focal.role if focal else "",
         notes="" if focal else "write-time omission: focal claim not consolidated",
     )
-    # The complete write set, in the consolidator's order (the paper's retrieval).
-    return action_stage.perform(client, episode, engine, written, condition, record, model, verbose)
+    # The complete write set, in the consolidator's order (the paper's retrieval) — or nothing,
+    # in the Memory-off arm ("frozen writes are not exposed").
+    shown = [] if condition.rendering == "off" else written
+    return action_stage.perform(client, episode, engine, shown, condition, record, model, verbose)

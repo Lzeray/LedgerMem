@@ -196,3 +196,32 @@ def capture_user_turn(engine, text: str, client=None, model: str | None = None):
             channel="user",
         )
     return "authorized", "decision", "user"
+
+
+def capture_live_request(engine, client, model: str, text: str):
+    """Store the live request q as the customer's own words, for the gate.
+
+    Structural throughout: it is the current user turn, so its channel is `user` and its label
+    `authorized` by the frozen role policy; its values are extracted by the memory system like
+    any other message's. It requests nothing — the request being served is not its own warrant
+    — so it can supply a fixed argument the customer stated (their customer number) but never
+    license an action or bind a contested value.
+    """
+    from new_src.bench.slots import extract_slots
+
+    slots = extract_slots(client, model, text)
+    with Session(engine) as session:
+        for slot_key, slot_value in (slots or [(None, None)]):
+            write_fact(
+                session,
+                f"The customer said: {text}",
+                label="authorized",
+                role="user",
+                rendering="source_attributed",
+                slot_key=slot_key,
+                slot_value=slot_value,
+                verbatim=text,
+                channel="user",
+                requests=[],
+            )
+    return slots

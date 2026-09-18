@@ -67,6 +67,15 @@ CONDITIONS: dict[str, Condition] = {
     "gate-native-predicted": module_b.GATE_NATIVE_PREDICTED,
     "gate-heuristic": module_b.GATE_HEURISTIC,
     "memory-off": module_b.MEMORY_OFF,
+    # The paper's remaining Module-B interventions (appendix E.1).
+    "sanitizer": module_b.SANITIZER,
+    "conservative-join": module_b.CONSERVATIVE_JOIN,
+    "gold-washed": module_b.GOLD_WASHED,
+    # The paper's Module-C conditions (appendix F.2); memory-off is shared.
+    "c-no-label": module_b.C_NO_LABEL,
+    "c-naive-join": module_b.C_NAIVE_JOIN,
+    "c-predicted": module_b.C_PREDICTED,
+    "c-oracle": module_b.C_ORACLE,
 }
 
 
@@ -242,9 +251,10 @@ def cmd_action(args, module: str) -> int:
     condition = CONDITIONS[args.condition]
     if args.confirm:
         condition = Condition(**{**condition.__dict__, "confirm_followup": True})
-    if module == "C" and condition.label_source not in ("gold", "predicted", "channel-typed"):
-        print("Module C supports label sources gold, predicted and channel-typed "
-              "(--condition gate, gate-predicted or gate-license-model).")
+    if module == "C" and condition.label_source not in ("gold", "reference", "predicted", "naive-join", "channel-typed"):
+        print("Module C supports label sources reference (gold), predicted, naive-join and "
+              "channel-typed — e.g. --condition c-no-label, c-naive-join, c-predicted, c-oracle, "
+              "memory-off, gate, gate-predicted or gate-license-model.")
         return 2
 
     client = make_client()
