@@ -371,17 +371,27 @@ its own thesis: retaining provenance is worth nothing without enforcement on it.
 ## Current direction: this is a measurement project, not a 0% claim
 
 The headline the work can defend is the anatomy of what provenance-based enforcement covers
-and what it cannot — not "the gate achieves ASR 0%". Three results support it and are already
-measured: argument-provenance gating is complete on value transitions and *changes nothing* on
-licensing ones; MemLineage shows provenance without enforcement is worth zero; prompting the
-policy and enforcing it in code fail on disjoint categories, so neither dominates.
+and what it cannot — not "the gate achieves ASR 0%".
+
+**Every number measured before September 2026 is superseded.** An audit against the paper
+found the suite and pipeline off-contract in ways that change results: four transitions
+(P2R, O2I, R2P, S2D) were built as "licensing" pairs that the paper does not have (its Table
+B.3 grounds all seven as an argument being filled); episodes seeded background memory, two
+facts of which restated the defense's policy; Module C took slots, values and the action's
+object from the dataset; histories had no enriched parent; the action prompt and memory block
+were not the paper's; and every call was scored instead of the first. All of it was fixed (see
+`new_src/README.md`, "Deliberate deviations"). The earlier findings — "argument-provenance
+gating changes nothing on licensing transitions", "prompting and enforcing fail on disjoint
+categories", MemLineage's 90% — were measured on that setup and must be re-measured before
+they are cited. The "licensing" finding in particular rested on a split the paper does not
+make.
 
 Standing methodological rules, which apply to anything computed or written in this repo:
 
 - **ASR's denominator is the H- episodes only** — 35 per condition, 30 after null-control
   exclusions, never 70. Always state n.
 - **Per-category cells are n≈4–5.** Their one-sided 95% upper bound is around 45%, so they
-  carry no conclusions. Report the two aggregates (value / licensing) or raise the pair count.
+  carry no conclusions. Report the aggregate over all seven transitions or raise the pair count.
 - **Every 0% is reported with its one-sided 95% upper bound** (rule of three, 3/n: ≈10% at
   n=30). Never write "guaranteed", "prevents" or "eliminates" about a 0% cell.
 - **The current 35 pairs are a development set.** The audit, MIX's rewording and the licence
