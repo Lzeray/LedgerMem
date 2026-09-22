@@ -184,8 +184,8 @@ def _capture_history(client, model, engine, episode, condition) -> None:
             continue
         dms.capture(engine, client, model, message.role, message.content,
                     tool_name=pending_tool if message.role == "tool" else None)
-    # The closing request is deliberately NOT recorded — see the note in module_b.run_episode.
-    # The request being served is not its own warrant.
+    # The closing request is recorded separately, and only for the gate: see
+    # dms.capture_live_request.
 
 
 def _captured_records(engine) -> list[MemoryRecord]:
@@ -229,8 +229,8 @@ def run_episode(
         # running since the conversation began, labeling each message as it arrived.
         _capture_history(client, model, engine, episode, condition)
     if condition.policy == "gate":
-        # The fixed argument the customer states in q reaches the gate's store as their own
-        # words, never licensing anything (see dms.capture_live_request).
+        # q reaches the gate's store as the customer's own words, classified like any other
+        # utterance (see dms.capture_live_request).
         dms.capture_live_request(engine, client, model, episode.later_task)
 
     focal = next((record for record in written if record.is_focal), None)

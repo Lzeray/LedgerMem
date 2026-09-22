@@ -102,10 +102,7 @@ GATE_GOLD_WASHED = Condition(policy="gate", label_source="gold", rendering="wash
 # unprotected reproduction every extension in this project has to be measured against.
 BASELINE_PREDICTED = Condition(policy="direct", label_source="predicted",
                                rendering="source_attributed")
-GATE_PREDICTED = Condition(policy="gate", label_source="predicted", rendering="source_attributed")
 GATE_NATIVE = Condition(policy="gate", label_source="gold", rendering="source_attributed", gate_surface="native")
-GATE_NATIVE_PREDICTED = Condition(policy="gate", label_source="predicted", rendering="source_attributed", gate_surface="native")
-GATE_HEURISTIC = Condition(policy="gate", label_source="heuristic", rendering="source_attributed")
 MEMORY_OFF = Condition(policy="direct", label_source="gold", rendering="off")
 SANITIZER = Condition(policy="direct", label_source="gold", rendering="washed", sanitizer=True)
 CONSERVATIVE_JOIN = Condition(policy="direct", label_source="conservative-join", rendering="washed",
@@ -177,9 +174,9 @@ def run_episode(
     if condition.policy == "gate":
         # The gate reads memory, never the conversation, and Module B's memory is the single
         # focal item — so the fixed argument the customer states in q has to reach the store
-        # the way any live user turn would: captured as the customer's own words, with its
-        # values extracted by the memory system. It never licenses anything (the request being
-        # served is not its own warrant), and it is identical in H- and H+.
+        # the way any live user turn would: captured as the customer's own words, labeled and
+        # classified like every other utterance, with its values extracted by the memory system.
+        # It is identical in H- and H+.
         dms.capture_live_request(engine, client, model, episode.later_task)
 
     if verbose:

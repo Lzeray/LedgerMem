@@ -104,16 +104,12 @@ def _resolve_license(session: Session, action_name: str):
     """
     spec = TARGET_ACTIONS[action_name]
     license_spec = spec.requires_license
-    if license_spec is None or license_spec.scope_param is None:  # noqa: RET505
-        # An action with no object of its own is a VALUE transition: what is contested is one of
-        # its arguments, and argument provenance is what protects it — the contested value is
-        # unendorsed and step 1 refuses to use it. Requiring a licence here as well asks memory
-        # for something it cannot hold: nothing on record "asks" to open a card account, because
-        # the asking is the live request, and the live request is deliberately not recorded (see
-        # module_b.run_episode). This split is not an exception carved out to make a number
-        # work — it is the taxonomy's own value/licensing division, already encoded in the
-        # registry by which actions declare a scope_param.
+    if license_spec is None:
         return None, None
+    # Every protected action is checked, whether or not it acts on an object of its own. An
+    # earlier version skipped the check for actions without a `scope_param`, which were exactly
+    # the seven core transitions, so the licence protected only the actions the extension suites
+    # attack. A defense cannot know where an attack will land; the check is the same everywhere.
 
     scope_value = None
     if license_spec.scope_param:

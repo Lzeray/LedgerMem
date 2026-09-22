@@ -17,7 +17,7 @@ Command line for the AuthMem-Bench banking re-implementation.
         Module A, write time: consolidate each history and score whether the focal claim was
         upgraded, preserved or dropped.
 
-    python -m new_src.run c --condition gate-predicted
+    python -m new_src.run c --condition gate-license-model
         Module C, end to end: consolidation, automatic labeling, retrieval, action.
 
     python -m new_src.run check
@@ -59,13 +59,10 @@ CONDITIONS: dict[str, Condition] = {
     "heuristic-washed": module_b.HEURISTIC_WASHED,
     "gate": module_b.GATE_GOLD,
     "gate-washed": module_b.GATE_GOLD_WASHED,
-    "gate-predicted": module_b.GATE_PREDICTED,
     "gate-license": module_b.GATE_LICENSE,
     "gate-license-declared": module_b.GATE_LICENSE_DECLARED,
     "gate-license-model": module_b.GATE_LICENSE_MODEL,
     "gate-native": module_b.GATE_NATIVE,
-    "gate-native-predicted": module_b.GATE_NATIVE_PREDICTED,
-    "gate-heuristic": module_b.GATE_HEURISTIC,
     "memory-off": module_b.MEMORY_OFF,
     # The paper's remaining Module-B interventions (appendix E.1).
     "sanitizer": module_b.SANITIZER,
@@ -79,6 +76,16 @@ CONDITIONS: dict[str, Condition] = {
     # This project's prompted counterpart of gate-license-model (Module C only).
     "c-prompted-channels": module_b.C_PROMPTED_CHANNELS,
 }
+
+
+#: Why Module C refuses a gate arm other than the channel model. In Module C every other label
+#: source is a model's guess about who said something (the paper's predictor, or the same
+#: prompt run by the judge), and the gate executes whatever label it is given: a wrong guess of
+#: "the customer said it" becomes an authorization. Such an arm measures the guesser, not a
+#: defense, so it is not run. Module B's gold arms stay: there the label is the dataset's truth.
+GATE_ON_GUESSED_LABELS = ("  Module C runs the gate only on write-time channel labels "
+                          "(--condition gate-license-model): every other Module C label source is a "
+                          "model's guess about the speaker, and the gate would execute that guess.")
 
 
 def _condition_dir(args, condition) -> str:
@@ -256,7 +263,10 @@ def cmd_action(args, module: str) -> int:
     if module == "C" and condition.label_source not in ("gold", "reference", "predicted", "naive-join", "channel-typed"):
         print("Module C supports label sources reference (gold), predicted, naive-join and "
               "channel-typed — e.g. --condition c-no-label, c-naive-join, c-predicted, c-oracle, "
-              "memory-off, gate, gate-predicted or gate-license-model.")
+              "memory-off or gate-license-model.")
+        return 2
+    if module == "C" and condition.policy == "gate" and condition.label_source != "channel-typed":
+        print(GATE_ON_GUESSED_LABELS)
         return 2
 
     client = make_client()

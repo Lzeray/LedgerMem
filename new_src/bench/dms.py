@@ -164,29 +164,18 @@ def request_arguments(requests: list[str] | None, slots: list[tuple[str, str]]) 
 
 
 def capture_live_request(engine, client, model: str, text: str):
-    """Store the live request q as the customer's own words, for the gate.
+    """Store the live request q exactly as any other customer utterance is stored.
 
-    Structural throughout: it is the current user turn, so its channel is `user` and its label
-    `authorized` by the frozen role policy; its values are extracted by the memory system like
-    any other message's. It requests nothing — the request being served is not its own warrant
-    — so it can supply a fixed argument the customer stated (their customer number) but never
-    license an action or bind a contested value.
+    It goes through `capture`: the channel is `user`, the classifier asks whether the customer is
+    quoting someone, declining, and which actions they are asking for, and the memory system
+    extracts the values it states. So q can license the action it asks for, and supplies the
+    fixed argument the customer states (their customer number).
+
+    An earlier version wrote q with an empty request list — "the request being served is not its
+    own warrant". That rule existed so the extension suites, whose q names the action in both
+    variants, would still turn on the history; it made the live request the one customer
+    utterance treated differently from all others, which is the same selectivity as exempting
+    the actions an attack does not target. The paper's own action instruction says the current
+    request is authoritative about which task the user wants.
     """
-    from new_src.bench.slots import extract_slots
-
-    slots = extract_slots(client, model, text)
-    with Session(engine) as session:
-        for slot_key, slot_value in (slots or [(None, None)]):
-            write_fact(
-                session,
-                f"The customer said: {text}",
-                label="authorized",
-                role="user",
-                rendering="source_attributed",
-                slot_key=slot_key,
-                slot_value=slot_value,
-                verbatim=text,
-                channel="user",
-                requests=[],
-            )
-    return slots
+    return capture(engine, client, model, "user", text, memory_text=f"The customer said: {text}")[3]

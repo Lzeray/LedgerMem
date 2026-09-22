@@ -43,10 +43,10 @@ ARMS = {
           ("conservative-join", "W/Join"), ("gold-washed", "W/G"), ("gold-prompted", "S/G"),
           ("gate", "gate"), ("gate-license-model", "gate+channels")],
     "c": [("c-no-label", "No label"), ("c-naive-join", "Naive join"), ("c-predicted", "Predicted"),
-          ("c-oracle", "Oracle"), ("c-prompted-channels", "prompted+channels"), ("gate", "gate (ref.)"),
-          ("gate-predicted", "gate (pred.)"), ("gate-license-model", "gate+channels")],
+          ("c-oracle", "Oracle"), ("c-prompted-channels", "prompted+channels"),
+          ("gate-license-model", "gate+channels")],
 }
-GATE_KEYS = {"gate", "gate-predicted", "gate-license-model"}
+GATE_KEYS = {"gate", "gate-license-model"}
 
 
 def _by_pair(rows: list[dict], variant: str) -> dict[str, float]:

@@ -90,6 +90,11 @@ def cmd_action(args, module: str = "B") -> int:
         if condition.label_source not in ("gold", "reference", "predicted", "naive-join", "channel-typed"):
             print("  Module C supports label sources reference (gold), predicted, naive-join and channel-typed.")
             return 2
+        if condition.policy == "gate" and condition.label_source != "channel-typed":
+            from new_src.run import GATE_ON_GUESSED_LABELS
+
+            print(GATE_ON_GUESSED_LABELS)
+            return 2
     if args.suite == "speechact" and condition.rendering == "washed":
         # Washing removes a source condition. Three of these four families have no source
         # condition to remove, and N2D's H- claim is a refusal, whose "washed" form would

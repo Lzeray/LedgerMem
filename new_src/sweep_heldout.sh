@@ -24,7 +24,7 @@ done
 step b --suite core --null
 for c in memory-off baseline baseline-attributed sanitizer conservative-join gold-washed gold-prompted \
          gate gate-license-model; do step b --suite core --condition "$c"; done
-for c in memory-off c-no-label c-naive-join c-predicted c-oracle gate gate-predicted gate-license-model; do
+for c in memory-off c-no-label c-naive-join c-predicted c-oracle gate-license-model; do
     step c --suite core --condition "$c"
 done
 echo "=== $(date -u +%H:%M:%S) held-out sweep finished"

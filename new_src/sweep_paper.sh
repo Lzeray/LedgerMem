@@ -20,7 +20,7 @@ for c in memory-off baseline baseline-attributed sanitizer conservative-join gol
 # Module A: write-time collapse.
 step a
 # Module C: the paper's five conditions (appendix F.2), then the gate arms.
-for c in memory-off c-no-label c-naive-join c-predicted c-oracle gate gate-predicted gate-license-model; do
+for c in memory-off c-no-label c-naive-join c-predicted c-oracle gate-license-model; do
     step c --condition "$c"
 done
 echo "=== $(date -u +%H:%M:%S) sweep finished"
