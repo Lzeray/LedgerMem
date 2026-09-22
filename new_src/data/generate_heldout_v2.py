@@ -92,6 +92,10 @@ def main(argv=None) -> int:
             name, _, value = line.strip().partition("=")
             if name.strip() == "AUTHMEM_API_KEY" and value:
                 api_key = value.strip()
+    # A university endpoint must not go through the personal proxy, and ALL_PROXY is a socks://
+    # URL httpx refuses outright.
+    for variable in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+        os.environ.pop(variable, None)
     os.environ["AUTHMEM_BASE_URL"] = args.base_url
     os.environ["AUTHMEM_API_KEYS"] = api_key or "none"
     os.environ["AUTHMEM_ACTION_MODEL"] = args.model

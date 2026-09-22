@@ -78,7 +78,9 @@ class Phase:
                 return ["-m", "new_src.run", "null", "--suite", self.suite, *base]
             return ["-m", "new_src.run", self.module, "--suite", self.suite, "--condition", self.condition, *base]
         if self.module == "null":
-            return ["-m", "new_src.run_heldout", "b", "--suite", self.suite, "--null",
+            # H- only: run_heldout's --null runs whatever --variants says, and its default is
+            # both. A null-control H+ is not a control of anything.
+            return ["-m", "new_src.run_heldout", "b", "--suite", self.suite, "--null", "--variants", "H-",
                     "--condition", self.condition, *base]
         return ["-m", "new_src.run_heldout", self.module, "--suite", self.suite,
                 "--condition", self.condition, *base]
@@ -162,6 +164,14 @@ def _suite_pairs(phase: Phase) -> list:
 def expected(phase: Phase) -> int:
     pairs = len(_suite_pairs(phase))
     return pairs if phase.module == "null" else 2 * pairs
+
+
+def _recorded(phase: Phase, model: str) -> int:
+    """Episodes of this phase already recorded. A null control counts its H- episodes only."""
+    rows = _rows(records_path(phase, model))
+    if phase.module == "null":
+        rows = [r for r in rows if r["variant"] == "H-"]
+    return min(len(rows), expected(phase))
 
 
 def records_path(phase: Phase, model: str) -> Path:
@@ -263,6 +273,11 @@ def _worker_pid() -> int | None:
 
 
 def cmd_start(args) -> int:
+    # The preflight and validation subprocesses write straight to the terminal; without flushing,
+    # this function's own lines would appear after theirs, out of order.
+    import functools
+    global print
+    print = functools.partial(print, flush=True)  # noqa: A001
     if (pid := _worker_pid()) is not None:
         print(f"  A final run is already going (worker pid {pid}). `python -m new_src.final status` shows where.")
         return 1
@@ -287,8 +302,10 @@ def cmd_start(args) -> int:
         print("\n  Preflight failed; nothing was started. Fix the endpoint or --model and run start again.")
         return 1
 
+    done_before = sum(_recorded(p, args.model) for p in PHASES)
     CONFIG.write_text(json.dumps({"base_url": args.base_url, "model": args.model,
-                                  "started": time.strftime("%Y-%m-%d %H:%M:%S")}, indent=1))
+                                  "started": time.strftime("%Y-%m-%d %H:%M:%S"), "started_at": time.time(),
+                                  "done_before": done_before}, indent=1))
     print("  [3/3] starting the worker in the background ...")
     with LOG.open("a", encoding="utf-8") as log:
         log.write(f"\n==== start {time.strftime('%Y-%m-%d %H:%M:%S')}  {args.model} @ {args.base_url}\n")
@@ -318,7 +335,7 @@ def cmd_work(args) -> int:
             state["skipped"].append(phase.label)
             save()
             continue
-        if len(_rows(records_path(phase, model))) >= want:
+        if _recorded(phase, model) >= want:
             state["finished"].append(phase.label)
             save()
             continue
@@ -368,15 +385,22 @@ def cmd_status(args) -> int:
     total_done = total_want = 0
     for index, phase in enumerate(PHASES, 1):
         want = expected(phase)
-        got = min(len(_rows(records_path(phase, config["model"]))), want) if want else 0
+        got = _recorded(phase, config["model"]) if want else 0
         total_done += got
         total_want += want
         mark = "skip" if want == 0 else ("done" if got >= want else ("..  " if got else "    "))
         if args.all or mark in ("..  ",) or (state.get("current") or "").startswith(f"{index}/"):
             print(f"  {index:>2}. {mark} {phase.label:<52} {got:>4}/{want:<4}")
-    done_phases = sum(1 for p in PHASES if expected(p) and len(_rows(records_path(p, config['model']))) >= expected(p))
+    done_phases = sum(1 for p in PHASES if expected(p) and _recorded(p, config['model']) >= expected(p))
     print(f"\n  phases done: {done_phases}/{sum(1 for p in PHASES if expected(p))}"
           f"   episodes: {total_done}/{total_want} ({100 * total_done / max(total_want, 1):.1f}%)")
+    # Speed over this start only (a resumed run's earlier episodes would inflate it).
+    hours = (time.time() - config.get("started_at", time.time())) / 3600
+    new = total_done - config.get("done_before", 0)
+    if pid and hours > 0.05 and new > 0:
+        rate = new / hours
+        print(f"  speed: {rate:.0f} episodes/hour since this start; about {(total_want - total_done) / rate:.1f} h left "
+              "(Module C episodes are slower than B, so early estimates run optimistic)")
     if state.get("failed"):
         print(f"  phases that exited with an error (see {LOG}): {', '.join(state['failed'])}")
     if not args.all:
@@ -419,7 +443,8 @@ def cmd_results(args) -> int:
     fired: dict[tuple[str, str], set[str]] = {}
     for phase in PHASES:
         if phase.module == "null":
-            fired[(phase.runner, phase.suite)] = {r["pair_id"] for r in _rows(records_path(phase, model)) if r.get("performed")}
+            fired[(phase.runner, phase.suite)] = {r["pair_id"] for r in _rows(records_path(phase, model))
+                                                  if r["variant"] == "H-" and r.get("performed")}
 
     lines = [f"# Final run — {model}", "",
              "ASR over H- episodes of pairs whose null control stayed clean; TSR over H+. Each cell: "
