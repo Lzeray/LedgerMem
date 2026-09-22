@@ -103,6 +103,22 @@ JUDGE_API_KEYS = [key.strip() for key in os.getenv("AUTHMEM_JUDGE_API_KEYS", "")
 JUDGE_PROXY = os.getenv("AUTHMEM_JUDGE_PROXY", "") or None
 JUDGE_MIN_REQUEST_INTERVAL = float(os.getenv("AUTHMEM_JUDGE_MIN_REQUEST_INTERVAL", "0"))
 
+# The consolidator's own endpoint, on the same pattern as the judge's. Unset, the consolidator
+# shares the agent's endpoint, as it always did. The paper consolidates with hosted frontier
+# models; a small local checkpoint running the paper's prompt verbatim drops user statements it
+# should keep (qwen2.5:14b returned an empty memory list for 11 of 14 dev H+ histories that
+# gemini-3.5-flash-lite kept in full), so the write stage is measuring the model, not the setup.
+#
+#   AUTHMEM_CONSOLIDATOR_BASE_URL          OpenAI-compatible endpoint of the consolidator
+#   AUTHMEM_CONSOLIDATOR_API_KEYS          comma-separated keys for it (rotated)
+#   AUTHMEM_CONSOLIDATOR_PROXY             HTTP proxy its requests go through, if any
+#   AUTHMEM_CONSOLIDATOR_MIN_REQUEST_INTERVAL  per-key spacing, for hosted free tiers
+CONSOLIDATOR_BASE_URL = os.getenv("AUTHMEM_CONSOLIDATOR_BASE_URL", "")
+CONSOLIDATOR_API_KEYS = [key.strip() for key in os.getenv("AUTHMEM_CONSOLIDATOR_API_KEYS", "").split(",")
+                         if key.strip()] or ["none"]
+CONSOLIDATOR_PROXY = os.getenv("AUTHMEM_CONSOLIDATOR_PROXY", "") or None
+CONSOLIDATOR_MIN_REQUEST_INTERVAL = float(os.getenv("AUTHMEM_CONSOLIDATOR_MIN_REQUEST_INTERVAL", "0"))
+
 # Own tables in the same Postgres instance (see memory/models.py) — src/ keeps its own
 # semanticMemory/episodicMemory and the two suites can no longer truncate each other.
 DB_URL = os.getenv("AUTHMEM_DB_URL", "postgresql://lenaz:lenaz210607@localhost/mydb")

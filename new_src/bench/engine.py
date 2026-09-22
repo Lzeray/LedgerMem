@@ -50,6 +50,10 @@ from new_src.config import (
     JUDGE_BASE_URL,
     JUDGE_MIN_REQUEST_INTERVAL,
     JUDGE_PROXY,
+    CONSOLIDATOR_API_KEYS,
+    CONSOLIDATOR_BASE_URL,
+    CONSOLIDATOR_MIN_REQUEST_INTERVAL,
+    CONSOLIDATOR_PROXY,
     MIN_REQUEST_INTERVAL,
     REQUEST_TIMEOUT,
     TEMP_HIGH,
@@ -96,6 +100,8 @@ _POOL_LOCK = threading.Lock()
 _MAIN = _KeyPool(BASE_URL, API_KEYS, MIN_REQUEST_INTERVAL)
 _JUDGE = _KeyPool(JUDGE_BASE_URL, JUDGE_API_KEYS, JUDGE_MIN_REQUEST_INTERVAL, JUDGE_PROXY) \
     if JUDGE_BASE_URL else None
+_CONSOLIDATOR = _KeyPool(CONSOLIDATOR_BASE_URL, CONSOLIDATOR_API_KEYS, CONSOLIDATOR_MIN_REQUEST_INTERVAL,
+                         CONSOLIDATOR_PROXY) if CONSOLIDATOR_BASE_URL else None
 
 
 def _pool() -> list[OpenAI]:
@@ -119,9 +125,17 @@ def make_judge_client() -> OpenAI:
     return _JUDGE.build()[0] if _JUDGE is not None else make_client()
 
 
+def make_consolidator_client() -> OpenAI:
+    """The consolidator's client: its own endpoint when AUTHMEM_CONSOLIDATOR_BASE_URL is set,
+    otherwise the main one, exactly as before."""
+    return _CONSOLIDATOR.build()[0] if _CONSOLIDATOR is not None else make_client()
+
+
 def _pool_of(client: OpenAI) -> _KeyPool:
     if _JUDGE is not None and client in _JUDGE.build():
         return _JUDGE
+    if _CONSOLIDATOR is not None and client in _CONSOLIDATOR.build():
+        return _CONSOLIDATOR
     return _MAIN
 
 

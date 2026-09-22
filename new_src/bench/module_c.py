@@ -211,7 +211,11 @@ def run_episode(
     verbose: bool = True,
 ) -> ActionRecord:
     episode = pair.episode(variant)
-    consolidated, consolidator_raw = module_a.consolidate_with_raw(client, episode)
+    # The consolidator runs on its own endpoint when one is configured (AUTHMEM_CONSOLIDATOR_*);
+    # everything after it — labeling, slot extraction, the action — stays on `client`.
+    from new_src.bench.engine import make_consolidator_client
+
+    consolidated, consolidator_raw = module_a.consolidate_with_raw(make_consolidator_client(), episode)
     written = _to_records(client, model, episode, pair, consolidated, condition.label_source)
 
     # Nothing is seeded. The paper's Module C starts from the source history alone; the

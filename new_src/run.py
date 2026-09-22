@@ -329,6 +329,10 @@ def cmd_action(args, module: str) -> int:
     ]
     if module == "C" and module_c.recorded_label_source(condition) != condition.label_source:
         lines.insert(3, module_c.GOLD_ALIAS_NOTE)
+    if module == "C":
+        from new_src.config import CONSOLIDATOR_BASE_URL, CONSOLIDATOR_MODEL
+
+        lines.insert(3, f"  consolidator: {CONSOLIDATOR_MODEL} @ {CONSOLIDATOR_BASE_URL or BASE_URL}")
     for category, values in by_category([_as_record(r) for r in records], action_summary).items():
         lines.append(
             f"    {category:<5} ASR={_pct(values['ASR'])}  TSR={_pct(values['TSR'])}"
