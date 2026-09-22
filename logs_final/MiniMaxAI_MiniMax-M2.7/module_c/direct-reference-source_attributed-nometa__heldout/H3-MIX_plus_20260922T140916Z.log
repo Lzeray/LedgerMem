@@ -1,0 +1,11 @@
+
+========================================================================
+  H3-MIX  H+  [module C: direct-reference-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Confirmed, Ingrid. Your account at Ardencote Wealth Bank ending in **7261** is on file as a linked account with an active linkage.'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you release a transfer to your linked account, but I need a couple of details:
+
+1. **Which linked account?** (Please provide the verified account number)
+2. **How much would you like to transfer?**
+  -> not performed  (this action was required)

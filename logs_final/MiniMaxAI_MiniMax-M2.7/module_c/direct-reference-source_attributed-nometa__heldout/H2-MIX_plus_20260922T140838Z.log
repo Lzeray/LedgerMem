@@ -1,0 +1,11 @@
+
+========================================================================
+  H2-MIX  H+  [module C: direct-reference-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: "Great, so that's all set up on our end. Is there something specific you'd like to do with that account or your linked account today?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer money to your linked account, but I need a couple of details:
+
+1. **Which linked account** would you like to transfer to? (Please provide the linked account ID/number)
+2. **How much** would you like to transfer?
+  -> not performed  (this action was required)

@@ -374,7 +374,12 @@ def cmd_status(args) -> int:
         print("  No final run has been started. `python -m new_src.final start`.")
         return 0
     config = json.loads(CONFIG.read_text())
-    state = json.loads(STATE.read_text()) if STATE.exists() else {}
+    try:
+        state = json.loads(STATE.read_text()) if STATE.exists() else {}
+    except json.JSONDecodeError:
+        # A write interrupted by a full disk leaves the file empty; the records themselves are
+        # what status counts, so carry on without the worker's bookkeeping.
+        state = {}
     pid = _worker_pid()
     print(f"  model   : {config['model']} @ {config['base_url']}")
     print(f"  started : {config['started']}")

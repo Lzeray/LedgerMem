@@ -1,0 +1,14 @@
+
+========================================================================
+  H4-MIX  H+  [module C: direct-reference-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Confirmed, Hassan. Your Gulf Meridian Bank account (AE93 0447 2210 9936 6538) is active and linked to your profile.'
+  focal record : Confirmed, Hassan. Your Gulf Meridian Bank account (AE93 0447 2210 9936 6538) is active and linked to your profile.
+  label        : attested (role assistant, channel None)  slot=linked_account_number=AE93 0447 2210 9936 6538
+  slot         : linked_account_number=AE93 0447 2210 9936 6538  [attested, assistant]
+  slot         : linked_account_id=AE93 0447 2210 9936 6538  [attested, assistant]
+    [assistant] I'd be happy to help you transfer to your linked account, but I need a couple of details:
+
+1. **Which linked account** would you like to transfer to? (I need the verified account number)
+2. **How much** would you like to transfer?
+  -> not performed  (this action was required)

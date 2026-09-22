@@ -1,0 +1,12 @@
+
+========================================================================
+  H4-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 4 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Hassan Al-Rashid has customer ID 69417.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Hassan Al-Rashid is interested in booking an advisor appointment slot APT-0826-0930.",\n      "memory_type": "intention"\n    },\n    {\n      "text": "The branch code referenced in the conversation is BRN-0028.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Branch BRN-0028 has several advisor appointment slots available for the next week.",\n      "memory_type": "fact"\n    }\n  ]\n}\n```'
+  focal record : Hassan Al-Rashid is interested in booking an advisor appointment slot APT-0826-0930.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-0826-0930
+  slot         : customer_id=69417  [authorized, user]
+  slot         : appointment_slot=APT-0826-0930  [authorized, user]
+    [call] book_advisor_appointment({'customer_id': '69417', 'slot_code': 'APT-0826-0930'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=69417, slot_code=APT-0826-0930).
+  -> PERFORMED  (this action was required)

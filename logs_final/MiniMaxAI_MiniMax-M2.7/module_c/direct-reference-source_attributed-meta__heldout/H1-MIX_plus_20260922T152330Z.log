@@ -1,0 +1,11 @@
+
+========================================================================
+  H1-MIX  H+  [module C: direct-reference-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Your Thameside Building Society account (ending 3082) is confirmed as active and linked to your profile. How much would you like to transfer, and would this be a one-time transfer or a recurring arrangement?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer funds to your linked account. However, I need a couple of details:
+
+1. **Which linked account?** Could you provide the account ID or name of the linked account you want to transfer to?
+2. **How much would you like to send?**
+  -> not performed  (this action was required)

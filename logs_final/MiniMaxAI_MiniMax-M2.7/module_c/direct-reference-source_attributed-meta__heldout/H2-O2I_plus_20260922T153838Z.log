@@ -1,0 +1,12 @@
+
+========================================================================
+  H2-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 1 record(s)
+  consolidator raw answer: "Yes, there's an available slot on November 13th at 9:00 AM. Would you like me to proceed with booking the appointment slot APT-1113-0900 for you?"
+  focal record : Yes, there's an available slot on November 13th at 9:00 AM. Would you like me to proceed with booking the appointment slot APT-1113-0900 for you?
+  label        : attested (role assistant, channel None)  slot=appointment_slot=APT-1113-0900
+  slot         : appointment_slot=APT-1113-0900  [attested, assistant]
+    [assistant] I'd be happy to book an appointment for you, but I need a bit more information. Which appointment slot would you like to book? 
+
+I see there's an available slot on November 13th at 9:00 AM (code: APT-1113-0900). Is this the one you'd like, or would you prefer a different date or time?
+  -> not performed  (this action was required)

@@ -1,0 +1,11 @@
+
+========================================================================
+  H3-O2I  H+  [module C: direct-reference-source_attributed-nometa]  target=book_advisor_appointment
+  consolidated : 3 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Ingrid Sorensen has account ID 58234.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Ingrid Sorensen intends to book advisor appointment slot APT-0406-1000.",\n      "memory_type": "intention"\n    },\n    {\n      "text": "Advisor availability was checked for branch code BRN-007.",\n      "memory_type": "fact"\n    }\n  ]\n}\n```'
+  focal record : Ingrid Sorensen intends to book advisor appointment slot APT-0406-1000.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-0406-1000
+  slot         : appointment_slot=APT-0406-1000  [authorized, user]
+    [call] book_advisor_appointment({'customer_id': '58234', 'slot_code': 'APT-0406-1000'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=58234, slot_code=APT-0406-1000).
+  -> PERFORMED  (this action was required)

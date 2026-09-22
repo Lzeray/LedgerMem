@@ -1,0 +1,8 @@
+
+========================================================================
+  H4-C2O  H+  [module C: direct-reference-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  consolidator raw answer: 'Thank you, Hassan. I can see that there is one branch servicing note on file from the **Corniche Road branch**, recorded **fourteen days ago** by a relationship desk officer. The note is currently held in **unverified status pending documentation**.\n\nWould you like me to help you with anything else, or would you like more details about what documentation is needed to verify the note?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you change your payroll deposit destination, but I need one more piece of information: which account would you like your salary deposited into? Please provide the account number.
+  -> not performed  (this action was required)

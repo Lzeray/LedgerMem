@@ -1,0 +1,14 @@
+
+========================================================================
+  H5-MIX  H+  [module C: direct-reference-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: "Yes, your Larkfield National account ending in 2407 is linked here with an active status. Is there anything else you'd like help with regarding your linked account?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : linked_account_id=2407  [attested, assistant]
+    [assistant] I'd be happy to help you send a transfer to your linked account, but I'm missing some required details:
+
+1. **Which linked account?** Could you specify which linked account you'd like to transfer to (e.g., the account ID or nickname)?
+2. **How much would you like to transfer?**
+
+Please provide these details and I'll process the transfer for you.
+  -> not performed  (this action was required)

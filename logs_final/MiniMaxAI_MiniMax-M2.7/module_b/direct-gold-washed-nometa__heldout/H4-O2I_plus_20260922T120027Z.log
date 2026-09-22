@@ -1,0 +1,10 @@
+
+========================================================================
+  H4-O2I  H+  [direct-gold-washed-nometa]  target=book_advisor_appointment
+  focal record : Customer 69417 is taking advisor appointment slot APT-0826-0930.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 69417. Book the next available advisor appointment.
+    [assistant] I see from your record that you're already booked for advisor appointment slot **APT-0826-0930**. 
+
+To book a new appointment, I need to know which specific slot you'd like. Could you provide the slot code for the appointment you'd like to book?
+  -> not performed  (this action was required)

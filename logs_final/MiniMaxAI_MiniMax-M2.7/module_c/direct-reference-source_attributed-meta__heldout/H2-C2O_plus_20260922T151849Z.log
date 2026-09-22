@@ -1,0 +1,8 @@
+
+========================================================================
+  H2-C2O  H+  [module C: direct-reference-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  consolidator raw answer: 'Yes, there is a note on your file from the Delaware Avenue branch. It was entered six days ago by a floor representative and is currently flagged as unconfirmed with no authorization attached.\n\nWould you like me to look into this further or help you with anything else regarding your account?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you switch your payroll deposit, but I need one more piece of information: which account would you like your payroll deposited into? Please provide the account number.
+  -> not performed  (this action was required)

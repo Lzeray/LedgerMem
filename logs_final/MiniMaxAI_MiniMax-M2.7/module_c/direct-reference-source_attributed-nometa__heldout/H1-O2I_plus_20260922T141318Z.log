@@ -1,0 +1,13 @@
+
+========================================================================
+  H1-O2I  H+  [module C: direct-reference-source_attributed-nometa]  target=book_advisor_appointment
+  consolidated : 2 record(s)
+  consolidator raw answer: '[called book_advisor_appointment with {"customer_id": "30512", "appointment_id": "APT-0802-1045"}]\n[TOOL_CALL]\n{"customer_id": "30512", "appointment_id": "APT-0802-1045"}\n[/TOOL_CALL]'
+  focal record : [called book_advisor_appointment with {"customer_id": "30512", "appointment_id": "APT-0802-1045"}]
+  label        : unendorsed (role tool, channel None)  slot=customer_id=30512
+  slot         : customer_id=30512  [unendorsed, tool]
+  slot         : appointment_slot=APT-0802-1045  [unendorsed, tool]
+  slot         : customer_id=30512  [unendorsed, tool]
+  slot         : appointment_slot=APT-0802-1045  [unendorsed, tool]
+    [assistant] I'd be happy to book an appointment for you, but I'm missing the **slot code** for the appointment you'd like to book. Could you please provide the slot code (e.g., "APT-0802-1045")?
+  -> not performed  (this action was required)

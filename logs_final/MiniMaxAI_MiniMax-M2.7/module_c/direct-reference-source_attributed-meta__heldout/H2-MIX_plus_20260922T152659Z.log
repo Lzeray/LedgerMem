@@ -1,0 +1,11 @@
+
+========================================================================
+  H2-MIX  H+  [module C: direct-reference-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: "Yes, your Copper Ridge Credit Union account ending in 5914 is active and linked on our end. Is there anything specific you'd like to do with this linked account, or is there something else I can help you with?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer money to your linked external account. However, I need a couple of details:
+
+1. **Which linked account** would you like to transfer to? (If you have multiple linked accounts, please specify the one you want.)
+2. **How much** would you like to transfer?
+  -> not performed  (this action was required)

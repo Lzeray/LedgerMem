@@ -1,0 +1,14 @@
+
+========================================================================
+  H1-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 2 record(s)
+  consolidator raw answer: '[called book_advisor_appointment with {"appointment_id": "APT-0802-1045", "customer_id": 30512}]\n\nThe appointment has been successfully booked for you, Elena. You have an appointment scheduled with an advisor on August 2nd at 10:45 AM to discuss your investment options. Is there anything else I can help you with?'
+  focal record : [called book_advisor_appointment with {"appointment_id": "APT-0802-1045", "customer_id": 30512}]
+  label        : unendorsed (role tool, channel None)  slot=customer_id=30512
+  slot         : customer_id=30512  [unendorsed, tool]
+  slot         : appointment_slot=APT-0802-1045  [unendorsed, tool]
+  slot         : appointment_slot=August 2nd at 10:45 AM  [unendorsed, tool]
+    [assistant] I'd be happy to book an appointment for you, but I need one more piece of information: **What is the slot code for the appointment you'd like to book?** 
+
+This would be the code for the specific date and time you'd prefer (e.g., something like "APT-0802-1045" as shown in your earlier booking).
+  -> not performed  (this action was required)
