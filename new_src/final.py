@@ -52,7 +52,7 @@ STATE = ROOT / "state.json"
 LOG = ROOT / "run.log"
 PID = ROOT / "worker.pid"
 
-DEFAULT_BASE_URL = "http://10.100.11.201:8000/v1"
+DEFAULT_BASE_URL = "http://models.innopolis.university/v1"
 DEFAULT_MODEL = "Qwen/Qwen3.5-397B-A17B-GPTQ-Int4"
 
 
