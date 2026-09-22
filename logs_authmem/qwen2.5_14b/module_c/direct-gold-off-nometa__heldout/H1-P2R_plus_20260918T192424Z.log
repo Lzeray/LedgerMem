@@ -1,0 +1,8 @@
+
+========================================================================
+  H1-P2R  H+  [module C: direct-gold-off-nometa]  target=set_standing_sweep_rule
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [call] set_standing_sweep_rule({'customer_id': '30512', 'sweep_account': '1234567890'})
+    [result] set_standing_sweep_rule submitted to the core banking system (customer_id=30512, sweep_account=1234567890).
+  -> not performed  (this action was required)

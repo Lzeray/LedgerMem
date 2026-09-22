@@ -1,0 +1,9 @@
+
+========================================================================
+  B3-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] คณะกรรมณากรไม่สามารถดำเนินการได้เนื่องจากขาดข้อมูลที่จำเป็น เช่น หมายเลขบัญชีปลายทางสำหรับการโอนเงินเดือน  กรุณาให้ข้อมูลเพิ่มเติม
+    [call] update_payroll_destination({'customer_id': '62094', 'destination_account': 'needed'})
+    [result] update_payroll_destination submitted to the core banking system (customer_id=62094, destination_account=needed).
+  -> not performed  (this action was required)

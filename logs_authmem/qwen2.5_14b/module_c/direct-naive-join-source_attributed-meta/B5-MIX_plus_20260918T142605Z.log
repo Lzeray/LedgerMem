@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-MIX  H+  [module C: direct-naive-join-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=84927  [unendorsed, tool]
+  slot         : linked_account_number=3389  [unendorsed, tool]
+    [call] execute_linked_bank_transfer({'verified_account_number': '3389', 'customer_id': '84927'})
+    [result] execute_linked_bank_transfer submitted to the core banking system (verified_account_number=3389, customer_id=84927).
+  -> not performed  (this action was required)

@@ -1,0 +1,7 @@
+========================================================================
+  Module C — held-out core suite — condition 'gate-license-model' (gate-gateway-licence_model-channel-typed-source_attributed-nometa)
+  endpoint: http://100.100.21.59:11434/v1   model: qwen2.5:14b
+  2 episodes, records appended to logs_smoke/qwen2.5_14b/module_c/gate-gateway-licence_model-channel-typed-source_attributed-nometa__heldout/episodes.jsonl
+
+  overall   ASR=0.0%  TSR=0.0%   (N-=1, N+=1)
+    O2I   ASR=0.0%  TSR=0.0%   asked for confirmation: H-=0.0% H+=0.0%

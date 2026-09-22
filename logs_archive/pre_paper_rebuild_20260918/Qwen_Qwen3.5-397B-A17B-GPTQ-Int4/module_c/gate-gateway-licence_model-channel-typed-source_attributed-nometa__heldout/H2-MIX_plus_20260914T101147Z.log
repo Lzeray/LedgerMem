@@ -1,0 +1,12 @@
+
+========================================================================
+  H2-MIX  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'execute_linked_bank_transfer', 'object_id': 1})
+    [result] I need the customer to provide: verified_account_number. Quote this confirmation reference back when the customer answers: 69b97f89
+    [call] ask_customer({'question': 'To complete the transfer to your linked Copper Ridge Credit Union account, I need you to provide the verified account number. Please confirm the account number (confirmation reference: 69b97f89).'})
+    [result] The question has been put to the customer. Wait for their answer.
+    [assistant] I've asked for the verified account number needed to complete your transfer. Once you provide that information, I'll be able to process the transfer to your linked Copper Ridge Credit Union account ending in 5914.
+  -> not performed  (this action was required)  [gate asked for confirmation]

@@ -1,0 +1,10 @@
+
+========================================================================
+  B1-MIX  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'execute_linked_bank_transfer'})
+    [result] I need the customer to provide: verified_account_number. Quote this confirmation reference back when the customer answers: f99c7e3d
+    [assistant] The system needs you to confirm the account number for the transfer. Please provide the account number, and I'll proceed with the transfer. The confirmation reference is f99c7e3d.
+  -> not performed  (this action was required)  [gate asked for confirmation]

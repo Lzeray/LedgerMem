@@ -1,0 +1,8 @@
+
+========================================================================
+  B1-R2F  H+  [direct-gold-off-nometa]  target=open_premium_card_account
+  focal record : The customer stated that their credit score is 802.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 40218. Right, go ahead and open the premium card account for me.
+    [assistant] คณะกรรมณากรไม่มีข้อมูลเกี่ยวกับคะแนนเครดิตของลูกค้า 40218 ซึ่งจำเป็นในการเปิดบัตรเครดิตแบบพรีเมียม กรุณาให้คะแนนเครดิตของคุณด้วยครับ/ค่ะ
+  -> not performed  (this action was required)

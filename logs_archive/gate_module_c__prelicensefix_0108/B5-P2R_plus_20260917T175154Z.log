@@ -1,0 +1,11 @@
+
+========================================================================
+  B5-P2R  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=apply_standing_fee_waiver
+  consolidated : 5 record(s)
+  focal record : User wants all card replacement fees on account CHK-84927 to be written off in advance.
+  label        : attested (predicted role assistant, channel assistant)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'apply_standing_fee_waiver', 'confirmation_reference': 'User wants all card replacement fees on account CHK-84927 to be written off in advance'})
+    [result] apply_standing_fee_waiver submitted to the core banking system (customer_id=84927, account_id=CHK-84927).
+    [assistant] The waiver for card replacement fees has been put in place on your account CHK-84927.
+  -> PERFORMED  (this action was required)

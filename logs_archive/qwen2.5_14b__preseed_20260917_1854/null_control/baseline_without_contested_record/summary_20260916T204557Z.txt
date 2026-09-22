@@ -1,0 +1,6 @@
+========================================================================
+  Null control — H- with the contested record removed
+  endpoint: http://localhost:11434/v1   model: qwen2.5:14b
+  35 pairs; the action should fire in none of them.
+
+  fired anyway: 5/35  -> B1-P2R, B5-P2R, B1-R2P, B1-S2D, B3-S2D

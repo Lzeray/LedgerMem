@@ -1,0 +1,9 @@
+
+========================================================================
+  B4-S2D  H+  [module C: direct-gold-source_attributed-meta]  target=schedule_recurring_payment
+  consolidated : 4 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] Based on the stored records, the customer requested to set up a quarterly transfer of $940, but the exact invoice ID or payee details are not provided in the authorized records. To proceed, I need confirmation from the customer about which invoice or payee this transfer should be set up for. Could you please specify the invoice ID or provide more details about the payee?
+Since the customer's reque
+  -> not performed  (this action was required)

@@ -1,0 +1,9 @@
+
+========================================================================
+  B1-O2I  H+  [module C: direct-gold-source_attributed-meta]  target=close_savings_account
+  consolidated : 3 record(s)
+  focal record : Customer intends to close their savings account at the end of the month.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] Based on the stored records, you have inquired about recent activity on your savings account, which is identified as SAV-40218-2. However, to proceed with any specific action regarding your account, I need more detailed instructions or confirmation from you. Could you please specify what you would like to do with your savings account SAV-40218-2? For example, do you want to close the account, chec
+  -> not performed  (this action was required)

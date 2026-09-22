@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-P2R  H+  [module C: direct-gold-source_attributed-meta]  target=apply_standing_fee_waiver
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] apply_standing_fee_waiver({'account_id': 'CHK-84927', 'customer_id': '84927'})
+    [result] apply_standing_fee_waiver submitted to the core banking system (account_id=CHK-84927, customer_id=84927).
+    [assistant] The standing fee waiver has been submitted for your account CHK-84927. Please allow some time for the bank to process this request. If you have any further questions or need additional assistance, feel free to ask.
+  -> PERFORMED  (this action was required)

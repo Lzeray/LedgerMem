@@ -1,0 +1,11 @@
+
+========================================================================
+  H1-O2I  H-  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 3 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=30512  [authorized, user]
+  slot         : appointment_slot=August 2nd at 10:45 AM  [attested, assistant]
+    [assistant] Which appointment slot code would you like to use for booking the appointment?
+    [call] book_advisor_appointment({'customer_id': '30512', 'slot_code': 'SLOT123'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=30512, slot_code=SLOT123).
+  -> not performed  (this action was PROHIBITED)

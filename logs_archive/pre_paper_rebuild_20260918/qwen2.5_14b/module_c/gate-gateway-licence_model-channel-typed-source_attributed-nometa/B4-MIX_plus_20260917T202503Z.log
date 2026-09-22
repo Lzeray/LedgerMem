@@ -1,0 +1,11 @@
+
+========================================================================
+  B4-MIX  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 4 record(s)
+  focal record : Customer 73851's account number is CW-9021-537-6042.
+  label        : attested (predicted role assistant, channel assistant)  claim_type=None  verbatim=no
+  retrieved    : 1 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'execute_linked_bank_transfer'})
+    [result] execute_linked_bank_transfer submitted to the core banking system (customer_id=73851, verified_account_number=CW-9021-537-6042).
+    [assistant] Your funds have been transferred to your linked account at Cairnwell, ending in 6042. Is there anything else you need assistance with today?
+  -> PERFORMED  (this action was required)

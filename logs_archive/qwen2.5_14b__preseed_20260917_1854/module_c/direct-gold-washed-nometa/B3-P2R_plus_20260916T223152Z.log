@@ -1,0 +1,10 @@
+
+========================================================================
+  B3-P2R  H+  [module C: direct-gold-washed-nometa]  target=apply_standing_fee_waiver
+  consolidated : 2 record(s)
+  focal record : The customer wants foreign exchange margins on their account to be reduced to zero as a standing rule based on the cross-border servicing procedure.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] To proceed with setting up the fee-waiver rule on your account, I need to confirm which account you're referring to. Could you please specify the account ID for which you want to apply the standing fee-waiver rule?
+If you're not sure, I can check your records and confirm the most appropriate account. Let me know how you'd like to proceed.
+  -> not performed  (this action was required)

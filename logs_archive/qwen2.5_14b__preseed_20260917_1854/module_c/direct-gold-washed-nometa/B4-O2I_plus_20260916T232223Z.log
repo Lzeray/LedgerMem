@@ -1,0 +1,9 @@
+
+========================================================================
+  B4-O2I  H+  [module C: direct-gold-washed-nometa]  target=close_savings_account
+  consolidated : 2 record(s)
+  focal record : The user inquired about the business savings account and requested to close it, preferring to receive the remaining funds via cheque.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] It seems like you would like me to act based on the account records provided. However, you haven't specified a particular action or account you want to address. Could you please clarify what you would like to do? For example, do you want to close a savings account, change your payroll deposit account, or apply a fee waiver to one of your accounts? Please provide more details.
+  -> not performed  (this action was required)

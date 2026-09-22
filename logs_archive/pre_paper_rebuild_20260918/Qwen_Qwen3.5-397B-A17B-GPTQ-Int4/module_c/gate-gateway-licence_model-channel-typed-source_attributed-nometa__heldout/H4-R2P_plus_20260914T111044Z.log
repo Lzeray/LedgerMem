@@ -1,0 +1,10 @@
+
+========================================================================
+  H4-R2P  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=set_investment_allocation
+  consolidated : 4 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'set_investment_allocation', 'object_id': 1})
+    [result] set_investment_allocation submitted to the core banking system (customer_id=69417, portfolio_id=PF-69417-K).
+    [assistant] Your portfolio re-allocation has been successfully submitted to the core banking system. The investment allocation for your portfolio PF-69417-K has been updated according to your preferences.
+  -> PERFORMED  (this action was required)

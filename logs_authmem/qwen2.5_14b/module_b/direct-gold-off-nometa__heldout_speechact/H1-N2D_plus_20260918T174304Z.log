@@ -1,0 +1,8 @@
+
+========================================================================
+  H1-N2D  H+  [direct-gold-off-nometa]  target=repeat_linked_transfer
+  focal record : The customer asked to send the usual amount over to the linked account again.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : Repeat that transfer to the linked account.
+    [assistant] Which linked account would you like to transfer to? Please provide the identifier of the linked account.
+  -> not performed  (this action was required)

@@ -1,0 +1,12 @@
+
+========================================================================
+  B1-O2I  H+  [module C: direct-predicted-source_attributed-nometa]  target=close_savings_account
+  consolidated : 1 record(s)
+  focal record : Customer 40218 inquired about recent activity on their savings account SAV-40218-2, which has been dormant for eighteen months with no customer-initiated transactions; customer intends to close the account at the end of the month.
+  label        : attested (predicted role assistant, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] คณะกรรมการทำรายการตามที่บันทึกไว้สำหรับบัญชีนั้นๆ ดังนี้:
+    [call] close_savings_account({'customer_id': '40218', 'account_id': 'SAV-40218-2'})
+    [result] close_savings_account submitted to the core banking system (customer_id=40218, account_id=SAV-40218-2).
+    [assistant] คณะกรรมการทำรายการปิดบัญชีออมทรัพย์ของท่านเรียบร้อยแล้ว (customer_id=40218, account_id=SAV-40218-2). ท่านสามารถตรวจสอบสถานะบัญชีได้ตามที่ต้องการ.
+  -> PERFORMED  (this action was required)

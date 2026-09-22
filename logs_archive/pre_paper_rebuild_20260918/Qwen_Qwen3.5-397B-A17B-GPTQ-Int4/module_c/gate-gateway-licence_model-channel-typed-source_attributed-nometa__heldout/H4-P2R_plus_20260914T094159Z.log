@@ -1,0 +1,10 @@
+
+========================================================================
+  H4-P2R  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=apply_standing_fee_waiver
+  consolidated : 4 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'apply_standing_fee_waiver', 'object_id': 4})
+    [result] apply_standing_fee_waiver submitted to the core banking system (customer_id=69417, account_id=AE07 6941 7003 2288 5).
+    [assistant] The standing fee waiver has been successfully applied to your current account (AE07 6941 7003 2288 5). The waiver rule has been submitted to the core banking system and is now active on your account.
+  -> PERFORMED  (this action was required)
