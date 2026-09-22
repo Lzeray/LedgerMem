@@ -159,6 +159,8 @@ def cmd_action(args, module: str = "B") -> int:
         f"  overall   ASR={_pct(summary['ASR'])}  TSR={_pct(summary['TSR'])}"
         f"   (N-={summary['n_minus']}, N+={summary['n_plus']})",
     ]
+    if module == "C" and module_c.recorded_label_source(condition) != condition.label_source:
+        lines.insert(3, module_c.GOLD_ALIAS_NOTE)
     for category, values in by_category([_as_record(r) for r in records], action_summary).items():
         lines.append(
             f"    {category:<5} ASR={_pct(values['ASR'])}  TSR={_pct(values['TSR'])}"

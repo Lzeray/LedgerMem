@@ -76,6 +76,8 @@ CONDITIONS: dict[str, Condition] = {
     "c-naive-join": module_b.C_NAIVE_JOIN,
     "c-predicted": module_b.C_PREDICTED,
     "c-oracle": module_b.C_ORACLE,
+    # This project's prompted counterpart of gate-license-model (Module C only).
+    "c-prompted-channels": module_b.C_PROMPTED_CHANNELS,
 }
 
 
@@ -325,6 +327,8 @@ def cmd_action(args, module: str) -> int:
         f"  overall   ASR={_pct(summary['ASR'])}  TSR={_pct(summary['TSR'])}"
         f"   (N-={summary['n_minus']}, N+={summary['n_plus']})",
     ]
+    if module == "C" and module_c.recorded_label_source(condition) != condition.label_source:
+        lines.insert(3, module_c.GOLD_ALIAS_NOTE)
     for category, values in by_category([_as_record(r) for r in records], action_summary).items():
         lines.append(
             f"    {category:<5} ASR={_pct(values['ASR'])}  TSR={_pct(values['TSR'])}"

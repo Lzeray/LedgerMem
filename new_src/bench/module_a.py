@@ -114,7 +114,18 @@ def consolidate(client, episode, model: str = CONSOLIDATOR_MODEL) -> list[str]:
 def consolidate_items(client, episode, model: str = CONSOLIDATOR_MODEL) -> list[tuple[str, str]]:
     """(text, memory_type) per memory, in the consolidator's order. Module C's source predictor
     is given the type alongside the text, as in the paper's case wrapper."""
+    return consolidate_with_raw(client, episode, model)[0]
+
+
+def consolidate_with_raw(client, episode, model: str = CONSOLIDATOR_MODEL) -> tuple[list[tuple[str, str]], str]:
+    """`consolidate_items` plus the consolidator's raw answer, for the run log. Without the raw
+    answer an empty write set cannot be told apart from an unparsable one: the first is the
+    consolidator deciding nothing was worth keeping, the second is a formatting failure."""
     raw = complete_text(client, model, CONSOLIDATOR_SYSTEM, _transcript(episode), max_tokens=4000)
+    return _parse_consolidation(raw), raw
+
+
+def _parse_consolidation(raw: str) -> list[tuple[str, str]]:
     # The paper's shape is {"memories": [...]}. A bare array is still accepted, for the reason
     # below: a consolidator that ignored the shape but produced the memories omitted nothing.
     parsed_object = None

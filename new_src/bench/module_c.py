@@ -53,6 +53,24 @@ from new_src.bench.slots import extract_slots, object_ref_for
 from new_src.config import ACTION_MODEL, JUDGE_MODEL
 
 
+def recorded_label_source(condition) -> str:
+    """The label source as it really is in Module C, for run records and summaries.
+
+    Module C has no dataset gold: `gold` is accepted as an alias of `reference`, whose labels
+    come from the judge model running the paper's source-first prompt (see `_to_records`). A
+    record or summary that said `gold` would invite reading those numbers as ground truth. With
+    memory off no label is ever computed, so the name is left alone there.
+    """
+    if condition.label_source == "gold" and condition.rendering != "off":
+        return "reference"
+    return condition.label_source
+
+
+#: Printed in a Module C summary whenever the condition's name still says `gold`.
+GOLD_ALIAS_NOTE = ("  note: in Module C 'gold' means judge-model reference labels, not dataset gold; "
+                   "the directory name keeps 'gold' only for compatibility")
+
+
 def _source_roles(episode) -> list[str]:
     """Roles of the messages that can source a durable memory: every non-system message with
     content. The paper: "The system role supplies policy context and cannot be the direct
@@ -170,6 +188,20 @@ def _capture_history(client, model, engine, episode, condition) -> None:
     # The request being served is not its own warrant.
 
 
+def _captured_records(engine) -> list[MemoryRecord]:
+    """The records `_capture_history` wrote, in arrival order. They are the ones carrying
+    `verbatim`: consolidated text is a paraphrase and never does."""
+    from new_src.memory import all_facts
+
+    with Session(engine) as session:
+        return [
+            MemoryRecord(text=row.fact_text, label=row.label, role=row.role, rendering="source_attributed",
+                         slot_key=row.slot_key, slot_value=row.slot_value, verbatim=row.verbatim,
+                         channel=row.channel, record_id=row.id)
+            for row in all_facts(session) if row.verbatim
+        ]
+
+
 def run_episode(
     client,
     pair: AuthorityPair,
@@ -179,7 +211,7 @@ def run_episode(
     verbose: bool = True,
 ) -> ActionRecord:
     episode = pair.episode(variant)
-    consolidated = module_a.consolidate_items(client, episode)
+    consolidated, consolidator_raw = module_a.consolidate_with_raw(client, episode)
     written = _to_records(client, model, episode, pair, consolidated, condition.label_source)
 
     # Nothing is seeded. The paper's Module C starts from the source history alone; the
@@ -187,7 +219,10 @@ def run_episode(
     # them like anything else, and a dropped identity counts against the run.
     gate.reset_pending()
     engine, written = dms.install(episode, written)
-    if condition.check_license:
+    if condition.label_source == "channel-typed":
+        # Every channel-typed arm keeps the write-time evidence store, whether code enforces its
+        # labels (the gate) or the agent reads them (prompted): the defense is taken to have been
+        # running since the conversation began, labeling each message as it arrived.
         _capture_history(client, model, engine, episode, condition)
     if condition.policy == "gate":
         # The fixed argument the customer states in q reaches the gate's store as their own
@@ -199,6 +234,7 @@ def run_episode(
     if verbose:
         print(f"\n{'='*72}\n  {pair.pair_id}  {variant}  [module C: {condition.name}]  target={episode.target_tool}")
         print(f"  consolidated : {len(consolidated)} record(s)")
+        print(f"  consolidator raw answer: {(consolidator_raw or '').strip()!r}")
         if focal is None:
             print("  focal claim  : NOT RETAINED by consolidation (write-time omission)")
         else:
@@ -214,7 +250,7 @@ def run_episode(
 
     record = ActionRecord(
         module="C", pair_id=pair.pair_id, base_id=pair.base_id, category=pair.category.code,
-        variant=variant, policy=condition.policy, label_source=condition.label_source,
+        variant=variant, policy=condition.policy, label_source=recorded_label_source(condition),
         rendering="consolidated", show_metadata=condition.show_metadata,
         gate_surface=condition.gate_surface,
         action_permitted=episode.action_permitted, target_tool=episode.target_tool,
@@ -226,4 +262,9 @@ def run_episode(
     # The complete write set, in the consolidator's order (the paper's retrieval) — or nothing,
     # in the Memory-off arm ("frozen writes are not exposed").
     shown = [] if condition.rendering == "off" else written
+    if condition.rendering != "off" and condition.policy == "direct" and condition.label_source == "channel-typed":
+        # The prompted counterpart of the gate: the agent is shown the same memory the gate
+        # reads — the consolidated write set, then every utterance captured at write time with
+        # its channel label — and has to apply the labels itself.
+        shown = [*written, *_captured_records(engine)]
     return action_stage.perform(client, episode, engine, shown, condition, record, model, verbose)

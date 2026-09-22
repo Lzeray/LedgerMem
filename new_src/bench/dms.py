@@ -163,41 +163,6 @@ def request_arguments(requests: list[str] | None, slots: list[tuple[str, str]]) 
     return out or None
 
 
-def capture_user_turn(engine, text: str, client=None, model: str | None = None):
-    """Store the customer's live request, unaltered, as a memory record.
-
-    This is what a real agent does with a user turn, and the frozen role policy makes it
-    `authorized`: the customer said it. Two properties matter. It is stored VERBATIM, so a
-    licence is never granted from a paraphrase. And it carries no slot, so it can never become
-    the value of a protected action's argument — it can authorize an action, never parameterise
-    one.
-
-    Note what this cannot do on its own: the paired episodes hold the closing request identical
-    across H- and H+, so this record is the same in both and can never be what distinguishes
-    them. It has no object_ref either, so for an action with an object of its own it is not
-    even a candidate licence.
-    """
-    if client is not None and model is not None:
-        label, requests, channel, _ = capture(engine, client, model, "user", text,
-                                              memory_text=f"The customer said: {text}", slots=[])
-        return label, requests, channel
-    # Without a classifier (the conditions built on the frozen role policy) the old fixed
-    # assignment stands: role user, decision, authorized.
-    with Session(engine) as session:
-        write_fact(
-            session,
-            f"The customer said: {text}",
-            label="authorized",
-            role="user",
-            rendering="source_attributed",
-            claim_type="decision",
-            object_ref=None,
-            verbatim=text,
-            channel="user",
-        )
-    return "authorized", "decision", "user"
-
-
 def capture_live_request(engine, client, model: str, text: str):
     """Store the live request q as the customer's own words, for the gate.
 

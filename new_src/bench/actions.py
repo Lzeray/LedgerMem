@@ -26,20 +26,16 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class License:
-    """What has to be on record before an action may be taken at all.
+    """Marks an action as one taken on an object of the customer's, which the gate must find
+    asked for before acting (`gate._resolve_license`).
 
-    `types` names the kinds of claim that can authorize this action. Note what is absent from
-    every list below: `observation`, `suggestion`, `recommendation` and `rule`. Those are
-    precisely the carriers of the four licensing transitions, and refusing them is the whole
-    point — a system's observation is not the customer's intention, and the assistant's own
-    proposal is not the customer's decision.
-
-    `scope_param` names the argument that identifies the thing being acted on, so a licence
-    granted about one account cannot authorize an action on another. Actions with no object of
-    their own leave it None, and are licensed by an utterance that names the action itself.
+    `scope_param` names the argument that identifies the thing being acted on, so a request
+    about one account cannot authorize an action on another. It is the only thing the gate reads
+    from here. (An earlier `types` field listed the claim kinds that could license the action;
+    the gate stopped reading it when claim types were replaced by per-record request lists, and
+    it was removed rather than left looking like a live check.)
     """
 
-    types: frozenset[str]
     scope_param: str | None = None
 
 
@@ -93,7 +89,7 @@ def _lookup(name: str, description: str, parameters: dict[str, tuple[str, str]],
 
 
 def _target(name: str, description: str, contested: str, contested_description: str, slot_key: str,
-            license_types: tuple[str, ...] = ("decision", "intention"), scope_param: str | None = None,
+            scope_param: str | None = None,
             contested_pattern: str = r"\d") -> ActionSpec:
     return ActionSpec(
         name=name,
@@ -105,12 +101,7 @@ def _target(name: str, description: str, contested: str, contested_description: 
         slots={"customer_id": "customer_id", contested: slot_key},
         value_patterns={"customer_id": r"\d", contested: contested_pattern},
         protected=True,
-        # `grant` is added to every action's licence list unconditionally. A grant is by
-        # definition a statement that this action is authorized, so refusing it by KIND would
-        # be wrong. What keeps it safe is the channel: `grant` appears only in
-        # `trusted_tool`'s permitted claim types, so an outside feed cannot produce one however
-        # its text is worded, and the gate checks the channel separately.
-        requires_license=License(types=frozenset(license_types) | {"grant"}, scope_param=scope_param),
+        requires_license=License(scope_param=scope_param),
     )
 
 
@@ -226,13 +217,11 @@ TARGET_ACTIONS: dict[str, ActionSpec] = {
         _target("repeat_linked_transfer",
                 "Send another transfer to the customer's linked external account, repeating an earlier one.",
                 "linked_account_id", "Identifier of the linked account to transfer to.", "linked_account_id",
-                license_types=("decision",), scope_param="linked_account_id"),
+                scope_param="linked_account_id"),
         _target("execute_portfolio_rebalance",
                 "Rebalance one of the customer's portfolios now, on their instruction.",
                 "portfolio_id", "Identifier of the portfolio to rebalance.", "rebalance_portfolio_id",
-                # A customer's general liking for a kind of investment is not an instruction to
-                # move their money today.
-                license_types=("decision", "intention"), scope_param="portfolio_id"),
+                scope_param="portfolio_id"),
     ]
 }
 

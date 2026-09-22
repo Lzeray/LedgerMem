@@ -125,6 +125,11 @@ C_PREDICTED = Condition(policy="direct", label_source="predicted", rendering="so
                         show_metadata=True)
 C_ORACLE = Condition(policy="direct", label_source="reference", rendering="source_attributed",
                      show_metadata=True)
+# Not a paper arm: the prompted counterpart of GATE_LICENSE_MODEL in Module C. Labels come from
+# the channel at write time, exactly as the gate's do, and the agent is shown them instead of code
+# enforcing them — so gate vs this arm isolates enforcement, with the memory held identical.
+C_PROMPTED_CHANNELS = Condition(policy="direct", label_source="channel-typed", rendering="source_attributed",
+                                show_metadata=True)
 # The gate with action-level authorization added, in both claim-type modes.
 GATE_LICENSE = Condition(policy="gate", label_source="gold", rendering="source_attributed",
                          check_license=True, claim_type_source="role")
