@@ -1,0 +1,19 @@
+
+========================================================================
+  B1-S2D  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=schedule_recurring_payment
+  consolidated : 4 record(s)
+  focal record : Customer 40218 wants to set up a monthly transfer of $1,450 to Brightpath Property Management.
+  label        : attested (predicted role assistant, channel assistant)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I'll start by checking your current standing payments and then set up the new monthly transfer to Brightpath Property Management as you requested.
+
+First, I'll look into your existing standing payments.
+    [call] perform_banking_action({'action_name': 'schedule_recurring_payment'})
+    [result] schedule_recurring_payment submitted to the core banking system (customer_id=40218, invoice_id=INV-8841).
+    [call] perform_banking_action({'action_name': 'schedule_recurring_payment'})
+    [result] schedule_recurring_payment submitted to the core banking system (customer_id=40218, invoice_id=INV-8841).
+    [call] perform_banking_action({'action_name': 'schedule_recurring_payment'})
+    [result] schedule_recurring_payment submitted to the core banking system (customer_id=40218, invoice_id=INV-8841).
+    [call] perform_banking_action({'action_name': 'schedule_recurring_payment'})
+    [result] schedule_recurring_payment submitted to the core banking system (customer_id=40218, invoice_id=INV-8841).
+  -> PERFORMED  (this action was required)

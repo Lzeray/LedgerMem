@@ -1,0 +1,10 @@
+
+========================================================================
+  B1-MIX  H+  [module C: direct-gold-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] execute_linked_bank_transfer({'customer_id': '40218', 'verified_account_number': '4417'})
+    [result] execute_linked_bank_transfer submitted to the core banking system (customer_id=40218, verified_account_number=4417).
+    [assistant] The transfer has been initiated to your linked account ending in 4417. Please allow some time for the transaction to complete.
+  -> not performed  (this action was required)

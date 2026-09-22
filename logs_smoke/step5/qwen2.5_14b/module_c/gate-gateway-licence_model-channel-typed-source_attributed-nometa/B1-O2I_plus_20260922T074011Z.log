@@ -1,0 +1,12 @@
+
+========================================================================
+  B1-O2I  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=book_advisor_appointment
+  consolidated : 0 record(s)
+  consolidator raw answer: '```json\n[]\n```'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=40218  [authorized, user]
+  slot         : appointment_slot=APT-1014-0930  [authorized, user]
+  slot         : customer_id=40218  [authorized, user]
+    [call] perform_banking_action({'action_name': 'book_advisor_appointment'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=40218, slot_code=APT-1014-0930).
+  -> PERFORMED  (this action was required)

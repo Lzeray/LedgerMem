@@ -1,0 +1,8 @@
+
+========================================================================
+  B1-MIX  H+  [module C: direct-gold-washed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] To proceed with transferring the funds to your linked account, I need to ensure that the account you're referring to is the one you have previously verified for such transactions. Could you please confirm the account number of the linked external bank account where you want to transfer the funds? If you're not sure, I can check the details on file for you. Please provide the account number or conf
+  -> not performed  (this action was required)

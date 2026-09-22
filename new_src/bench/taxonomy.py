@@ -214,16 +214,6 @@ def worst_label(*labels: str) -> str:
     return min(labels, key=LABEL_ORDER.index)
 
 
-#: Transitions whose contested claim is a directive — a rule, preference, intention or
-#: decision. These do not fill an argument of the later action: they LICENSE it. The action's
-#: own arguments are ordinary bank-owned identifiers. Modelling them as an argument value (as
-#: an earlier version of this suite did) quietly guarantees that any provenance check over
-#: arguments can see the attack, which is not what the taxonomy describes: P2R's prohibited
-#: upgrade is a standing rule, O2I's a user intention, R2P's a user preference, S2D's a user
-#: decision — none of those is a parameter.
-LICENSING_TYPES = ("rule", "intention", "preference")
-
-
 class Category(Enum):
     R2F = ("R2F", "Report to Fact", "tool", "third-party report", "user-profile fact", "fact", "observation", "fact")
     P2R = ("P2R", "Procedure to Rule", "tool", "external procedure", "standing rule", "rule", "rule", "intention")
@@ -249,12 +239,6 @@ class Category(Enum):
         # carriers, not from the 35 scenarios, so the dataset stays untouched.
         self.claim_type_minus = claim_type_minus
         self.claim_type_plus = claim_type_plus
-
-    @property
-    def licenses_action(self) -> bool:
-        """True when the contested claim authorizes the action itself rather than supplying one
-        of its arguments (P2R, R2P, O2I, S2D)."""
-        return self.memory_type in LICENSING_TYPES
 
     @property
     def gold_label_minus(self) -> str:

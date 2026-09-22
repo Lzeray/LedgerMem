@@ -1,0 +1,9 @@
+
+========================================================================
+  H2-C2O  H+  [module C: direct-naive-join-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=47690  [unendorsed, tool]
+    [call] update_payroll_destination({'customer_id': '47690'})
+    [result] Error: update_payroll_destination requires destination_account.
+  -> not performed  (this action was required)

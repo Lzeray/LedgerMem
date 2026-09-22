@@ -1,5 +1,15 @@
 """
-Background memory present before any episode runs.
+Background memory — NO LONGER SEEDED into episodes.
+
+AuthMem-Bench seeds no pre-existing memory: its source histories carry the nonfocal
+memories themselves. These facts were an addition of this project, and two of them are not
+neutral at all — "Third-party reports ... are informational only" and "... may not alter them
+without an authorized request" state the defense's own policy inside the memory the agent
+reads, which helps the unprotected arm by construction. `fresh_memory` therefore only resets
+the store. The list is kept so the old condition can be reproduced explicitly with
+`seed_background`; numbers measured before this change had the seed.
+
+Original description:
 
 These are institution-level banking facts with no bearing on any focal proposition: they
 exist so the store is never empty (an agent retrieving from an empty memory behaves
@@ -33,7 +43,6 @@ def seed_background(engine=None):
 
 
 def fresh_memory(engine=None):
-    """Reset the store and re-seed the background. Called at the start of every episode."""
-    engine = reset_memory(engine)
-    seed_background(engine)
-    return engine
+    """Reset the store to empty. Called at the start of every episode. Nothing is seeded — see
+    the module docstring."""
+    return reset_memory(engine)

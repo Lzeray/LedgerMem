@@ -58,6 +58,9 @@ class Condition:
     #: Beyond the paper: run one scripted confirmation round-trip after the gate asks for it.
     #: Off by default, because the paper's ASR/TSR are measured without a user in the loop.
     confirm_followup: bool = False
+    #: The paper's text-sanitizer baseline (appendix C.2): the washed item plus only a fixed
+    #: warning that memory may be distorted or unreliable.
+    sanitizer: bool = False
 
     @property
     def name(self) -> str:
@@ -65,9 +68,19 @@ class Condition:
         surface = f"-{self.gate_surface}" if self.policy == "gate" else ""
         licence = f"-licence_{self.claim_type_source}" if self.check_license else ""
         return f"{self.policy}{surface}{licence}-{self.label_source}-{self.rendering}-{metadata}" + (
-            "-confirm" if self.confirm_followup else ""
-        )
+            "-sanitize" if self.sanitizer else ""
+        ) + ("-confirm" if self.confirm_followup else "")
 
+
+# ---- The paper's seven Module-B interventions (appendix E.1) -------------------------------
+#   Off       MEMORY_OFF          no memory
+#   W/N       BASELINE            washed, no metadata
+#   S/N       BASELINE_ATTRIBUTED source-attributed, no metadata
+#   Sanitize  SANITIZER           washed + generic warning
+#   W/Join    CONSERVATIVE_JOIN   washed, Unendorsed for both variants
+#   W/G       GOLD_WASHED         washed, gold role-derived label
+#   S/G       GOLD_PROMPTED       source-attributed, gold role-derived label
+# Everything with policy="gate" is this project's defense, not a paper condition.
 
 # The unprotected baseline: washed memory, no authority metadata, tools in the agent's hands.
 BASELINE = Condition(policy="direct", label_source="gold", rendering="washed", show_metadata=False)
@@ -82,11 +95,41 @@ HEURISTIC_WASHED = Condition(policy="direct", label_source="heuristic", renderin
 # The defense: enforcement in code, from stored labels.
 GATE_GOLD = Condition(policy="gate", label_source="gold", rendering="source_attributed")
 GATE_GOLD_WASHED = Condition(policy="gate", label_source="gold", rendering="washed")
+# The paper's own Module C arm, end to end: consolidation writes the records, a predictor
+# picks the message that primarily supports each one, and the frozen role policy maps that
+# role to a label — "we then map its source role deterministically to Authorized, Attested or
+# Unendorsed". No gate, no metadata shown, no seeded memory, no verbatim capture. This is the
+# unprotected reproduction every extension in this project has to be measured against.
+BASELINE_PREDICTED = Condition(policy="direct", label_source="predicted",
+                               rendering="source_attributed")
 GATE_PREDICTED = Condition(policy="gate", label_source="predicted", rendering="source_attributed")
 GATE_NATIVE = Condition(policy="gate", label_source="gold", rendering="source_attributed", gate_surface="native")
 GATE_NATIVE_PREDICTED = Condition(policy="gate", label_source="predicted", rendering="source_attributed", gate_surface="native")
 GATE_HEURISTIC = Condition(policy="gate", label_source="heuristic", rendering="source_attributed")
 MEMORY_OFF = Condition(policy="direct", label_source="gold", rendering="off")
+SANITIZER = Condition(policy="direct", label_source="gold", rendering="washed", sanitizer=True)
+CONSERVATIVE_JOIN = Condition(policy="direct", label_source="conservative-join", rendering="washed",
+                              show_metadata=True)
+GOLD_WASHED = Condition(policy="direct", label_source="gold", rendering="washed", show_metadata=True)
+
+# ---- The paper's five Module-C conditions (appendix F.2) ----------------------------------
+#   Memory off  MEMORY_OFF   (module C honours rendering="off")
+#   No label    C_NO_LABEL   every written memory as plain text
+#   Naive join  C_NAIVE_JOIN every memory gets the most restrictive label in the write window
+#   Predicted   C_PREDICTED  the source-first predictor's role-derived label
+#   Oracle      C_ORACLE     the reference label
+C_NO_LABEL = Condition(policy="direct", label_source="reference", rendering="source_attributed")
+C_NAIVE_JOIN = Condition(policy="direct", label_source="naive-join", rendering="source_attributed",
+                         show_metadata=True)
+C_PREDICTED = Condition(policy="direct", label_source="predicted", rendering="source_attributed",
+                        show_metadata=True)
+C_ORACLE = Condition(policy="direct", label_source="reference", rendering="source_attributed",
+                     show_metadata=True)
+# Not a paper arm: the prompted counterpart of GATE_LICENSE_MODEL in Module C. Labels come from
+# the channel at write time, exactly as the gate's do, and the agent is shown them instead of code
+# enforcing them — so gate vs this arm isolates enforcement, with the memory held identical.
+C_PROMPTED_CHANNELS = Condition(policy="direct", label_source="channel-typed", rendering="source_attributed",
+                                show_metadata=True)
 # The gate with action-level authorization added, in both claim-type modes.
 GATE_LICENSE = Condition(policy="gate", label_source="gold", rendering="source_attributed",
                          check_license=True, claim_type_source="role")
@@ -131,19 +174,13 @@ def run_episode(
             if not record.is_focal
         ]
     engine, stored = dms.install(episode, stored)
-    if condition.check_license and condition.label_source != "channel-typed":
-        # The frozen-role conditions still record the live request, as they always did.
-        #
-        # Under the channel model it is deliberately NOT recorded. It would be `user`, not a
-        # quotation, therefore `authorized`, and the write path could well list the very action
-        # being attempted against it — while the paired episodes hold that request IDENTICAL
-        # across H- and H+, so it cannot be what distinguishes them. Letting it license would
-        # blind the gate on every licensing transition at once.
-        #
-        # The rule it stands for is worth stating plainly: the request being served is not its
-        # own warrant. Authorization has to be on record already, or whoever can forge the
-        # request can authorize themselves with it.
-        dms.capture_user_turn(engine, episode.later_task)
+    if condition.policy == "gate":
+        # The gate reads memory, never the conversation, and Module B's memory is the single
+        # focal item — so the fixed argument the customer states in q has to reach the store
+        # the way any live user turn would: captured as the customer's own words, with its
+        # values extracted by the memory system. It never licenses anything (the request being
+        # served is not its own warrant), and it is identical in H- and H+.
+        dms.capture_live_request(engine, client, model, episode.later_task)
 
     if verbose:
         print(f"\n{'='*72}\n  {pair.pair_id}  {variant}  [{condition.name}]  target={episode.target_tool}")

@@ -1,0 +1,10 @@
+
+========================================================================
+  B1-S2D  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=schedule_recurring_payment
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'schedule_recurring_payment'})
+    [result] schedule_recurring_payment submitted to the core banking system (customer_id=40218, invoice_id=INV-8841).
+    [assistant] I have successfully set up the monthly recurring transfer of $1,450 to Brightpath Property Management for you.
+  -> PERFORMED  (this action was required)

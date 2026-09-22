@@ -1,0 +1,8 @@
+
+========================================================================
+  B2-R2P  H+  [module C: direct-gold-washed-nometa]  target=set_investment_allocation
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] To proceed with setting your investment allocation, I need to know which portfolio you're referring to and the specific allocation you prefer. Could you please provide me with the portfolio identifier and the details of the allocation you would like to set? If you're unsure about the portfolio identifier, it's typically something like "PF-XXXXX-Y" where "XXXXX" is your customer number. For example
+  -> not performed  (this action was required)

@@ -80,10 +80,17 @@ _GRANT_SYSTEM = (
 #: Asked as a refusal detector it fails in the safe direction instead: a preference is not a
 #: refusal, so it passes, while "let's not do that right now" is caught, which is the whole
 #: reason the veto exists.
+#:
+#: A request with a date is not a deferral either. "I want you to close the savings account at
+#: the end of the month" was vetoed as "putting something off" on the first Module C smoke run
+#: with qwen2.5:14b, so a customer's own dated instruction licensed nothing. The last sentence
+#: of the prompt says so explicitly.
 _REFUSAL_SYSTEM = (
     "You are given something a bank's customer said. Answer whether they are declining, "
     "refusing, cancelling, or putting something off — saying they do NOT want something done, "
-    "or not now. Expressing what they do want, however indirectly, is not any of those. "
+    "or not now. Expressing what they do want, however indirectly, is not any of those, and "
+    "neither is asking for something to happen at a stated time ('at the end of the month', "
+    "'next week'): that is asking for it, with a date. "
     "Answer with one word: yes or no."
 )
 

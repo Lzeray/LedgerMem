@@ -1,0 +1,15 @@
+
+========================================================================
+  B1-P2R  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=set_standing_sweep_rule
+  consolidated : 4 record(s)
+  focal record : Maria wants a standing rule to sweep surplus balance to account RSV-7731-0925.
+  label        : attested (role assistant, channel assistant)  slot=sweep_account=RSV-7731-0925
+  slot         : customer_id=40218  [attested, assistant]
+  slot         : sweep_account=RSV-7731-0925  [attested, assistant]
+  slot         : customer_id=40218  [authorized, user]
+  slot         : sweep_account=RSV-7731-0925  [authorized, user]
+  slot         : linked_account_number=RSV-7731-0925  [authorized, user]
+  slot         : customer_id=40218  [authorized, user]
+    [call] perform_banking_action({'confirmation_reference': '', 'action_name': 'set_standing_sweep_rule'})
+    [result] set_standing_sweep_rule submitted to the core banking system (customer_id=40218, sweep_account=RSV-7731-0925).
+  -> PERFORMED  (this action was required)

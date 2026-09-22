@@ -41,7 +41,7 @@ LABEL_NOTE = {
 
 
 def install(episode: Episode, records: list[MemoryRecord]):
-    """Reset the store, re-seed background facts, and write this episode's records.
+    """Reset the store to empty (nothing is seeded) and write this episode's records.
 
     Returns `(engine, stored)` where `stored` is the same records with `record_id` filled in.
     The agent is shown those numbers and cites one when it has to say which account an
@@ -65,6 +65,7 @@ def install(episode: Episode, records: list[MemoryRecord]):
                 verbatim=record.verbatim,
                 channel=record.channel,
                 requests=record.requests,
+                arguments=record.arguments,
             )
             stored.append(replace(record, record_id=row_id))
         for message in episode.messages:
@@ -74,103 +75,118 @@ def install(episode: Episode, records: list[MemoryRecord]):
 
 
 def capture(engine, client, model: str, role: str, said: str, *, tool_name: str | None = None,
-            memory_text: str | None = None, object_value: str | None = None,
-            slot_key: str | None = None, slot_value: str | None = None,
-            rendering: str = "source_attributed"):
-    """Write one memory record at the moment a message occurs, filling every field that can be
-    filled without a model.
+            memory_text: str | None = None, rendering: str = "source_attributed",
+            slots: list[tuple[str, str]] | None = None):
+    """Write the memory record(s) for one message at the moment it occurs.
 
-    Only ONE field here comes from a model: the claim type, classified from `said` — the words
-    as they were actually said. Everything else is copied or looked up:
+    Nothing about the benchmark's answer reaches this function. It is given what was said, who
+    said it and which tool produced it — what any deployed memory system sees — and decides the
+    rest itself:
 
-      verbatim    the literal text. Copying costs nothing and needs no judgement, and it is
-                  what makes the record auditable later; a record that kept only a paraphrase
-                  has destroyed the evidence any authorization would rest on.
+      verbatim    the literal text, copied.
       channel     the role, plus for a tool result the trust declared for that tool in the
-                  action registry. Never inferred from what the result says.
-      label       `taxonomy.label_for(channel, claim_type)` — a table, not a model output.
-      object_ref  set when the words name the object being acted on, and not otherwise. This
-                  is deliberately a property of the text: an utterance that only points at
-                  something ("go ahead with that") does not identify what it authorizes.
-      slot_*      supplied by the caller from the dataset, never extracted by a model.
+                  action registry. Structural; never inferred from what the result says.
+      label       from the channel, through `classifier.decide`. A model is asked at most one
+                  question per channel and never names a label.
+      requests    which protected actions the words ask for (`classifier.decide`).
+      slot_*      which operative values the words state, extracted by the model and bounded
+                  by `slots.extract_slots` (closed key set, value must occur in the text).
+      object_ref  the object the words name, derived from the extracted scope slots.
+      arguments   for each requested action, the values these same words gave its parameters
+                  (`request_arguments`). Nothing from any other record.
+
+    A record holds one slot, so a message stating several values is written as one row per
+    value, all sharing the same verbatim text, channel, label and request list. A message
+    stating none is written once, without a slot.
+
+    `slots` overrides extraction only when the caller can say, without any knowledge of the
+    dataset, that the text states nothing — the live request, which by design never
+    parameterises an action. Passing the dataset's own values here is exactly the oracle this
+    function exists to exclude.
     """
     from new_src.bench.actions import tool_trust
     from new_src.bench.classifier import action_catalogue, decide
+    from new_src.bench.slots import extract_slots, object_ref_for
     from new_src.bench.taxonomy import channel_for
 
     channel = channel_for(role, tool_trust(tool_name) if role == "tool" else None)
     decision = decide(client, model, channel, said, action_catalogue())
     label = decision.label
+    if slots is None:
+        slots = extract_slots(client, model, said)
+    object_ref = object_ref_for(slots)
+    arguments = request_arguments(decision.requests, slots)
     with Session(engine) as session:
-        write_fact(
-            session,
-            memory_text or said,
-            label=label,
-            role=role,
-            rendering=rendering,
-            slot_key=slot_key,
-            slot_value=slot_value,
-            claim_type=None,
-            requests=decision.requests,
-            object_ref=object_value if (object_value and object_value in said) else None,
-            verbatim=said,
-            channel=channel,
-        )
-    return label, decision.requests, channel
+        for slot_key, slot_value in (slots or [(None, None)]):
+            write_fact(
+                session,
+                memory_text or said,
+                label=label,
+                role=role,
+                rendering=rendering,
+                slot_key=slot_key,
+                slot_value=slot_value,
+                claim_type=None,
+                requests=decision.requests,
+                object_ref=object_ref,
+                verbatim=said,
+                channel=channel,
+                arguments=arguments,
+            )
+    return label, decision.requests, channel, slots
 
 
-def capture_user_turn(engine, text: str, client=None, model: str | None = None,
-                      object_value: str | None = None):
-    """Store the customer's live request, unaltered, as a memory record.
+def request_arguments(requests: list[str] | None, slots: list[tuple[str, str]]) -> dict | None:
+    """{action: {parameter: value}} for each requested action, from this utterance's own slots.
 
-    This is what a real agent does with a user turn, and the frozen role policy makes it
-    `authorized`: the customer said it. Two properties matter. It is stored VERBATIM, so a
-    licence is never granted from a paraphrase. And it carries no slot, so it can never become
-    the value of a protected action's argument — it can authorize an action, never parameterise
-    one.
-
-    Note what this cannot do on its own: the paired episodes hold the closing request identical
-    across H- and H+, so this record is the same in both and can never be what distinguishes
-    them. It has no object_ref either, so for an action with an object of its own it is not
-    even a candidate licence.
+    A parameter is filled only when the utterance states exactly one value for its slot. Two
+    different values for the same slot in one sentence ("move it from A to B") identify neither,
+    so the parameter is left unnamed and the gate resolves it from memory — where the same two
+    values will make it ask which one.
     """
-    if client is not None and model is not None:
-        return capture(engine, client, model, "user", text,
-                       memory_text=f"The customer said: {text}", object_value=object_value)
-    # Without a classifier (the conditions built on the frozen role policy) the old fixed
-    # assignment stands: role user, decision, authorized.
+    from new_src.bench.actions import TARGET_ACTIONS
+
+    if not requests:
+        return None
+    by_key: dict[str, set[str]] = {}
+    for key, value in slots:
+        by_key.setdefault(key, set()).add(value)
+    out = {}
+    for action in requests:
+        spec = TARGET_ACTIONS.get(action)
+        if spec is None:
+            continue
+        named = {param: next(iter(by_key[key])) for param, key in spec.slots.items()
+                 if len(by_key.get(key, ())) == 1}
+        if named:
+            out[action] = named
+    return out or None
+
+
+def capture_live_request(engine, client, model: str, text: str):
+    """Store the live request q as the customer's own words, for the gate.
+
+    Structural throughout: it is the current user turn, so its channel is `user` and its label
+    `authorized` by the frozen role policy; its values are extracted by the memory system like
+    any other message's. It requests nothing — the request being served is not its own warrant
+    — so it can supply a fixed argument the customer stated (their customer number) but never
+    license an action or bind a contested value.
+    """
+    from new_src.bench.slots import extract_slots
+
+    slots = extract_slots(client, model, text)
     with Session(engine) as session:
-        write_fact(
-            session,
-            f"The customer said: {text}",
-            label="authorized",
-            role="user",
-            rendering="source_attributed",
-            claim_type="decision",
-            object_ref=None,
-            verbatim=text,
-            channel="user",
-        )
-    return "authorized", "decision", "user"
-
-
-def memory_block(records: list[MemoryRecord], show_metadata: bool) -> str:
-    """The [MEMORY] section injected into the action agent's context."""
-    lines = []
-    for position, record in enumerate(records, 1):
-        # A position in this list, NOT the database row id. Row ids here run in the tens of
-        # thousands and grow, which puts them in the same range as the account and customer
-        # numbers written inside the records — and the first live test showed exactly the
-        # predictable failure: asked for a record number, the agent answered 40218, the
-        # CUSTOMER's number, which it had read out of a record's text. Worse than losing the
-        # action, a row id that large eventually exists, so a plausible-looking number picked
-        # out of prose would one day address a real and arbitrary record.
-        #
-        # Small ordinals cannot be confused with anything in the data. The harness translates
-        # back to the row id before the gate sees it.
-        marker = f"[{position}] "
-        if show_metadata:
-            lines.append(f"{marker}{record.text}  [authority: {LABEL_NOTE[record.label]}]")
-        else:
-            lines.append(f"{marker}{record.text}")
-    return "\n".join(lines)
+        for slot_key, slot_value in (slots or [(None, None)]):
+            write_fact(
+                session,
+                f"The customer said: {text}",
+                label="authorized",
+                role="user",
+                rendering="source_attributed",
+                slot_key=slot_key,
+                slot_value=slot_value,
+                verbatim=text,
+                channel="user",
+                requests=[],
+            )
+    return slots

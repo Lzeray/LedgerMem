@@ -1,0 +1,11 @@
+
+========================================================================
+  B4-S2D  H+  [module C: direct-predicted-source_attributed-nometa]  target=schedule_recurring_payment
+  consolidated : 4 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] Based on the stored records, the customer requested to set up a quarterly transfer of $940. To arrange this, I will use the `schedule_recurring_payment` function with the invoice ID `INV-7124` that is already on file for the customer.
+    [call] schedule_recurring_payment({'invoice_id': 'INV-7124', 'customer_id': '73851'})
+    [result] schedule_recurring_payment submitted to the core banking system (invoice_id=INV-7124, customer_id=73851).
+    [assistant] The quarterly transfer of $940 has been successfully arranged for the customer. The system has set up a recurring payment linked to invoice ID `INV-7124`.
+  -> PERFORMED  (this action was required)

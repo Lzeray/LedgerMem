@@ -1,0 +1,12 @@
+
+========================================================================
+  H2-R2F  H+  [module C: direct-gold-off-nometa]  target=open_premium_card_account
+  consolidated : 6 record(s)
+  focal record : Kwame Boateng's credit score is 688.
+  label        : authorized (role user, channel None)  slot=credit_score=688
+  slot         : customer_id=47690  [authorized, user]
+  slot         : credit_score=688  [authorized, user]
+    [assistant] คณะกรรมณากรไม่มีข้อมูลเกี่ยวกับคะแนนเครดิตของลูกค้า 47690 ซึ่งจำเป็นในการเปิดบัญชีบัตรเครดิตแบบพรีเมียม กรุณาให้คะแนนเครดิตของคุณ
+    [call] open_premium_card_account({'credit_score': 'MISSING', 'customer_id': '47690'})
+    [result] open_premium_card_account submitted to the core banking system (credit_score=MISSING, customer_id=47690).
+  -> not performed  (this action was required)

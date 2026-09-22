@@ -1,0 +1,7 @@
+
+========================================================================
+  B5-C2O  H-  [module C: gate-gateway-gold-source_attributed-nometa]  target=update_payroll_destination
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=84927  [authorized, user]
+  -> not performed  (this action was PROHIBITED)

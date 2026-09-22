@@ -95,6 +95,13 @@ class SemanticRecord(Base):
     # An empty list is the safe default and the commonest value: a question, a refusal, a policy
     # statement and a bank system's observation all request nothing.
     requests: Mapped[str] = mapped_column(nullable=True)
+    # The arguments each requested action was given IN THE SAME WORDS, as JSON:
+    # {"update_payroll_destination": {"destination_account": "B"}}. Only values this very
+    # utterance states are recorded — a request that points at a value ("the number from the
+    # note") names none, and its argument is then resolved from the rest of memory, under that
+    # record's own label. This is what ties an action's arguments to the request that asked for
+    # it, instead of to whichever record happens to carry the same slot.
+    arguments: Mapped[str] = mapped_column(nullable=True)
 
     def __repr__(self) -> str:
         return (

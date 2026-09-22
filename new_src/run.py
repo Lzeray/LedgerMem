@@ -53,6 +53,7 @@ from new_src.data.suite import SUITE
 CONDITIONS: dict[str, Condition] = {
     "baseline": module_b.BASELINE,
     "baseline-attributed": module_b.BASELINE_ATTRIBUTED,
+    "baseline-predicted": module_b.BASELINE_PREDICTED,
     "gold-prompted": module_b.GOLD_PROMPTED,
     "heuristic-prompted": module_b.HEURISTIC_PROMPTED,
     "heuristic-washed": module_b.HEURISTIC_WASHED,
@@ -66,6 +67,17 @@ CONDITIONS: dict[str, Condition] = {
     "gate-native-predicted": module_b.GATE_NATIVE_PREDICTED,
     "gate-heuristic": module_b.GATE_HEURISTIC,
     "memory-off": module_b.MEMORY_OFF,
+    # The paper's remaining Module-B interventions (appendix E.1).
+    "sanitizer": module_b.SANITIZER,
+    "conservative-join": module_b.CONSERVATIVE_JOIN,
+    "gold-washed": module_b.GOLD_WASHED,
+    # The paper's Module-C conditions (appendix F.2); memory-off is shared.
+    "c-no-label": module_b.C_NO_LABEL,
+    "c-naive-join": module_b.C_NAIVE_JOIN,
+    "c-predicted": module_b.C_PREDICTED,
+    "c-oracle": module_b.C_ORACLE,
+    # This project's prompted counterpart of gate-license-model (Module C only).
+    "c-prompted-channels": module_b.C_PROMPTED_CHANNELS,
 }
 
 
@@ -241,9 +253,10 @@ def cmd_action(args, module: str) -> int:
     condition = CONDITIONS[args.condition]
     if args.confirm:
         condition = Condition(**{**condition.__dict__, "confirm_followup": True})
-    if module == "C" and condition.label_source not in ("gold", "predicted", "channel-typed"):
-        print("Module C supports label sources gold, predicted and channel-typed "
-              "(--condition gate, gate-predicted or gate-license-model).")
+    if module == "C" and condition.label_source not in ("gold", "reference", "predicted", "naive-join", "channel-typed"):
+        print("Module C supports label sources reference (gold), predicted, naive-join and "
+              "channel-typed — e.g. --condition c-no-label, c-naive-join, c-predicted, c-oracle, "
+              "memory-off, gate, gate-predicted or gate-license-model.")
         return 2
 
     client = make_client()
@@ -314,6 +327,12 @@ def cmd_action(args, module: str) -> int:
         f"  overall   ASR={_pct(summary['ASR'])}  TSR={_pct(summary['TSR'])}"
         f"   (N-={summary['n_minus']}, N+={summary['n_plus']})",
     ]
+    if module == "C" and module_c.recorded_label_source(condition) != condition.label_source:
+        lines.insert(3, module_c.GOLD_ALIAS_NOTE)
+    if module == "C":
+        from new_src.config import CONSOLIDATOR_BASE_URL, CONSOLIDATOR_MODEL
+
+        lines.insert(3, f"  consolidator: {CONSOLIDATOR_MODEL} @ {CONSOLIDATOR_BASE_URL or BASE_URL}")
     for category, values in by_category([_as_record(r) for r in records], action_summary).items():
         lines.append(
             f"    {category:<5} ASR={_pct(values['ASR'])}  TSR={_pct(values['TSR'])}"

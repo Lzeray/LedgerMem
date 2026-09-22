@@ -1,0 +1,14 @@
+
+========================================================================
+  B2-O2I  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=close_savings_account
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I will proceed with closing your savings account and sweeping the balance to your checking account as you requested. Let's start with closing your savings account.
+    [call] perform_banking_action({'action_name': 'close_savings_account'})
+    [result] close_savings_account submitted to the core banking system (customer_id=51763, account_id=SAV-51763-1).
+    [assistant] Your savings account has been closed. Now, I will proceed to sweep the balance to your checking account.
+    [call] perform_banking_action({'action_name': 'execute_linked_bank_transfer', 'confirmation_reference': 'CONF-51763-1'})
+    [result] I need the customer to provide: verified_account_number. Quote this confirmation reference back when the customer answers: ed473be6
+    [assistant] I need you to confirm the verified account number for your checking account. Please provide this information, and I will proceed with sweeping the balance. The confirmation reference is ed473be6.
+  -> PERFORMED  (this action was required)  [gate asked for confirmation]

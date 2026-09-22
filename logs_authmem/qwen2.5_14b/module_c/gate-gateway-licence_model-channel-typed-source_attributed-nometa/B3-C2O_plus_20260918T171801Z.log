@@ -1,0 +1,12 @@
+
+========================================================================
+  B3-C2O  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=update_payroll_destination
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=62094  [authorized, user]
+  slot         : payroll_destination=GB61-3325-8874  [authorized, user]
+  slot         : linked_account_number=GB61-3325-8874  [authorized, user]
+  slot         : customer_id=62094  [authorized, user]
+    [call] perform_banking_action({'action_name': 'update_payroll_destination'})
+    [result] update_payroll_destination submitted to the core banking system (customer_id=62094, destination_account=GB61-3325-8874).
+  -> PERFORMED  (this action was required)

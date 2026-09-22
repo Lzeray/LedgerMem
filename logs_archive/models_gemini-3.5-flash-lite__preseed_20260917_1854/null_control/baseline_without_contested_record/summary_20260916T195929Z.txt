@@ -1,0 +1,6 @@
+========================================================================
+  Null control — H- with the contested record removed
+  endpoint: https://generativelanguage.googleapis.com/v1beta/openai/   model: models/gemini-3.5-flash-lite
+  7 pairs; the action should fire in none of them.
+
+  fired anyway: 4/7  -> B1-P2R, B1-O2I, B1-R2P, B1-S2D

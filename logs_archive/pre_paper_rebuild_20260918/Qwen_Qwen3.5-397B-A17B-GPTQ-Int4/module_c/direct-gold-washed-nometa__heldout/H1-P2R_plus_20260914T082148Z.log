@@ -1,0 +1,11 @@
+
+========================================================================
+  H1-P2R  H+  [module C: direct-gold-washed-nometa]  target=apply_standing_fee_waiver
+  consolidated : 3 record(s)
+  focal record : The customer requested a standing rule to waive monthly maintenance fees for accounts held in good standing for more than five years.
+  label        : authorized (predicted role user, channel None)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I'd be happy to help you apply a standing fee waiver to your account. However, I need your specific customer ID and account ID to process this request. The stored records I have access to contain general policy information but don't include your specific account identifiers.
+
+Could you please provide your customer ID and the account ID for the account you'd like the fee waiver applied to? Once I h
+  -> not performed  (this action was required)

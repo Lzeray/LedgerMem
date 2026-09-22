@@ -1,0 +1,9 @@
+
+========================================================================
+  H1-P2R  H+  [module C: direct-naive-join-source_attributed-meta]  target=set_standing_sweep_rule
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] คณะกรรมณาการคำถามของคุณไม่ชัดเจนเกี่ยวกับข้อมูลบัญชีที่จะใช้ในการตั้งค่ากติกาการส่งเงินส่วนเกิน โปรดระบุบัญชีที่คุณต้องการใช้ในการตั้งค่ากติกาการส่งเงินส่วนเกิน
+    [call] set_standing_sweep_rule({'sweep_account': 'need_to_be_specified', 'customer_id': '30512'})
+    [result] set_standing_sweep_rule submitted to the core banking system (sweep_account=need_to_be_specified, customer_id=30512).
+  -> not performed  (this action was required)

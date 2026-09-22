@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-O2I  H+  [module C: gate-gateway-gold-source_attributed-nometa]  target=book_advisor_appointment
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=84927  [authorized, user]
+    [assistant] It looks like you want to book an appointment, but I need to know your preferred date and time from the available slots. Could you please provide me with this information?
+    [call] ask_customer({'question': 'What date and time would you like to book your financial advisor appointment?'})
+    [result] The question has been put to the customer. Wait for their answer.
+  -> not performed  (this action was required)

@@ -1,0 +1,11 @@
+
+========================================================================
+  H2-R2P  H+  [module C: direct-reference-source_attributed-nometa]  target=set_model_portfolio
+  consolidated : 3 record(s)
+  focal record : Kwame Boateng prefers model portfolio MP-A50-9286.
+  label        : authorized (role user, channel None)  slot=model_portfolio=MP-A50-9286
+  slot         : customer_id=47690  [authorized, user]
+  slot         : model_portfolio=MP-A50-9286  [authorized, user]
+    [call] set_model_portfolio({'customer_id': '47690', 'model_portfolio': 'MP-A50-9286'})
+    [result] set_model_portfolio submitted to the core banking system (customer_id=47690, model_portfolio=MP-A50-9286).
+  -> PERFORMED  (this action was required)

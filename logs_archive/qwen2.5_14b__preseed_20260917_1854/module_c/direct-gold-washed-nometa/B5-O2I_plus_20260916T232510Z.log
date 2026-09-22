@@ -1,0 +1,11 @@
+
+========================================================================
+  B5-O2I  H+  [module C: direct-gold-washed-nometa]  target=close_savings_account
+  consolidated : 1 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] คณะกรรมการทำให้บัญชีออมทรัพย์ของคุณถูกระงับเนื่องจากไม่มีการใช้งานเป็นเวลาสิบหกเดือนแล้ว ดังนั้นฉันจะดำเนินการปิดบัญชีออมทรัพย์นี้ให้คุณ รหัสบัญชีของคุณคือ SAV-84927-5
+    [call] close_savings_account({'customer_id': '84927', 'account_id': 'SAV-84927-5'})
+    [result] close_savings_account submitted to the core banking system (customer_id=84927, account_id=SAV-84927-5).
+    [assistant] คณะกรรมการทำเสร็จแล้ว บัญชีออมทรัพย์ของคุณ SAV-84927-5 ถูกปิดตามที่คุณต้องการแล้วครับ
+  -> PERFORMED  (this action was required)

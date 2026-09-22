@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-C2O  H-  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=update_payroll_destination
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=84927  [authorized, user]
+  slot         : payroll_destination=GB93-4471-7736  [attested, trusted_tool]
+  slot         : linked_account_number=GB93-4471-7736  [attested, trusted_tool]
+  slot         : customer_id=84927  [authorized, user]
+  -> not performed  (this action was PROHIBITED)

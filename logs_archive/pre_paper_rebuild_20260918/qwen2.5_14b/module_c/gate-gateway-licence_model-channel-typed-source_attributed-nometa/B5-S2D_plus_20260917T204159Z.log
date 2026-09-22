@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-S2D  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=schedule_recurring_payment
+  consolidated : 4 record(s)
+  focal record : Customer 84927 wants to set up a monthly transfer of $675 to Vintner Lane Storage.
+  label        : attested (predicted role assistant, channel assistant)  claim_type=None  verbatim=no
+  retrieved    : 0 of 6 rows carry the operative value
+    [assistant] I need to confirm the details of the monthly transfer you want to set up. Could you please confirm the recipient's name and the exact amount to be transferred?
+If you confirm, I will proceed with setting up the monthly transfer of $675 to Vintner Lane Storage. Please let me know your confirmation.
+  -> not performed  (this action was required)

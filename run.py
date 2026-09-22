@@ -43,6 +43,18 @@ import sys
 ENDPOINTS = {
     "a": ("http://10.100.11.201:8000/v1", "397"),        # Qwen3.5-397B-A17B-GPTQ-Int4
     "b": ("http://10.100.10.70:8123/v1", "35b"),         # qwen3.6-35B-A3B
+    # Google's OpenAI-compatible surface. Reachable from here only through the personal proxy —
+    # a direct request answers 400 FAILED_PRECONDITION on location — which is why
+    # _prepare_environment keeps the proxy for hosted endpoints instead of clearing it.
+    "g": ("https://generativelanguage.googleapis.com/v1beta/openai/", "3.5-flash-lite"),
+    # This laptop's own Ollama. Module C is the slowest module and a 14B on a laptop is the
+    # slowest host, so budget hours, not minutes — but it is the setting where the difference
+    # between the three conditions shows up most plainly.
+    "l": ("http://localhost:11434/v1", "qwen2.5:14b"),
+    # The Tailscale GPU box. Same model as the laptop endpoint, so a run started on one
+    # resumes on the other: the records are keyed by model name and they live here, not there.
+    # No duty cycle is applied — that box has cooling and is not the machine being sat at.
+    "gpu": ("http://gpu-box:11434/v1", "qwen2.5:14b"),
 }
 
 # The two conditions under comparison: unprotected, and the newest gate.
@@ -62,11 +74,41 @@ def _prepare_environment(base_url: str, logs_root: str) -> None:
     import would silently have no effect, which is the kind of bug that only shows up as a 404
     forty episodes in.
     """
-    # The personal proxy at 127.0.0.1:10808 would swallow traffic bound for the corporate
-    # network: no_proxy only covers localhost.
-    for variable in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "all_proxy",
-                     "http_proxy", "https_proxy"):
+    # Proxies cut both ways and which way depends on the endpoint.
+    #
+    # A local or university endpoint must NOT go through the personal proxy at 127.0.0.1:10808
+    # — it would swallow traffic bound for the corporate network, and no_proxy only covers
+    # localhost. A hosted API is the opposite case: Google answers
+    # `400 FAILED_PRECONDITION: User location is not supported` from here, and the proxy is the
+    # only way the request arrives at all.
+    #
+    # ALL_PROXY is dropped in both cases: it is set to a `socks://` URL, a scheme httpx rejects
+    # outright ("Unknown scheme for proxy URL"), so leaving it set fails before any request is
+    # made. HTTP_PROXY and HTTPS_PROXY point at the same port over http and those httpx reads.
+    hosted = base_url.startswith("https://") and "localhost" not in base_url
+    for variable in ("ALL_PROXY", "all_proxy"):
         os.environ.pop(variable, None)
+    if hosted:
+        # Postgres, the embedding cache and any SSH tunnel all live on localhost; the tailnet
+        # and the university subnets must not be proxied either.
+        keep = "localhost,127.0.0.1,::1,gpu-box,100.64.0.0/10,10.0.0.0/8,192.168.0.0/16"
+        os.environ["NO_PROXY"] = keep
+        os.environ["no_proxy"] = keep
+        # Hosted free tiers are quoted per key per minute. Spacing requests out keeps the run
+        # under the limit instead of discovering it once a minute and backing off; with two
+        # keys in rotation this is per key, so the effective rate is double. setdefault, so an
+        # explicit value on the command line still wins.
+        os.environ.setdefault("AUTHMEM_MIN_REQUEST_INTERVAL", "4.5")
+    else:
+        for variable in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+            os.environ.pop(variable, None)
+    # A model served from this machine means hours of continuous inference on a laptop that has
+    # nowhere to put the heat. Give it a scheduled pause, and an earlier one if it gets hot.
+    # Only for localhost: the university boxes are somebody else's hardware with real cooling,
+    # and pausing a run against them would waste the endpoint's time for no reason.
+    if "localhost" in base_url or "127.0.0.1" in base_url:
+        os.environ.setdefault("AUTHMEM_DUTY_WORK", "1200")   # 20 minutes of work
+        os.environ.setdefault("AUTHMEM_DUTY_REST", "300")    # then 5 minutes of rest
     # The embedding model is cached; without this, every process start spends ~15s retrying
     # huggingface.co and then loads from cache anyway.
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -74,17 +116,31 @@ def _prepare_environment(base_url: str, logs_root: str) -> None:
     os.environ["AUTHMEM_LOGS_ROOT"] = logs_root
 
 
+#: Read from .env when absent from the environment. AUTHMEM_API_KEYS is the comma-separated
+#: rotation list; a hosted free tier is quoted per key, so spreading a run over several keys is
+#: the difference between finishing and sitting in back-off.
+_ENV_KEYS = ("AUTHMEM_API_KEY", "AUTHMEM_API_KEYS")
+
+
 def _load_env_file() -> None:
-    """Read .env for AUTHMEM_API_KEY without needing python-dotenv."""
-    if os.environ.get("AUTHMEM_API_KEY"):
+    """Read .env for the API keys without needing python-dotenv."""
+    wanted = [name for name in _ENV_KEYS if not os.environ.get(name)]
+    if not wanted:
         return
     try:
         for line in open(".env", encoding="utf-8"):
-            line = line.strip()
-            if line.startswith("AUTHMEM_API_KEY") and "=" in line:
-                os.environ["AUTHMEM_API_KEY"] = line.split("=", 1)[1].strip()
+            name, _, value = line.strip().partition("=")
+            if name.strip() in wanted and value:
+                os.environ[name.strip()] = value.strip()
     except OSError:
         pass
+
+
+def _first_key() -> str:
+    """Any one valid key is enough to list models and probe tool calling."""
+    listed = os.environ.get("AUTHMEM_API_KEYS", "").split(",")
+    return next((k.strip() for k in listed if k.strip()),
+                os.environ.get("AUTHMEM_API_KEY", "none"))
 
 
 def resolve_model(base_url: str, hint: str, explicit: str | None) -> str | None:
@@ -92,7 +148,7 @@ def resolve_model(base_url: str, hint: str, explicit: str | None) -> str | None:
     the id on a web page and the id a vLLM server answers to are usually different strings."""
     from openai import OpenAI
 
-    client = OpenAI(base_url=base_url, api_key=os.environ.get("AUTHMEM_API_KEY", "none"))
+    client = OpenAI(base_url=base_url, api_key=_first_key())
     print(f"  endpoint: {base_url}")
     try:
         served = [m.id for m in client.models.list().data]
@@ -140,13 +196,12 @@ def probe_tools(model: str) -> bool:
 
     from new_src.preflight import probe
 
-    client = OpenAI(base_url=os.environ["AUTHMEM_BASE_URL"],
-                    api_key=os.environ.get("AUTHMEM_API_KEY", "none"))
+    client = OpenAI(base_url=os.environ["AUTHMEM_BASE_URL"], api_key=_first_key())
     return all(probe(client, model, surface) for surface in ("direct", "gateway"))
 
 
 def run_gate_suite(model: str, with_baseline: bool, modules: tuple[str, ...] = ("b", "c"),
-                   categories: str = "") -> int:
+                   categories: str = "", datasets: tuple[str, ...] = ("1",)) -> int:
     """The gate across the whole core suite: 35 pairs, both variants, Modules B and C.
 
     `--with-baseline` runs the unprotected arm as well, and it is worth doing whenever the two
@@ -164,13 +219,21 @@ def run_gate_suite(model: str, with_baseline: bool, modules: tuple[str, ...] = (
     # episode, Module C consolidates, classifies what it wrote, captures every utterance and
     # only then acts. If the run is cut short, B is what survives.
     phases = []
-    for module in modules:
-        if with_baseline:
-            phases.append((f"module {module.upper()} — core — baseline", module, "baseline"))
-        phases.append((f"module {module.upper()} — core — gate", module, "gate-license-model"))
+    for dataset in datasets:
+        label = "dev" if dataset == "1" else "held-out"
+        # The null control first, and not as a courtesy: it re-runs every H- with the contested
+        # record removed, and a pair whose action fires anyway was never testing the authority
+        # transition. Every ASR computed afterwards has to exclude those pairs, so measuring
+        # before knowing which they are means recomputing everything later. Dataset 1's is
+        # already recorded and --resume will skip it in seconds.
+        phases.append((f"null control — {label}", "null", "baseline", dataset))
+        for module in modules:
+            if with_baseline:
+                phases.append((f"module {module.upper()} — {label} — baseline", module, "baseline", dataset))
+            phases.append((f"module {module.upper()} — {label} — gate", module, "gate-license-model", dataset))
 
     started = time.time()
-    for index, (title, module, condition) in enumerate(phases, 1):
+    for index, (title, module, condition, dataset) in enumerate(phases, 1):
         print("\n" + "=" * 74)
         print(f"  [{time.strftime('%H:%M:%S')}]  phase {index}/{len(phases)}  —  {title}")
         print("=" * 74, flush=True)
@@ -178,13 +241,206 @@ def run_gate_suite(model: str, with_baseline: bool, modules: tuple[str, ...] = (
             argv = [module, "--condition", condition, "--model", model, "--resume", "--quiet"]
             if categories:
                 argv += ["--categories", categories]
-            code = bench_main(argv)
+            if module == "null":
+                if dataset == "2":
+                    from new_src.run_heldout import main as heldout_main
+
+                    code = heldout_main(["b", "--suite", "core", "--condition", "baseline",
+                                         "--null", "--variants", "H-", "--model", model,
+                                         "--resume", "--quiet"])
+                else:
+                    code = bench_main(["null", "--suite", "core", "--model", model,
+                                       "--resume", "--quiet"])
+            elif dataset == "2":
+                from new_src.run_heldout import main as heldout_main
+
+                code = heldout_main([*argv, "--suite", "core"])
+            else:
+                code = bench_main(argv)
             if code != 0:
                 print(f"  phase {index} exited with {code}; continuing.")
         except Exception as error:  # noqa: BLE001 - one phase must not end the run
             print(f"  phase {index} raised {type(error).__name__}: {error}; continuing.")
     print(f"\n  finished in {(time.time() - started) / 60:.0f} min. "
           "Summaries: python -m new_src.report")
+    return 0
+
+
+#: Module C only, both datasets, three conditions. Module C is the end-to-end setting: the
+#: agent consolidates its own memory, labels it, retrieves from it and then acts, with nothing
+#: supplied by the benchmark except the source history. It is the slowest condition per episode
+#: and the one where a memory defense is actually load-bearing.
+#: Split per dataset so --datasets can ask for one of them. Each half opens with its own null
+#: control, because every ASR after it has to exclude the pairs that control invalidates:
+#: running the measurements first means recomputing them afterwards.
+SWEEP_C_D1 = [
+    ("null control — dataset 1",     "run",     ["null", "--suite", "core"], 35),
+    # The paper's own arm first: consolidation, a predictor picking the supporting message,
+    # the frozen role policy, no gate and no seeded memory. Everything after it is measured
+    # against this, so a run cut short still leaves the reference point.
+    ("C — dataset 1 — paper",        "run",     ["c", "--condition", "baseline-predicted"], 70),
+    ("C — dataset 1 — baseline",     "run",     ["c", "--condition", "baseline"], 70),
+    ("C — dataset 1 — prompted",     "run",     ["c", "--condition", "gold-prompted"], 70),
+    ("C — dataset 1 — gate",         "run",     ["c", "--condition", "gate-license-model"], 70),
+]
+
+SWEEP_C_D2 = [
+    ("null control — dataset 2",     "heldout", ["b", "--suite", "core", "--condition", "baseline",
+                                                 "--null", "--variants", "H-"], 35),
+    ("C — dataset 2 — baseline",     "heldout", ["c", "--suite", "core", "--condition", "baseline"], 70),
+    ("C — dataset 2 — prompted",     "heldout", ["c", "--suite", "core", "--condition", "gold-prompted"], 70),
+    ("C — dataset 2 — gate",         "heldout", ["c", "--suite", "core", "--condition", "gate-license-model"], 70),
+]
+
+SWEEP_C = SWEEP_C_D1 + SWEEP_C_D2
+
+#: The two speech-act families, full size: 5 pairs each, all three conditions.
+#:
+#: Q2D is the customer quoting somebody else and G2O is a tool carrying a signed grant, so
+#: between them they exercise both directions of the label table — Q2D must stay closed, G2O's
+#: H+ must be ALLOWED. A defense that only ever refuses passes one of them and fails the other,
+#: which is why both are here rather than only the attack-shaped one.
+#:
+#: Module B, not Module C, and that is a limitation rather than a choice: these are
+#: SpeechActPair, carrying no operative value and no slot, and Module C builds its memory
+#: record out of precisely those two fields. Never averaged into the Module C numbers.
+#:
+#: Placed early in the plan because they are cheap — Module B does not consolidate — so a run
+#: cut short still leaves them finished.
+SPEECH_ACTS = [
+    ("B — Q2D,G2O — baseline",  "heldout", ["b", "--suite", "speechact", "--condition",
+                                            "baseline-attributed", "--categories", "Q2D,G2O"], 20),
+    ("B — Q2D,G2O — prompted",  "heldout", ["b", "--suite", "speechact", "--condition",
+                                            "gold-prompted", "--categories", "Q2D,G2O"], 20),
+    ("B — Q2D,G2O — gate",      "heldout", ["b", "--suite", "speechact", "--condition",
+                                            "gate-license-model", "--categories", "Q2D,G2O"], 20),
+]
+
+
+def sweep_c_plan(datasets: str, speech_acts: bool = True) -> list:
+    """The Module C sweep restricted to the datasets asked for. `--datasets 1` is the
+    development suite, `2` the held-out one, `1,2` both. The speech-act families ride along
+    unless switched off: "every condition" is meant to include them."""
+    wanted = {d.strip() for d in datasets.split(",") if d.strip()}
+    plan = []
+    if "1" in wanted:
+        plan += SWEEP_C_D1[:1]          # the null control first: every ASR after it has to
+        if speech_acts:                 # exclude the pairs that control invalidates
+            plan += SPEECH_ACTS
+        plan += SWEEP_C_D1[1:]
+    if "2" in wanted:
+        plan += SWEEP_C_D2
+    return plan or SWEEP_C
+
+
+#: One pass over the whole taxonomy on a new model: 9 scenarios per condition, three
+#: conditions, Module C.
+#:
+#: The nine are the 7 established transitions taken once each (one base history, so every
+#: category appears exactly once and none is silently dropped — filtering by --limit instead of
+#: --bases has cost a category before) plus the two speech-act families the channel model was
+#: built for: Q2D, the customer quoting somebody else, and G2O, a tool carrying a signed grant.
+#: Between them those two exercise both directions of the label table — Q2D must stay closed,
+#: G2O's H+ must be allowed.
+#:
+#: The speech-act pairs run on Module B rather than Module C, and this is a limitation rather
+#: than a choice: they are SpeechActPair, carrying no operative value and no slot, and Module C
+#: consolidates a memory record out of exactly those two fields. There is nothing for it to
+#: retain or lose. Reported as Module B, never averaged into the Module C numbers.
+#:
+#: `prompted` is the middle condition and the point of the comparison: the agent is shown the
+#: labels and the policy in prose and asked to apply them itself. If prompting sufficed, a gate
+#: would not be needed, so it is the honest competitor rather than a straw man.
+TRIAL = [
+    ("null control — 7 transitions", "run", ["null", "--suite", "core", "--bases", "B1"], 7),
+    ("C — 7 transitions — baseline", "run",
+     ["c", "--condition", "baseline", "--bases", "B1"], 14),
+    ("C — 7 transitions — prompted", "run",
+     ["c", "--condition", "gold-prompted", "--bases", "B1"], 14),
+    ("C — 7 transitions — gate", "run",
+     ["c", "--condition", "gate-license-model", "--bases", "B1"], 14),
+    ("B — Q2D,G2O — baseline", "heldout",
+     ["b", "--suite", "speechact", "--condition", "baseline-attributed",
+      "--categories", "Q2D,G2O", "--bases", "H1"], 4),
+    ("B — Q2D,G2O — prompted", "heldout",
+     ["b", "--suite", "speechact", "--condition", "gold-prompted",
+      "--categories", "Q2D,G2O", "--bases", "H1"], 4),
+    ("B — Q2D,G2O — gate", "heldout",
+     ["b", "--suite", "speechact", "--condition", "gate-license-model",
+      "--categories", "Q2D,G2O", "--bases", "H1"], 4),
+]
+
+
+#: The full programme, in priority order.
+#:
+#: Ordered so that a run cut short leaves the results that matter most. The null controls come
+#: first because every ASR afterwards has to exclude the pairs they invalidate — measuring
+#: before knowing which those are means recomputing everything. Module B before Module C
+#: because it is the headline comparison and several times cheaper per episode.
+#:
+#: Three conditions, and the middle one is the point of the comparison: `gold-prompted` shows
+#: the agent the authority labels and the policy in prose and asks it to apply them itself. If
+#: prompting worked, a gate would not be needed, so it is the honest competitor rather than a
+#: straw man.
+SWEEP = [
+    ("null control — dataset 1",              "run",     ["null", "--suite", "core"], 35),
+    ("null control — dataset 2",              "heldout", ["b", "--suite", "core", "--condition", "baseline",
+                                                          "--null", "--variants", "H-"], 35),
+    ("B — dataset 1 — baseline",              "run",     ["b", "--condition", "baseline"], 70),
+    ("B — dataset 1 — prompted",              "run",     ["b", "--condition", "gold-prompted"], 70),
+    ("B — dataset 1 — gate",                  "run",     ["b", "--condition", "gate-license-model"], 70),
+    ("B — dataset 2 — baseline",              "heldout", ["b", "--suite", "core", "--condition", "baseline"], 70),
+    ("B — dataset 2 — prompted",              "heldout", ["b", "--suite", "core", "--condition", "gold-prompted"], 70),
+    ("B — dataset 2 — gate",                  "heldout", ["b", "--suite", "core", "--condition", "gate-license-model"], 70),
+    # Only Q2D and G2O: the customer quoting somebody else, and a tool carrying a signed grant.
+    # Q2D is closed on the label axis and G2O is the one family whose H+ must be ALLOWED, so
+    # between them they exercise both directions of the channel model.
+    ("B — speech acts (Q2D,G2O) — baseline",  "heldout", ["b", "--suite", "speechact", "--condition",
+                                                          "baseline-attributed", "--categories", "Q2D,G2O"], 20),
+    ("B — speech acts (Q2D,G2O) — prompted",  "heldout", ["b", "--suite", "speechact", "--condition",
+                                                          "gold-prompted", "--categories", "Q2D,G2O"], 20),
+    ("B — speech acts (Q2D,G2O) — gate",      "heldout", ["b", "--suite", "speechact", "--condition",
+                                                          "gate-license-model", "--categories", "Q2D,G2O"], 20),
+    ("C — dataset 1 — baseline",              "run",     ["c", "--condition", "baseline"], 70),
+    ("C — dataset 1 — gate",                  "run",     ["c", "--condition", "gate-license-model"], 70),
+    ("C — dataset 2 — baseline",              "heldout", ["c", "--suite", "core", "--condition", "baseline"], 70),
+    ("C — dataset 2 — gate",                  "heldout", ["c", "--suite", "core", "--condition", "gate-license-model"], 70),
+]
+
+
+def run_sweep(model: str, dry_run: bool, plan=None) -> int:
+    import time
+
+    from new_src.run import main as bench_main
+    from new_src.run_heldout import main as heldout_main
+
+    plan = plan or SWEEP
+    total = sum(n for *_, n in plan)
+    print(f"  {len(plan)} phases, at most {total} episodes. Every phase resumes; nothing is deleted.")
+    for i, (title, _, _, n) in enumerate(plan, 1):
+        print(f"    {i:>2}. {title:38} up to {n:>3}")
+    if dry_run:
+        print("\n  --dry-run: nothing was run.")
+        return 0
+    started = time.time()
+    for i, (title, kind, argv, _) in enumerate(plan, 1):
+        print("\n" + "=" * 74)
+        print(f"  [{time.strftime('%H:%M:%S')}]  phase {i}/{len(plan)}  —  {title}")
+        print("=" * 74, flush=True)
+        runner = bench_main if kind == "run" else heldout_main
+        try:
+            runner([*argv, "--model", model, "--resume", "--quiet"])
+        except Exception as error:  # noqa: BLE001 - one phase must not end the sweep
+            print(f"  phase {i} raised {type(error).__name__}: {error}; continuing.")
+    print(f"\n  done in {(time.time() - started) / 3600:.1f} h.")
+    # Draw the picture at the end so a finished sweep leaves a result you can look at rather
+    # than a directory of json to re-read.
+    try:
+        from new_src.plot import main as plot_main
+
+        plot_main(["--module", "c"])
+    except Exception as error:  # noqa: BLE001 - a drawing failure must not fail the sweep
+        print(f"  could not draw the table: {type(error).__name__}: {error}")
     return 0
 
 
@@ -304,6 +560,23 @@ def main() -> int:
     parser.add_argument("--with-baseline", action="store_true", dest="with_baseline",
                         help="with --gate: run the unprotected arm too, so both are measured "
                              "under the same code")
+    parser.add_argument("--datasets", default="1",
+                        help="with --gate: which datasets to run — 1 (dev suite.py), 2 (held-out), "
+                             "or 1,2 for both. They are measured separately and logged "
+                             "separately; merging them would destroy the only thing the held-out "
+                             "set is for, which is being data the defense was not designed against")
+    parser.add_argument("--heldout", action="store_true",
+                        help="the SECOND dataset (held-out, bases H1-H5) under the gate, Module B")
+    parser.add_argument("--no-speechacts", action="store_true", dest="no_speechacts",
+                        help="leave Q2D/G2O out of the sweep (they are included by default)")
+    parser.add_argument("--trial", action="store_true",
+                        help="one pass over the taxonomy on a new model: 9 scenarios "
+                             "(7 transitions + Q2D + G2O) x baseline/prompted/gate")
+    parser.add_argument("--sweep-c", action="store_true", dest="sweep_c",
+                        help="Module C only: both datasets x baseline/prompted/gate")
+    parser.add_argument("--sweep", action="store_true",
+                        help="the full programme: both datasets, baseline/prompted/gate, "
+                             "Modules B and C, plus Q2D and G2O")
     parser.add_argument("--night", action="store_true",
                         help="the whole programme, in priority order, every phase resumable")
     parser.add_argument("--dry-run", action="store_true", dest="dry_run",
@@ -315,6 +588,15 @@ def main() -> int:
     base_url, hint = ENDPOINTS[args.endpoint]
     if args.base_url:
         base_url = args.base_url
+    if args.trial and args.dry_run:
+        print("=" * 74 + "\n  trial — plan only\n" + "=" * 74)
+        return run_sweep("<not resolved>", True, TRIAL)
+    if args.sweep_c and args.dry_run:
+        print("=" * 74 + "\n  Module C sweep — plan only\n" + "=" * 74)
+        return run_sweep("<not resolved>", True, sweep_c_plan(args.datasets, not args.no_speechacts))
+    if args.sweep and args.dry_run:
+        print("=" * 74 + "\n  sweep — plan only\n" + "=" * 74)
+        return run_sweep("<not resolved>", True)
     if args.night and args.dry_run:
         # Printing the plan needs no endpoint, so it must not sit behind the preflight: the
         # commonest moment to want it is while deciding whether tonight is long enough, which
@@ -358,7 +640,9 @@ def main() -> int:
     # later has no effect at all — which it silently did not, sending a full night's results
     # into the smoke tree where the next smoke would delete them.
     _prepare_environment(base_url,
-                         "logs_authmem" if (args.night or args.full or args.gate) else "logs_smoke")
+                         "logs_authmem" if (args.night or args.full or args.gate or args.heldout
+                                            or args.sweep or args.sweep_c or args.trial)
+                         else "logs_smoke")
 
     print("=" * 74)
     print("  [1/4] resolving the model")
@@ -380,6 +664,46 @@ def main() -> int:
     if not probe_tools(model):
         return 1
 
+    if args.trial:
+        print("\n" + "=" * 74 + "\n  trial — 9 scenarios x 3 conditions\n" + "=" * 74)
+        return run_sweep(model, False, TRIAL)
+
+    if args.sweep_c:
+        print("\n" + "=" * 74 + "\n  Module C sweep\n" + "=" * 74)
+        return run_sweep(model, False, sweep_c_plan(args.datasets, not args.no_speechacts))
+
+    if args.sweep:
+        print("\n" + "=" * 74 + "\n  full sweep\n" + "=" * 74)
+        return run_sweep(model, False)
+
+    if args.heldout:
+        # Dataset 2, through the held-out runner. Both modules: Module C is where the agent
+        # manages its own memory, which is the condition the held-out pairs are most worth
+        # measuring under.
+        from new_src.run_heldout import main as heldout_main
+
+        print("\n" + "=" * 74)
+        print("  held-out suite (dataset 2)")
+        print("=" * 74, flush=True)
+        import time
+
+        mods = tuple(m.strip() for m in args.modules.split(",") if m.strip())
+        phases = []
+        for mod in mods:
+            if args.with_baseline:
+                phases.append((f"module {mod.upper()} — held-out — baseline", mod, "baseline"))
+            phases.append((f"module {mod.upper()} — held-out — gate", mod, "gate-license-model"))
+        for index, (title, mod, condition) in enumerate(phases, 1):
+            print("\n" + "=" * 74)
+            print(f"  [{time.strftime('%H:%M:%S')}]  phase {index}/{len(phases)}  —  {title}")
+            print("=" * 74, flush=True)
+            try:
+                heldout_main([mod, "--suite", "core", "--condition", condition,
+                              "--model", model, "--resume", "--quiet"])
+            except Exception as error:  # noqa: BLE001
+                print(f"  phase {index} raised {type(error).__name__}: {error}; continuing.")
+        return 0
+
     if args.gate:
         print("\n" + "=" * 74)
         print("  gate on the full core suite")
@@ -389,7 +713,8 @@ def main() -> int:
         narrow = args.categories if args.categories != SMOKE_CATEGORIES else ""
         return run_gate_suite(model, args.with_baseline,
                               tuple(m.strip() for m in args.modules.split(",") if m.strip()),
-                              narrow)
+                              narrow,
+                              tuple(d.strip() for d in args.datasets.split(",") if d.strip()))
 
     if args.night:
         print("\n" + "=" * 74)

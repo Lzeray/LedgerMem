@@ -1,0 +1,7 @@
+
+========================================================================
+  B2-O2I  H+  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] Which appointment slot code would you like to use for booking the appointment? Please provide the slot code.
+  -> not performed  (this action was required)

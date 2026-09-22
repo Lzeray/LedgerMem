@@ -1,0 +1,13 @@
+
+========================================================================
+  B3-MIX  H+  [module C: gate-gateway-predicted-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=62094  [authorized, user]
+  slot         : linked_account_number=7158  [attested, assistant]
+  slot         : customer_id=62094  [authorized, user]
+  slot         : linked_account_number=62094  [authorized, user]
+  slot         : linked_account_id=62094  [authorized, user]
+    [call] perform_banking_action({'action_name': 'execute_linked_bank_transfer'})
+    [result] The records hold more than one verified_account_number (62094 or 7158); ask the customer which one they mean. Quote this confirmation reference back when the customer answers: 67ca1d9a
+  -> not performed  (this action was required)  [gate asked for confirmation]

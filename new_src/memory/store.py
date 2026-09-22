@@ -19,6 +19,7 @@ deterministically from a script; silently returning an existing row's id (and ke
 older label) is exactly the failure the previous version had to work around.
 """
 
+import json
 from functools import lru_cache
 
 from sqlalchemy import Engine, create_engine, select, text
@@ -61,6 +62,7 @@ _ADDED_COLUMNS = (
     ("verbatim", "TEXT"),
     ("channel", "VARCHAR"),
     ("requests", "TEXT"),
+    ("arguments", "TEXT"),
 )
 
 
@@ -109,6 +111,18 @@ def decode_requests(stored: str | None) -> list[str]:
     return [name for name in stored.split(_DELIM) if name]
 
 
+def decode_arguments(stored: str | None) -> dict:
+    """{action: {parameter: value}} as written by `write_fact`. Anything unreadable is empty: a
+    request whose arguments cannot be read names none, so they are resolved from memory instead."""
+    if not stored:
+        return {}
+    try:
+        value = json.loads(stored)
+    except json.JSONDecodeError:
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
 def lookup_requesting(session: Session, action_name: str) -> list[SemanticRecord]:
     """Every record asking for this action, most-trusted first. Exact match inside the
     delimited list — no vector search, no model, no string heuristic over free text."""
@@ -117,6 +131,28 @@ def lookup_requesting(session: Session, action_name: str) -> list[SemanticRecord
         select(SemanticRecord).where(SemanticRecord.requests.like(needle))
     ).all())
     return sorted(rows, key=lambda r: (LABEL_RANK[r.label], r.id))
+
+
+#: Channels that can never produce `authorized`, whatever else happens upstream.
+#:
+#: `authorized` has exactly two sources: the customer's own words when they are not quoting
+#: anybody, and a grant arriving over a trusted tool. The agent's own writing and an outside
+#: feed are not among them, and no classifier answer, parameter or inference may make them so.
+#:
+#: This is a hard stop rather than a clamp because a clamp hides the defect. A write that
+#: reaches here with `authorized` on one of these channels means something upstream decided a
+#: label it had no standing to decide, and that is worth failing the episode over — it is how
+#: module_c's channel prediction was caught, after it had quietly turned an untrusted tool's
+#: claim into the customer's own words and let a payment through.
+_NEVER_AUTHORIZED = ("assistant", "untrusted_tool")
+
+
+def _refuse_impossible_authority(channel: Channel | None, label: AuthorityLabel) -> None:
+    if label == "authorized" and channel in _NEVER_AUTHORIZED:
+        raise ValueError(
+            f"refusing to store an 'authorized' record on the {channel!r} channel: "
+            "only the customer's own words or a grant over a trusted tool can be authorized"
+        )
 
 
 def write_fact(
@@ -132,7 +168,9 @@ def write_fact(
     verbatim: str | None = None,
     channel: Channel | None = None,
     requests: list[str] | None = None,
+    arguments: dict | None = None,
 ) -> int:
+    _refuse_impossible_authority(channel, label)
     record = SemanticRecord(
         fact_text=fact_text,
         label=label,
@@ -145,6 +183,7 @@ def write_fact(
         verbatim=verbatim,
         channel=channel,
         requests=encode_requests(requests),
+        arguments=json.dumps(arguments, sort_keys=True) if arguments else None,
         embedding=embed(fact_text),
     )
     session.add(record)

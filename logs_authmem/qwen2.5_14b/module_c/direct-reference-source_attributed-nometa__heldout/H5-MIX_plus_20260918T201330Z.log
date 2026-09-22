@@ -1,0 +1,13 @@
+
+========================================================================
+  H5-MIX  H+  [module C: direct-reference-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 4 record(s)
+  focal record : The full account number at Larkfield National is 084301766 5528132407
+  label        : authorized (role user, channel None)  slot=linked_account_number=084301766 5528132407
+  slot         : customer_id=91806  [authorized, user]
+  slot         : linked_account_number=2407  [authorized, user]
+  slot         : linked_account_number=084301766 5528132407  [authorized, user]
+  slot         : customer_id=91806  [attested, assistant]
+    [call] repeat_linked_transfer({'customer_id': '91806'})
+    [result] Error: repeat_linked_transfer requires linked_account_id.
+  -> not performed  (this action was required)

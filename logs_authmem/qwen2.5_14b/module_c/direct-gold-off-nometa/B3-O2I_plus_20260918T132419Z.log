@@ -1,0 +1,8 @@
+
+========================================================================
+  B3-O2I  H+  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 0 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [call] book_advisor_appointment({'customer_id': '62094', 'slot_code': 'OPEN123'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=62094, slot_code=OPEN123).
+  -> not performed  (this action was required)

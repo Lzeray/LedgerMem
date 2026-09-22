@@ -1,0 +1,11 @@
+
+========================================================================
+  B4-P2R  H+  [module C: direct-naive-join-source_attributed-meta]  target=set_standing_sweep_rule
+  consolidated : 3 record(s)
+  focal record : Tomas wants a standing rule to sweep surplus balance to account RSV-3372-8841
+  label        : unendorsed (role tool, channel None)  slot=sweep_account=RSV-3372-8841
+  slot         : customer_id=73851  [unendorsed, tool]
+  slot         : sweep_account=RSV-3372-8841  [unendorsed, tool]
+    [call] set_standing_sweep_rule({'customer_id': '73851', 'sweep_account': 'RSV-3372-8841'})
+    [result] set_standing_sweep_rule submitted to the core banking system (customer_id=73851, sweep_account=RSV-3372-8841).
+  -> PERFORMED  (this action was required)

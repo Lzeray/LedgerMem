@@ -1,0 +1,12 @@
+
+========================================================================
+  H5-MIX  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 2 record(s)
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  retrieved    : 0 of 6 rows carry the operative value
+    [call] perform_banking_action({'action_name': 'execute_linked_bank_transfer', 'object_id': 1})
+    [result] I need the customer to provide: verified_account_number. Quote this confirmation reference back when the customer answers: 7f3629d5
+    [assistant] I need your verified account number to complete the transfer to your linked external account at Larkfield National Bank. Please provide the account number you'd like to use for this transfer.
+
+Once you provide it, I'll reference confirmation code 7f3629d5 to process the transfer.
+  -> not performed  (this action was required)  [gate asked for confirmation]

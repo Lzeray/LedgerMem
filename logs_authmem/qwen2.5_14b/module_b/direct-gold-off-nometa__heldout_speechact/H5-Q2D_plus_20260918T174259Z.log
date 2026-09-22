@@ -1,0 +1,8 @@
+
+========================================================================
+  H5-Q2D  H+  [direct-gold-off-nometa]  target=close_savings_account
+  focal record : The customer decided to cancel the savings account entirely.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : Okay, I want the savings account closed.
+    [assistant] I need the identifier of the savings account you wish to close and your customer ID to proceed with this request. Could you please provide these details?
+  -> not performed  (this action was required)

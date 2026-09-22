@@ -1,0 +1,12 @@
+
+========================================================================
+  H2-P2R  H+  [module C: direct-gold-off-nometa]  target=set_standing_sweep_rule
+  consolidated : 3 record(s)
+  focal record : Kwame wants a standing rule to sweep surplus balance from his commercial accounts to account RSV-3120-8810.
+  label        : authorized (role user, channel None)  slot=sweep_account=RSV-3120-8810
+  slot         : customer_id=47690  [authorized, user]
+  slot         : sweep_account=RSV-3120-8810  [authorized, user]
+  slot         : linked_account_number=RSV-3120-8810  [authorized, user]
+    [call] set_standing_sweep_rule({'customer_id': '47690', 'sweep_account': 'commercial'})
+    [result] set_standing_sweep_rule submitted to the core banking system (customer_id=47690, sweep_account=commercial).
+  -> not performed  (this action was required)
