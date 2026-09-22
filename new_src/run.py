@@ -48,7 +48,15 @@ from new_src.bench.module_b import Condition
 from new_src.bench.schema import validate_pair
 from new_src.config import ACTION_MODEL, BASE_URL
 from new_src.data.license_attacks import LICENSE_ATTACKS
+from new_src.data.multiarg import MULTIARG_DEV
+from new_src.data.speech_act_attacks import SPEECH_ACT_DEV, SpeechActPair
+from new_src.data.speech_act_attacks import validate as validate_speech_act
 from new_src.data.suite import SUITE
+
+#: Directory suffix per suite: each suite's records live apart, because they answer different
+#: questions and averaging them produces a number that means nothing.
+SUITE_SUFFIX = {"core": "", "licence": "__licence", "all": "__licence",
+                "multiarg": "__multiarg", "speechact": "__speechact"}
 
 CONDITIONS: dict[str, Condition] = {
     "baseline": module_b.BASELINE,
@@ -89,15 +97,21 @@ GATE_ON_GUESSED_LABELS = ("  Module C runs the gate only on write-time channel l
 def _condition_dir(args, condition) -> str:
     """Keep the two suites' records in separate directories. They answer different questions and
     averaging them together produces a number that means nothing."""
-    return condition.name + ("" if suite_for(args) is SUITE else "__licence")
+    return condition.name + SUITE_SUFFIX[getattr(args, "suite", "core")]
 
 
 def suite_for(args) -> list:
     """`--suite core` is the 35-pair taxonomy suite; `licence` is the 15 pairs that attack the
-    gate's licence check itself (see data/license_attacks.py); `all` is both."""
+    gate's licence check itself (see data/license_attacks.py); `all` is both. `multiarg` and
+    `speechact` are the hand-written development sets of data/multiarg.py and
+    data/speech_act_dev_raw.json."""
     choice = getattr(args, "suite", "core")
     if choice == "licence":
         return LICENSE_ATTACKS
+    if choice == "multiarg":
+        return MULTIARG_DEV
+    if choice == "speechact":
+        return SPEECH_ACT_DEV
     if choice == "all":
         return [*SUITE, *LICENSE_ATTACKS]
     return SUITE
@@ -235,6 +249,13 @@ def cmd_validate(args) -> int:
     seen: set[str] = set()
     failures = 0
     for pair in select_pairs(args):
+        if isinstance(pair, SpeechActPair):
+            problems = validate_speech_act(pair, REGISTRY)
+            print(f"  {pair.pair_id:<10} {pair.category.transition:<32} {'ok' if not problems else 'FAILED'}")
+            for problem in problems:
+                print(f"      - {problem}")
+            failures += bool(problems)
+            continue
         if not hasattr(pair, "operative_value"):
             problems = _validate_license_pair(pair)
             status = "ok" if not problems else "FAILED"
@@ -266,6 +287,17 @@ def cmd_action(args, module: str) -> int:
     if module == "C" and condition.policy == "gate" and condition.label_source != "channel-typed":
         print(GATE_ON_GUESSED_LABELS)
         return 2
+    if getattr(args, "suite", "core") == "speechact":
+        # Same limits as the held-out speech-act suite (see new_src.run_heldout): no operative
+        # value for Module C to consolidate, and no source condition for a washed rendering to
+        # remove.
+        if module == "C":
+            print("  Module C runs on suites with an operative value; the speech-act pairs have none.")
+            return 2
+        if condition.rendering == "washed":
+            print("  The washed rendering is undefined for the speech-act suite; "
+                  "use --condition baseline-attributed as the unprotected arm.")
+            return 2
 
     client = make_client()
     pairs = select_pairs(args)
@@ -438,7 +470,11 @@ def cmd_null(args) -> int:
     client = make_client()
     pairs = select_pairs(args)
     fired = []
-    null_dir = "baseline_without_contested_record" + ("" if suite_for(args) is SUITE else "__licence")
+    null_dir = "baseline_without_contested_record" + SUITE_SUFFIX[getattr(args, "suite", "core")]
+    # Washing is undefined for the speech-act suite, so its null control uses the attributed
+    # baseline, as the held-out speech-act null control always has.
+    null_condition = (module_b.BASELINE_ATTRIBUTED if getattr(args, "suite", "core") == "speechact"
+                      else module_b.BASELINE)
     directory = run_dir(args.model, "null_control", null_dir)
 
     # The null control resumes like every other phase. It did not, and a night's programme
@@ -458,7 +494,7 @@ def cmd_null(args) -> int:
         try:
             with transcript(args.model, "null_control", null_dir,
                             f"{pair.pair_id}_minus", echo=not args.quiet):
-                record = module_b.run_episode(client, pair, "H-", module_b.BASELINE,
+                record = module_b.run_episode(client, pair, "H-", null_condition,
                                               model=args.model, verbose=True, drop_focal=True)
         except Exception as error:  # noqa: BLE001
             if not failures.record(f"{pair.pair_id}_minus", error):
@@ -519,7 +555,7 @@ def main(argv=None) -> int:
     parser.add_argument("--model", default=ACTION_MODEL)
     parser.add_argument("--confirm", action="store_true",
                         help="Gate conditions only: run one scripted confirmation round-trip (beyond the paper)")
-    parser.add_argument("--suite", default="core", choices=["core", "licence", "all"],
+    parser.add_argument("--suite", default="core", choices=["core", "licence", "all", "multiarg", "speechact"],
                         help="Which pairs to run: the taxonomy suite, the licence-attack suite, or both")
     parser.add_argument("--families", default="",
                         help="Licence suite only: comma-separated family letters, e.g. A,C")

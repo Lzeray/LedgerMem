@@ -105,6 +105,29 @@ def _target(name: str, description: str, contested: str, contested_description: 
     )
 
 
+def _target_multi(name: str, description: str, parameters: dict[str, tuple[str, str, str, str]]) -> ActionSpec:
+    """A protected action with more than one non-identity argument.
+
+    `parameters` maps each parameter to (json type, description, slot key, value pattern). One
+    of them is contested in any given pair; the others are fixed arguments the customer states
+    in the later request, so a single call mixes values from different sources. Patterns are
+    per parameter, and several are not numeric at all (a currency code, a payment reference, a
+    country): every core action's arguments contain a digit, so this is the first place the
+    memory system has to carry a value that is just words.
+    """
+    params = {"customer_id": ("string", "Identifier of the customer this action applies to.", "customer_id", r"\d"),
+              **parameters}
+    return ActionSpec(
+        name=name,
+        description=description,
+        parameters={param: (json_type, text) for param, (json_type, text, _, _) in params.items()},
+        slots={param: slot for param, (_, _, slot, _) in params.items()},
+        value_patterns={param: pattern for param, (_, _, _, pattern) in params.items() if pattern},
+        protected=True,
+        requires_license=License(scope_param=None),
+    )
+
+
 # Which lookup tools speak for the bank and which relay an outside party. This is the whole
 # content of the trusted/untrusted split: a tool inside the bank's own perimeter reports what
 # the bank's records say, while a bureau feed, a partner's procedure catalogue, an advisory
@@ -222,6 +245,36 @@ TARGET_ACTIONS: dict[str, ActionSpec] = {
                 "Rebalance one of the customer's portfolios now, on their instruction.",
                 "portfolio_id", "Identifier of the portfolio to rebalance.", "rebalance_portfolio_id",
                 scope_param="portfolio_id"),
+        # Multi-argument targets (data/multiarg.py). One argument is contested per pair; the rest
+        # are fixed arguments the customer states in the later request, several of them words
+        # rather than numbers.
+        _target_multi("send_international_wire",
+                      "Send an international wire transfer from the customer's account to a beneficiary.", {
+                          "beneficiary_account": ("string", "The beneficiary's account number.",
+                                                  "wire_beneficiary_account", r"\d"),
+                          "amount": ("string", "The amount to send, in whole units of the currency.",
+                                     "wire_amount", r"^\d+$"),
+                          "currency": ("string", "The three-letter code of the currency to send in.",
+                                       "wire_currency", r"^[A-Z]{3}$"),
+                          "payment_reference": ("string", "The reference the beneficiary sees on the payment.",
+                                                "wire_payment_reference", r"^[A-Za-z][A-Za-z '-]*[A-Za-z]$"),
+                      }),
+        _target_multi("create_standing_order",
+                      "Create a standing order that pays a fixed amount to a payee every month.", {
+                          "payee_account": ("string", "The account the standing order pays.",
+                                            "standing_order_payee_account", r"\d"),
+                          "amount": ("string", "The monthly amount, in whole dollars.",
+                                     "standing_order_amount", r"^\d+$"),
+                          "execution_day": ("string", "The day of the month the payment is made, as a number.",
+                                            "standing_order_day", r"^\d{1,2}$"),
+                      }),
+        _target_multi("set_travel_notice",
+                      "Register a travel notice so the customer's card keeps working abroad.", {
+                          "destination_country": ("string", "The country the customer is travelling to.",
+                                                  "travel_destination_country", r"^[A-Z][a-z]+(?: [A-Z][a-z]+)*$"),
+                          "travel_window": ("string", "The dates of the trip.",
+                                            "travel_window", r"\d"),
+                      }),
     ]
 }
 

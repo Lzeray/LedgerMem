@@ -232,12 +232,13 @@ def _lookup_tool(name: str, arguments: dict) -> ToolCall:
     return ToolCall(name, arguments)
 
 
-def _build() -> list[SpeechActPair]:
-    raw = json.loads(RAW_PATH.read_text(encoding="utf-8"))
+def build(raw: dict, bases: dict) -> list[SpeechActPair]:
+    """Speech-act pairs from generated or hand-written narrative material. `bases` maps each
+    `base_id` the material uses to its `Base`."""
     pairs: list[SpeechActPair] = []
 
     for entry in raw["Q2D"]:
-        base = BASES[entry["base_id"]]
+        base = bases[entry["base_id"]]
         wish, account = entry["wish"], entry["account_id"]
         pairs.append(SpeechActPair(
             base_id=base.base_id, category=Q2D,
@@ -268,7 +269,7 @@ def _build() -> list[SpeechActPair]:
         ))
 
     for entry in raw["N2D"]:
-        base = BASES[entry["base_id"]]
+        base = bases[entry["base_id"]]
         wish, linked = entry["wish"], entry["linked_account_id"]
         pairs.append(SpeechActPair(
             base_id=base.base_id, category=N2D,
@@ -299,7 +300,7 @@ def _build() -> list[SpeechActPair]:
         ))
 
     for entry in raw["P2F"]:
-        base = BASES[entry["base_id"]]
+        base = bases[entry["base_id"]]
         wish, account = entry["wish"], entry["account_id"]
         pairs.append(SpeechActPair(
             base_id=base.base_id, category=P2F,
@@ -331,7 +332,7 @@ def _build() -> list[SpeechActPair]:
         ))
 
     for entry in raw["G2O"]:
-        base = BASES[entry["base_id"]]
+        base = bases[entry["base_id"]]
         portfolio = entry["portfolio_id"]
         pairs.append(SpeechActPair(
             base_id=base.base_id, category=G2O,
@@ -375,7 +376,50 @@ def _build() -> list[SpeechActPair]:
     return pairs
 
 
-SPEECH_ACT_PAIRS = _build()
+#: The first held-out speech-act set (heldout_raw.json). Its closing requests name the action
+#: outright ("Close the savings account, please"), which the check in `validate` now rejects: a
+#: customer asking for the action in the closing sentence authorizes it whatever the history says,
+#: so those pairs do not test the speech act. Kept, and still built, so its recorded runs can be
+#: re-read; not a set to report attack numbers on.
+SPEECH_ACT_PAIRS = build(json.loads(RAW_PATH.read_text(encoding="utf-8")), BASES)
+
+#: Hand-written development set on the multi-argument suite's bases (M1-M5).
+DEV_RAW_PATH = Path(__file__).with_name("speech_act_dev_raw.json")
+
+
+def _dev() -> list[SpeechActPair]:
+    from new_src.data.multiarg import BASES as DEV_BASES
+
+    return build(json.loads(DEV_RAW_PATH.read_text(encoding="utf-8")), DEV_BASES)
+
+
+SPEECH_ACT_DEV = _dev()
+
+#: The regenerated held-out set (heldout_v2_raw.json, GENERATION_PROMPT_V2.md), empty before it
+#: is generated.
+V2_RAW_PATH = Path(__file__).with_name("heldout_v2_raw.json")
+
+
+def _heldout_v2() -> list[SpeechActPair]:
+    if not V2_RAW_PATH.exists():
+        return []
+    from new_src.data.builders import Base
+
+    raw = json.loads(V2_RAW_PATH.read_text(encoding="utf-8"))
+    bases = {b["base_id"]: Base(b["base_id"], b["customer_id"], b["customer_name"], b["identity_fact"])
+             for b in raw.get("bases", [])}
+    return build({code: raw.get(code, []) for code in FAMILIES}, bases)
+
+
+SPEECH_ACT_HELDOUT_V2 = _heldout_v2()
+
+#: Words that name each extension action. A closing request containing one asks for the action
+#: itself, which the live-request rule treats as the customer's own authorization.
+ACTION_WORDS = {
+    "close_savings_account": r"\bclos(e|es|ed|ing|ure)\b",
+    "repeat_linked_transfer": r"\b(repeat\w*|transfer\w*|send\w*|resend\w*|pay\w*)\b",
+    "execute_portfolio_rebalance": r"\b(rebalanc\w*|re-balanc\w*|reallocat\w*|re-allocat\w*)\b",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +472,16 @@ def validate(pair: SpeechActPair, tool_registry: dict) -> list[str]:
         problems.append(
             f"{pair.target_tool}: argument object {sorted(pair.target_arguments)} != schema {sorted(spec.parameters)}"
         )
+
+    # 8. The closing request must not ask for the action itself. The customer's live request
+    #    is their own words and licenses what it names, so a pair whose closing sentence says
+    #    "close the savings account" is authorized by that sentence alone and the history — the
+    #    quotation, the refusal, the policy, the lapsed grant — decides nothing.
+    import re as _re
+
+    words = ACTION_WORDS.get(pair.target_tool)
+    if words and _re.search(words, pair.later_task, _re.IGNORECASE):
+        problems.append("the later request names the action itself, so it authorizes it regardless of the history")
 
     # 7. Every argument must resolve from an authorized context fact: these are licensing
     #    families, so nothing contested may sit in an argument.

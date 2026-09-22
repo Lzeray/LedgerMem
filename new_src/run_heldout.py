@@ -39,12 +39,25 @@ from new_src.bench.schema import validate_pair
 from new_src.config import ACTION_MODEL, BASE_URL
 from new_src.data import speech_act_attacks
 from new_src.data.heldout import HELDOUT_SUITE
-from new_src.data.speech_act_attacks import SPEECH_ACT_PAIRS
+from new_src.data.multiarg import MULTIARG_HELDOUT
+from new_src.data.speech_act_attacks import SPEECH_ACT_HELDOUT_V2, SPEECH_ACT_PAIRS
 from new_src.run import CONDITIONS, EpisodeFailures, _as_record, _pct, exclusive_run
 
 
 def suite_for(name: str) -> list:
-    return SPEECH_ACT_PAIRS if name == "speechact" else HELDOUT_SUITE
+    """`core` the 35 held-out value pairs; `speechact` the first speech-act set, kept only so its
+    records can be re-read (its closing requests name the action, see data/speech_act_attacks.py);
+    `speechact2` and `multiarg` the sets generated from GENERATION_PROMPT_V2.md."""
+    return {"speechact": SPEECH_ACT_PAIRS, "speechact2": SPEECH_ACT_HELDOUT_V2,
+            "multiarg": MULTIARG_HELDOUT}.get(name, HELDOUT_SUITE)
+
+
+#: Directory suffix per suite, after "__heldout".
+SUITE_SUFFIX = {"core": "", "speechact": "_speechact", "speechact2": "_speechact2", "multiarg": "_multiarg"}
+
+
+def _is_speech_act(name: str) -> bool:
+    return name.startswith("speechact")
 
 
 def select_pairs(args) -> list:
@@ -62,12 +75,12 @@ def select_pairs(args) -> list:
 
 def cmd_validate(args) -> int:
     failures = 0
-    for name in (["core", "speechact"] if args.suite == "all" else [args.suite]):
+    for name in (["core", "speechact2", "multiarg"] if args.suite == "all" else [args.suite]):
         pairs = suite_for(name)
         print(f"\n  {name} suite ({len(pairs)} pairs)")
         seen: set[str] = set()
         for pair in pairs:
-            problems = (speech_act_attacks.validate(pair, REGISTRY) if name == "speechact"
+            problems = (speech_act_attacks.validate(pair, REGISTRY) if _is_speech_act(name)
                         else validate_pair(pair, REGISTRY, seen))
             print(f"    {pair.pair_id:<10} {pair.category.transition:<32} {'ok' if not problems else 'FAILED'}")
             for problem in problems:
@@ -80,7 +93,7 @@ def cmd_validate(args) -> int:
 def cmd_action(args, module: str = "B") -> int:
     condition = CONDITIONS[args.condition]
     if module == "C":
-        if args.suite == "speechact":
+        if _is_speech_act(args.suite):
             # The speech-act families are SpeechActPair, not AuthorityPair: they carry no
             # operative value and no slot, because their contested claim is never an argument.
             # Module C's record-building reads both, so there is nothing for it to do here.
@@ -95,7 +108,7 @@ def cmd_action(args, module: str = "B") -> int:
 
             print(GATE_ON_GUESSED_LABELS)
             return 2
-    if args.suite == "speechact" and condition.rendering == "washed":
+    if _is_speech_act(args.suite) and condition.rendering == "washed":
         # Washing removes a source condition. Three of these four families have no source
         # condition to remove, and N2D's H- claim is a refusal, whose "washed" form would
         # invert its meaning rather than strip an attribution. Use the attributed baseline.
@@ -104,13 +117,13 @@ def cmd_action(args, module: str = "B") -> int:
         return 2
 
     module_dir = f"module_{module.lower()}"
-    directory_name = f"{condition.name}__heldout" + ("_speechact" if args.suite == "speechact" else "")
+    directory_name = f"{condition.name}__heldout" + SUITE_SUFFIX[args.suite]
     if args.null:
         # Null-control episodes get their own directory, exactly as new_src.run does. Sharing a
         # directory with the real run makes --resume treat a null episode as a completed one,
         # and puts two different measurements in one file where only the `notes` marker keeps
         # them apart.
-        directory_name = "null_control__heldout" + ("_speechact" if args.suite == "speechact" else "")
+        directory_name = "null_control__heldout" + SUITE_SUFFIX[args.suite]
     client = make_client()
     pairs = select_pairs(args)
     variants = [value.strip() for value in args.variants.split(",")]
@@ -186,7 +199,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="new_src.run_heldout", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=["validate", "b", "c"])
-    parser.add_argument("--suite", default="core", choices=["core", "speechact", "all"])
+    parser.add_argument("--suite", default="core", choices=["core", "speechact", "speechact2", "multiarg", "all"])
     parser.add_argument("--condition", default="baseline", choices=sorted(CONDITIONS))
     parser.add_argument("--categories", default="")
     parser.add_argument("--bases", default="")
