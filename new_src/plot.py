@@ -43,8 +43,7 @@ ARMS = {
           ("conservative-join", "W/Join"), ("gold-washed", "W/G"), ("gold-prompted", "S/G"),
           ("gate", "gate"), ("gate-license-model", "gate+channels")],
     "c": [("c-no-label", "No label"), ("c-naive-join", "Naive join"), ("c-predicted", "Predicted"),
-          ("c-oracle", "Oracle"), ("c-prompted-channels", "prompted+channels"),
-          ("gate-license-model", "gate+channels")],
+          ("c-oracle", "Oracle"), ("gate-license-model", "gate+channels")],
 }
 GATE_KEYS = {"gate", "gate-license-model"}
 

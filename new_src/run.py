@@ -73,8 +73,6 @@ CONDITIONS: dict[str, Condition] = {
     "c-naive-join": module_b.C_NAIVE_JOIN,
     "c-predicted": module_b.C_PREDICTED,
     "c-oracle": module_b.C_ORACLE,
-    # This project's prompted counterpart of gate-license-model (Module C only).
-    "c-prompted-channels": module_b.C_PROMPTED_CHANNELS,
 }
 
 

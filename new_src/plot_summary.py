@@ -40,7 +40,7 @@ PAPER_B_SPEECH = [("memory-off", "Off"), ("baseline-attributed", "S/N"), ("gold-
 PAPER_C = [("memory-off", "Memory off"), ("c-no-label", "No label"), ("c-naive-join", "Naive join"),
            ("c-predicted", "Predicted"), ("c-oracle", "Oracle")]
 GATE_B = [("gate", "gate"), ("gate-license-model", "gate + channels")]
-GATE_C = [("c-prompted-channels", "prompted + channels"), ("gate-license-model", "gate + channels")]
+GATE_C = [("gate-license-model", "gate + channels")]
 
 PANELS = [
     ("Module B — dev (35 pairs)", "module_b", "", PAPER_B, GATE_B),

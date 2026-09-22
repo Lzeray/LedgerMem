@@ -188,20 +188,6 @@ def _capture_history(client, model, engine, episode, condition) -> None:
     # dms.capture_live_request.
 
 
-def _captured_records(engine) -> list[MemoryRecord]:
-    """The records `_capture_history` wrote, in arrival order. They are the ones carrying
-    `verbatim`: consolidated text is a paraphrase and never does."""
-    from new_src.memory import all_facts
-
-    with Session(engine) as session:
-        return [
-            MemoryRecord(text=row.fact_text, label=row.label, role=row.role, rendering="source_attributed",
-                         slot_key=row.slot_key, slot_value=row.slot_value, verbatim=row.verbatim,
-                         channel=row.channel, record_id=row.id)
-            for row in all_facts(session) if row.verbatim
-        ]
-
-
 def run_episode(
     client,
     pair: AuthorityPair,
@@ -224,9 +210,8 @@ def run_episode(
     gate.reset_pending()
     engine, written = dms.install(episode, written)
     if condition.label_source == "channel-typed":
-        # Every channel-typed arm keeps the write-time evidence store, whether code enforces its
-        # labels (the gate) or the agent reads them (prompted): the defense is taken to have been
-        # running since the conversation began, labeling each message as it arrived.
+        # The channel-typed gate keeps the write-time evidence store: the defense is taken to have
+        # been running since the conversation began, labeling each message as it arrived.
         _capture_history(client, model, engine, episode, condition)
     if condition.policy == "gate":
         # q reaches the gate's store as the customer's own words, classified like any other
@@ -266,9 +251,4 @@ def run_episode(
     # The complete write set, in the consolidator's order (the paper's retrieval) — or nothing,
     # in the Memory-off arm ("frozen writes are not exposed").
     shown = [] if condition.rendering == "off" else written
-    if condition.rendering != "off" and condition.policy == "direct" and condition.label_source == "channel-typed":
-        # The prompted counterpart of the gate: the agent is shown the same memory the gate
-        # reads — the consolidated write set, then every utterance captured at write time with
-        # its channel label — and has to apply the labels itself.
-        shown = [*written, *_captured_records(engine)]
     return action_stage.perform(client, episode, engine, shown, condition, record, model, verbose)
