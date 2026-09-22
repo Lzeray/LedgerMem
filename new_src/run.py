@@ -391,12 +391,23 @@ def cmd_write(args) -> int:
     directory = run_dir(args.model, "module_a", "consolidation")
     records = []
 
+    # --resume, as in every other phase: without it a re-started programme appends a second copy
+    # of every write-time episode to the same file.
+    done: set[tuple[str, str]] = set()
+    if getattr(args, "resume", False):
+        previous = load_jsonl(directory / "write_records.jsonl")
+        done = {(row["pair_id"], row["variant"]) for row in previous}
+        records.extend(_Row(row) for row in previous)
+        print(f"  resume: {len(done)} write-time episodes already recorded")
+
     failures = EpisodeFailures()
     stop = False
     for pair in pairs:
         if stop:
             break
         for variant in variants(args):
+            if (pair.pair_id, variant) in done:
+                continue
             name = f"{pair.pair_id}_{'minus' if variant == 'H-' else 'plus'}"
             try:
                 with transcript(args.model, "module_a", "consolidation", name, echo=not args.quiet):
