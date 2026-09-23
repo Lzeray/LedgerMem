@@ -48,12 +48,15 @@ ROWS = {
           ("baseline-attributed", "baseline (attributed)"), ("sanitizer", "sanitizer"),
           ("conservative-join", "conservative join"), ("gold-washed", "gold labels, washed"),
           ("gold-prompted", "prompted with labels"), ("gate", "gate (gold labels)"),
-          ("gate-license-model", "gate + channels")],
+          ("gate-license-model", "gate + channels"),
+          ("baseline-retrieve", "baseline, agent searches memory"),
+          ("baseline-attributed-retrieve", "baseline (attributed), agent searches memory"),
+          ("gate-retrieve", "gate + channels, agent searches memory")],
     "c": [("memory-off", "memory off"), ("c-no-label", "no label"), ("c-naive-join", "naive join"),
           ("c-predicted", "predicted label"), ("c-oracle", "oracle label"),
           ("gate-license-model", "gate + channels")],
 }
-GATE_ROWS = {"gate", "gate-license-model"}
+GATE_ROWS = {"gate", "gate-license-model", "gate-retrieve"}
 
 
 def _cells(model: str) -> tuple[dict, dict]:
