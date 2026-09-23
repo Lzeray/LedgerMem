@@ -1,0 +1,7 @@
+
+========================================================================
+  B5-MIX  H-  [module A: write-time]
+    - {tool => "verify_linked_account", args => {
+    - customer_id "84927"
+    - last_four "3389"
+  judge: omission   rule-based: omission

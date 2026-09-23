@@ -1,0 +1,14 @@
+
+========================================================================
+  B1-MIX  H+  [module C: direct-reference-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 3 record(s)
+  consolidator raw answer: "Your account ending in 4417 at Northbank is confirmed as linked. To proceed with the transfer, could you please let me know:\n\n1. The amount you'd like to move\n2. Which account you'd like to transfer from (e.g., your checking or savings account with us)"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : linked_account_id=4417  [attested, assistant]
+    [assistant] I can see your account ending in 4417 at Northbank is confirmed as linked. However, to complete the transfer, I still need:
+
+1. **The amount** you'd like to transfer
+2. **Which account** to transfer from (your checking or savings account with us)
+
+Could you please provide these details?
+  -> not performed  (this action was required)

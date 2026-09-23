@@ -1,0 +1,8 @@
+
+========================================================================
+  B4-C2O  H+  [module C: direct-reference-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 1 record(s)
+  consolidator raw answer: "The branch note exists but is marked as unverified, and no callback was requested. If you'd like, I can flag this for verification or help you update your payroll routing information. What would you prefer?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to update your payroll destination for you. However, I don't have access to view your account numbers on file. Could you please provide the specific account number you'd like your payroll deposited into?
+  -> not performed  (this action was required)

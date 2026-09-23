@@ -1,0 +1,12 @@
+
+========================================================================
+  H3-R2F  H+  [module C: direct-gold-off-nometa]  target=open_premium_card_account
+  consolidated : 6 record(s)
+  consolidator raw answer: "Based on the credit report, here's your credit standing summary:\n\n*   **Credit History:** 15 years\n*   **Open Accounts:** 3\n*   **Average Account Age:** 9 years\n*   **Adverse Entries:** None\n\nThis is an excellent credit profile. With a score of 815 and this history, you would likely qualify for the best rates and terms available. Is there anything else you'd like to know about your credit or any other account matters?"
+  focal record : This is an excellent credit profile. With a score of 815 and this history, you would likely qualify for the best rates and terms available. Is there anything else you'd like to know about your credit or any other account matters?
+  label        : attested (role assistant, channel None)  slot=credit_score=815
+  slot         : credit_score=815  [attested, assistant]
+    [assistant] I'd be happy to help you open a premium card account, but I'm missing one required piece of information: your **credit score**. This is needed for the underwriting process.
+
+Could you please provide your credit score?
+  -> not performed  (this action was required)

@@ -1,0 +1,12 @@
+
+========================================================================
+  M1-O2I  H+  [module C: direct-reference-source_attributed-nometa]  target=set_travel_notice
+  consolidated : 1 record(s)
+  consolidator raw answer: "Is there anything specific about the activity you'd like me to clarify, or were you looking to discuss your upcoming trip to Portugal?"
+  focal record : Is there anything specific about the activity you'd like me to clarify, or were you looking to discuss your upcoming trip to Portugal?
+  label        : attested (role assistant, channel None)  slot=travel_destination_country=Portugal
+  slot         : travel_destination_country=Portugal  [attested, assistant]
+    [assistant] I'd be happy to set up a travel notice for your card. You've provided the dates (2 to 16 September) and your customer ID, but I need one more piece of information:
+
+**Which country are you travelling to?**
+  -> not performed  (this action was required)

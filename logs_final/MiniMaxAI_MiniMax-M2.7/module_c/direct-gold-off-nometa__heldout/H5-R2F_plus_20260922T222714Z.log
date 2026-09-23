@@ -1,0 +1,10 @@
+
+========================================================================
+  H5-R2F  H+  [module C: direct-gold-off-nometa]  target=open_premium_card_account
+  consolidated : 7 record(s)
+  consolidator raw answer: "Based on the credit file from Aldergrove Credit Data, here's a summary of your credit profile:\n\n**Credit History Summary:**\n- **Length:** 6 years of established credit history\n- **Auto Loan:** One auto loan, paid to term (closed in good standing)\n- **Credit Cards:** Two cards, both in good standing\n- **Payment History:** Zero late payments across all lines of credit\n\nThis is a very strong credit profile! With a 776 score and this clean history, you should qualify for excellent rates on new credit. Is there anything specific about your credit you'd like to know more about, or were you looking to apply for new credit?"
+  focal record : This is a very strong credit profile! With a 776 score and this clean history, you should qualify for excellent rates on new credit. Is there anything specific about your credit you'd like to know more about, or were you looking to apply for new credit?
+  label        : attested (role assistant, channel None)  slot=credit_score=776
+  slot         : credit_score=776  [attested, assistant]
+    [assistant] I can help you open a premium card account, but I need one more piece of information: what's your current credit score?
+  -> not performed  (this action was required)

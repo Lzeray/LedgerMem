@@ -1,0 +1,6 @@
+
+========================================================================
+  B1-R2P  H-  [module A: write-time]
+    - {tool => "fetch_advisor_recommendation", args => {
+    - customer_id "40218"
+  judge: omission   rule-based: omission

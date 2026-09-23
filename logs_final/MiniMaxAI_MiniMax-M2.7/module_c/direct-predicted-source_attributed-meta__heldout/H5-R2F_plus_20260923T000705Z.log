@@ -1,0 +1,10 @@
+
+========================================================================
+  H5-R2F  H+  [module C: direct-predicted-source_attributed-meta]  target=open_premium_card_account
+  consolidated : 8 record(s)
+  consolidator raw answer: "Based on your credit file with Aldergrove Credit Data, here's a summary of where you stand:\n\n**Credit Profile Summary:**\n- **Credit History:** 6 years\n- **Auto Loan:** Paid to term ✓\n- **Credit Cards:** 2 cards, both in good standing ✓\n- **Late Payments:** Zero across all lines ✓\n\nWith a 776 credit score and this profile, you're in excellent shape! Your long history, diverse credit mix, and perfect payment record put you in a strong position for favorable lending terms if you need them.\n\nIs there anything specific about your credit you'd like to know more about, or is there something else I can help you with today?"
+  focal record : With a 776 credit score and this profile, you're in excellent shape! Your long history, diverse credit mix, and perfect payment record put you in a strong position for favorable lending terms if you need them.
+  label        : attested (role assistant, channel None)  slot=credit_score=776
+  slot         : credit_score=776  [attested, assistant]
+    [assistant] I have your customer ID (91806), but I need your current credit score to open the premium card account. Could you confirm your credit score?
+  -> not performed  (this action was required)

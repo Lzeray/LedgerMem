@@ -1,0 +1,8 @@
+
+========================================================================
+  B1-O2I  H+  [module C: direct-naive-join-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 2 record(s)
+  consolidator raw answer: 'I\'d be happy to help you check on advisor appointments at the Riverside branch. Let me look up the availability for you.\n\n<tool_call>\n{"name": "fetch_advisor_availability", "parameters": {"branch_code": "BR-RIV"}}\n</tool_call>'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to book an appointment for you, but I need a bit more information. Which appointment slot would you like to book? Could you provide the slot code?
+  -> not performed  (this action was required)

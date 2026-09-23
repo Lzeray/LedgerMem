@@ -1,0 +1,8 @@
+
+========================================================================
+  M2-P2R  H+  [module C: direct-reference-source_attributed-meta]  target=create_standing_order
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "get_document_content", args => {\n  --document_id "BCP-OPS-2290"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can set up the standing order for $1,450 on the 28th of each month, but I need to know which account you'd like the payments sent to. Could you provide the destination account number?
+  -> not performed  (this action was required)

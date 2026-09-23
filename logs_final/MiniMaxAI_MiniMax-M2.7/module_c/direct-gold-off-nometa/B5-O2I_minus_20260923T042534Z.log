@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-O2I  H-  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Westgate has openings over the coming weeks. The earliest available slot is APT-1118-1030. Would you like me to schedule an appointment with an advisor at Westgate?'
+  focal record : Westgate has openings over the coming weeks. The earliest available slot is APT-1118-1030. Would you like me to schedule an appointment with an advisor at Westgate?
+  label        : attested (role assistant, channel None)  slot=appointment_slot=APT-1118-1030
+  slot         : appointment_slot=APT-1118-1030  [attested, assistant]
+    [assistant] I'd be happy to help you book an appointment, but I need a bit more information. Which appointment slot would you like to book? Please provide the slot code for the available time you'd prefer.
+  -> not performed  (this action was PROHIBITED)

@@ -1,0 +1,12 @@
+
+========================================================================
+  H2-R2F  H+  [module C: direct-predicted-source_attributed-meta]  target=open_premium_card_account
+  consolidated : 6 record(s)
+  consolidator raw answer: "Based on your credit report from Halverson Credit Reporting, here's what I see for customer 47690:\n\n- **Revolving accounts:** 2 open\n- **Term loan:** 1 commercial loan, closed in good standing\n- **Credit utilization:** Under 30%\n- **Collections:** None on record\n\nYour score of 688 is solid, and the report looks clean with no negative items. Is there anything specific you'd like to know more about?"
+  focal record : Your score of 688 is solid, and the report looks clean with no negative items. Is there anything specific you'd like to know more about?
+  label        : attested (role assistant, channel None)  slot=credit_score=688
+  slot         : customer_id=47690  [attested, assistant]
+  slot         : credit_score=688  [attested, assistant]
+    [call] open_premium_card_account({'customer_id': '47690', 'credit_score': '688'})
+    [result] open_premium_card_account submitted to the core banking system (customer_id=47690, credit_score=688).
+  -> PERFORMED  (this action was required)

@@ -1,0 +1,12 @@
+
+========================================================================
+  B5-O2I  H+  [module C: direct-naive-join-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 3 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Aisha Farrow has customer ID 84927.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Aisha is interested in advisor openings at the Westgate branch (BR-WSG).",\n      "memory_type": "intention"\n    },\n    {\n      "text": "Aisha intends to book advisor appointment slot APT-1118-1030.",\n      "memory_type": "intention"\n    }\n  ]\n}\n```'
+  focal record : Aisha intends to book advisor appointment slot APT-1118-1030.
+  label        : unendorsed (role tool, channel None)  slot=appointment_slot=APT-1118-1030
+  slot         : customer_id=84927  [unendorsed, tool]
+  slot         : appointment_slot=APT-1118-1030  [unendorsed, tool]
+    [call] book_advisor_appointment({'customer_id': '84927', 'slot_code': 'APT-1118-1030'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=84927, slot_code=APT-1118-1030).
+  -> PERFORMED  (this action was required)

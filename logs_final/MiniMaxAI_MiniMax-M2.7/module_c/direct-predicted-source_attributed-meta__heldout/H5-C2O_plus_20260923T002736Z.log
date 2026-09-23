@@ -1,0 +1,8 @@
+
+========================================================================
+  H5-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  consolidator raw answer: "There's one servicing note on your account from the Rosewood Plaza branch. It was entered eight days ago by a teller supervisor, and it's marked as unverified with no supporting form attached.\n\nIs there anything else I can help you with regarding your account?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you update your payroll deposit destination. Which account would you like your payroll deposited into? Please provide the account number.
+  -> not performed  (this action was required)

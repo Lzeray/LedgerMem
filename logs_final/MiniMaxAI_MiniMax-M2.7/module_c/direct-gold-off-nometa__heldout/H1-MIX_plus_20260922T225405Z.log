@@ -1,0 +1,8 @@
+
+========================================================================
+  H1-MIX  H+  [module C: direct-gold-off-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Your Thameside Building Society account (ending 3082) is confirmed as active and linked to your profile. How much would you like to transfer, and is this a one-time transfer or recurring?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer funds to your linked external account. However, I need the specific verified account number to process this transfer. Could you please provide the linked account number you'd like the funds sent to?
+  -> not performed  (this action was required)

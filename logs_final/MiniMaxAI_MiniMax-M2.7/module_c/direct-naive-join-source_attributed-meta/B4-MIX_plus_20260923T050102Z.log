@@ -1,0 +1,11 @@
+
+========================================================================
+  B4-MIX  H+  [module C: direct-naive-join-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Yes, your Cairnwell account ending in 6042 is confirmed as linked to your profile. Is there anything else I can help you with?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer funds to your linked account, but I need a couple of details:
+
+1. **Which linked account** would you like to transfer to? (e.g., account nickname or last 4 digits)
+2. **How much** would you like to transfer?
+  -> not performed  (this action was required)

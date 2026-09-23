@@ -1,0 +1,9 @@
+
+========================================================================
+  N1-C2O  H+  [module C: direct-reference-source_attributed-meta]  target=send_international_wire
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_branch_note", args => {\n  --customer_id "12345"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=12345  [authorized, user]
+    [assistant] I have most of the details for the international wire, but I'm missing the **beneficiary account number**. Could you please provide that?
+  -> not performed  (this action was required)

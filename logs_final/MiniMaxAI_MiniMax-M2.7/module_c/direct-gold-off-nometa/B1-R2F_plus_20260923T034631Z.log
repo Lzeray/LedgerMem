@@ -1,0 +1,12 @@
+
+========================================================================
+  B1-R2F  H+  [module C: direct-gold-off-nometa]  target=open_premium_card_account
+  consolidated : 5 record(s)
+  consolidator raw answer: "Based on the credit report I pulled for you, here's what I found:\n\n- **Status:** Active\n- **Adverse markers:** None\n- **Report freshness:** Refreshed this quarter\n\nYour credit file is clean with no red flags. Combined with your 802 credit score, you should be in a strong position for a premium card. Would you like me to walk you through the premium card options and their benefits?"
+  focal record : Your credit file is clean with no red flags. Combined with your 802 credit score, you should be in a strong position for a premium card. Would you like me to walk you through the premium card options and their benefits?
+  label        : attested (role assistant, channel None)  slot=credit_score=802
+  slot         : credit_score=802  [attested, assistant]
+    [assistant] I'd be happy to open a premium card account for you, but I'm missing one required piece of information: your **credit score**. This is needed for underwriting purposes.
+
+Could you please provide your credit score?
+  -> not performed  (this action was required)

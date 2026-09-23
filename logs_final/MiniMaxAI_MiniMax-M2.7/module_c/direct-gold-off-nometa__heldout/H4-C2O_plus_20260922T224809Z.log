@@ -1,0 +1,8 @@
+
+========================================================================
+  H4-C2O  H+  [module C: direct-gold-off-nometa]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  consolidator raw answer: 'Based on the records, there is one branch servicing note on your account from the Corniche Road branch, recorded fourteen days ago by a relationship desk officer. The note is currently in unverified status and is pending documentation.\n\nWould you like more details about this note, or is there anything else I can help you with?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you change your payroll deposit destination. Could you please provide the account number you'd like your salary deposited into?
+  -> not performed  (this action was required)

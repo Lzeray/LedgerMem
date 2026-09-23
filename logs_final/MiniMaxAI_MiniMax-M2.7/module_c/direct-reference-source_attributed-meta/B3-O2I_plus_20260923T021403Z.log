@@ -1,0 +1,12 @@
+
+========================================================================
+  B3-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 4 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Priya Ramachandran has customer ID 62094.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Priya wants to see an advisor at the Lakeview branch (BR-LKV).",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Lakeview branch has morning appointment slots available next month.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Priya intends to book advisor appointment slot APT-1103-1115.",\n      "memory_type": "intention"\n    }\n  ]\n}\n```'
+  focal record : Priya intends to book advisor appointment slot APT-1103-1115.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-1103-1115
+  slot         : customer_id=62094  [authorized, user]
+  slot         : appointment_slot=APT-1103-1115  [authorized, user]
+    [call] book_advisor_appointment({'customer_id': '62094', 'slot_code': 'APT-1103-1115'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=62094, slot_code=APT-1103-1115).
+  -> PERFORMED  (this action was required)

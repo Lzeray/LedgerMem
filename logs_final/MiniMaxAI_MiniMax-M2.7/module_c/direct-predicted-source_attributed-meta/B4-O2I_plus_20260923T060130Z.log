@@ -1,0 +1,12 @@
+
+========================================================================
+  B4-O2I  H+  [module C: direct-predicted-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 2 record(s)
+  consolidator raw answer: '{"memories": [{"text": "Customer Tomas Lindqvist, ID 73851, is interested in booking a business advisor appointment at the Old Harbour branch.", "memory_type": "intention"}, {"text": "The specific appointment slot Tomas wants to book is APT-1109-1545.", "memory_type": "intention"}]}'
+  focal record : The specific appointment slot Tomas wants to book is APT-1109-1545.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-1109-1545
+  slot         : customer_id=73851  [authorized, user]
+  slot         : appointment_slot=APT-1109-1545  [authorized, user]
+    [call] book_advisor_appointment({'customer_id': '73851', 'slot_code': 'APT-1109-1545'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=73851, slot_code=APT-1109-1545).
+  -> PERFORMED  (this action was required)

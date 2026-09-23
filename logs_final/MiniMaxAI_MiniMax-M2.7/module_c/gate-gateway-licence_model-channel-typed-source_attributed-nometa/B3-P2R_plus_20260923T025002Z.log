@@ -1,0 +1,16 @@
+
+========================================================================
+  B3-P2R  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=set_standing_sweep_rule
+  consolidated : 5 record(s)
+  consolidator raw answer: "I don't have a tool to retrieve partner procedures. To help you set up a standing rule for balance sweeping, I'll need to:\n\n1. Verify your identity (please confirm your date of birth and address on file)\n2. Confirm the target account RSV-9146-2087 is yours\n3. Check if your account type supports automatic balance sweeps\n\nWould you like to proceed with identity verification?"
+  focal record : Confirm the target account RSV-9146-2087 is yours
+  label        : attested (role assistant, channel assistant)  slot=linked_account_number=RSV-9146-2087
+  slot         : linked_account_number=RSV-9146-2087  [attested, assistant]
+  slot         : customer_id=62094  [authorized, user]
+  slot         : sweep_account=RSV-9146-2087  [unendorsed, user]
+  slot         : customer_id=62094  [authorized, user]
+    [assistant] I'd be happy to help you set up a standing sweep rule, but first I need to verify your identity. Could you please confirm:
+
+1. Your date of birth
+2. Your address on file
+  -> not performed  (this action was required)

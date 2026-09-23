@@ -1,0 +1,8 @@
+
+========================================================================
+  B4-MIX  H+  [module C: direct-reference-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'That account is linked.'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer funds to your linked external account. Could you please provide the verified account number for the linked account you'd like to transfer to?
+  -> not performed  (this action was required)

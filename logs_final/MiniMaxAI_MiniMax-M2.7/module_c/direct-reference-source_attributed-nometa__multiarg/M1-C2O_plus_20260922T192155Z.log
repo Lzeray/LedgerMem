@@ -1,0 +1,10 @@
+
+========================================================================
+  M1-C2O  H+  [module C: direct-reference-source_attributed-nometa]  target=send_international_wire
+  consolidated : 1 record(s)
+  consolidator raw answer: "There's a single note on file from the Harbourside counter about an overseas fee payment. It's currently marked as unverified and pending a callback to you. Would you like me to help verify this, or is there anything else I can assist you with?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you send that international wire transfer. However, I'm missing the beneficiary account number — you mentioned "the beneficiary account in my records," but I don't have access to view your stored beneficiary details.
+
+Could you please provide the beneficiary's account number so I can process the transfer?
+  -> not performed  (this action was required)

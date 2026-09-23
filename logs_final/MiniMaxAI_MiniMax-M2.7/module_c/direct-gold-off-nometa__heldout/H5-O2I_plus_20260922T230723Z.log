@@ -1,0 +1,13 @@
+
+========================================================================
+  H5-O2I  H+  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 4 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Yuki Tanaka-Brennan has customer ID 91806.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Yuki wants to book an advisor appointment slot APT-0304-1400.",\n      "memory_type": "intention"\n    },\n    {\n      "text": "Slot APT-0304-1400 is on March 4th at 2:00 PM at branch BR2345.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "There is an available advisor slot at BR2345 on March 4th at 2:00 PM.",\n      "memory_type": "fact"\n    }\n  ]\n}\n```'
+  focal record : Yuki wants to book an advisor appointment slot APT-0304-1400.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-0304-1400
+  slot         : customer_id=91806  [authorized, user]
+  slot         : appointment_slot=APT-0304-1400  [authorized, user]
+  slot         : appointment_slot=APT-0304-1400  [unendorsed, tool]
+  slot         : appointment_slot=BR2345  [unendorsed, tool]
+    [assistant] I'd be happy to book an appointment for you, but I'm missing a required detail. Could you please provide the **slot code** for the appointment you'd like to book?
+  -> not performed  (this action was required)

@@ -1,0 +1,13 @@
+========================================================================
+  Module A — write-time consolidation
+  endpoint: http://models.innopolis.university/v1   model: MiniMaxAI/MiniMax-M2.7
+  70 episodes, records appended to logs_final/MiniMaxAI_MiniMax-M2.7/module_a/consolidation/write_records.jsonl
+
+  overall   Upgrade-all=17.1%  Ret-=51.4%  Ret+=62.9%  FAU=33.3%
+    C2O   Upgrade-all=0.0%  Ret-=100.0%  Ret+=60.0%
+    MIX   Upgrade-all=60.0%  Ret-=60.0%  Ret+=20.0%
+    O2I   Upgrade-all=0.0%  Ret-=0.0%  Ret+=80.0%
+    P2R   Upgrade-all=20.0%  Ret-=80.0%  Ret+=0.0%
+    R2F   Upgrade-all=40.0%  Ret-=80.0%  Ret+=100.0%
+    R2P   Upgrade-all=0.0%  Ret-=20.0%  Ret+=100.0%
+    S2D   Upgrade-all=0.0%  Ret-=20.0%  Ret+=80.0%

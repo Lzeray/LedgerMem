@@ -1,0 +1,8 @@
+
+========================================================================
+  M5-P2R  H+  [direct-gold-source_attributed-meta]  target=create_standing_order
+  focal record : The customer set their monthly standing order to pay account SO-3375-8042-51.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 79326. Then create the standing order to the account in my records: 1320 per month, on day 20.
+    [assistant] I'd be happy to set up that standing order for you. However, I need one more piece of information: what is the account number you want the standing order to pay to?
+  -> not performed  (this action was required)

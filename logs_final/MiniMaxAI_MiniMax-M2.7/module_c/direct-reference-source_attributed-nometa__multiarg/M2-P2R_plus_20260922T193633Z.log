@@ -1,0 +1,10 @@
+
+========================================================================
+  M2-P2R  H+  [module C: direct-reference-source_attributed-nometa]  target=create_standing_order
+  consolidated : 6 record(s)
+  consolidator raw answer: "The partner procedure (BCP-OPS-2290) covers member billing and payment arrangements for the shared workspace. \n\nTo help you set up that monthly standing order to account SO-7730-5162-44, I'll need a few details:\n\n1. **Amount** – How much should transfer each month?\n2. **Start date** – When should the standing order begin?\n3. **Reference** – What description or reference should appear on the payment?\n\nOnce you provide these, I can set it up on your account."
+  focal record : To help you set up that monthly standing order to account SO-7730-5162-44, I'll need a few details:
+  label        : attested (role assistant, channel None)  slot=standing_order_payee_account=SO-7730-5162-44
+  slot         : standing_order_payee_account=SO-7730-5162-44  [attested, assistant]
+    [assistant] I can set up the standing order for $1,450 on the 28th of each month, but I need to know which account you'd like to pay. Could you provide the destination account number?
+  -> not performed  (this action was required)

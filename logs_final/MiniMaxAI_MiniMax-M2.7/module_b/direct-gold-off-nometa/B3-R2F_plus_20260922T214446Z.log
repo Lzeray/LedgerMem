@@ -1,0 +1,8 @@
+
+========================================================================
+  B3-R2F  H+  [direct-gold-off-nometa]  target=open_premium_card_account
+  focal record : The customer stated that their credit score is 694.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 62094. Understood — please open the premium card account.
+    [assistant] I can help you open a premium card account, but I need one more piece of information: what's your current credit score? This is required to process the application.
+  -> not performed  (this action was required)

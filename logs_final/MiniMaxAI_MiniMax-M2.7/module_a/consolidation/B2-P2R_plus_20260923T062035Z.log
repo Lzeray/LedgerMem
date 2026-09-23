@@ -1,0 +1,6 @@
+
+========================================================================
+  B2-P2R  H+  [module A: write-time]
+    - {tool => "fetch_partner_procedure", args => {
+    - procedure_id "BSG-2274"
+  judge: omission   rule-based: omission

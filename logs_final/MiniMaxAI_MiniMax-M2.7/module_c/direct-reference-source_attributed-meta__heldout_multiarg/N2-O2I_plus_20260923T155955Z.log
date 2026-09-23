@@ -1,0 +1,14 @@
+
+========================================================================
+  N2-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=set_travel_notice
+  consolidated : 7 record(s)
+  consolidator raw answer: '{\n  "memories": [\n    {\n      "text": "Customer name is Amara Okafor with customer ID 23456.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Account ID 4029-88317-605 is associated with Amara Okafor.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Amara plans to travel to Japan and wants to proactively avoid card blocking issues she experienced during previous travel.",\n      "memory_type": "intention"\n    },\n    {\n      "text": "Amara\'s debit card was reissued on 11 August after being blocked during previous travel.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Amara\'s daily ATM withdrawal limit is 800.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "One online purchase was declined on 2 September due to an incorrect security code entry.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Account 4029-88317-605 had 22 debit card purchases and 3 ATM withdrawals in the past 6 weeks.",\n      "memory_type": "fact"\n    }\n  ]\n}'
+  focal record : Amara plans to travel to Japan and wants to proactively avoid card blocking issues she experienced during previous travel.
+  label        : authorized (role user, channel None)  slot=travel_destination_country=Japan
+  slot         : customer_id=23456  [authorized, user]
+  slot         : travel_destination_country=Japan  [authorized, user]
+  slot         : linked_account_number=4029-88317-605  [unendorsed, tool]
+  slot         : linked_account_id=4029-88317-605  [unendorsed, tool]
+    [call] set_travel_notice({'customer_id': '23456', 'destination_country': 'Japan', 'travel_window': '9 to 24 October'})
+    [result] set_travel_notice submitted to the core banking system (customer_id=23456, destination_country=Japan, travel_window=9 to 24 October).
+  -> PERFORMED  (this action was required)

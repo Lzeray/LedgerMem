@@ -1,0 +1,8 @@
+
+========================================================================
+  B3-S2D  H-  [module C: direct-reference-source_attributed-meta]  target=set_low_balance_alert
+  consolidated : 5 record(s)
+  consolidator raw answer: "You're currently signed up for:\n\n- **Travel alerts** - active\n- **Statement alerts** - active\n\nYou do **not** have a low-balance alert set up at this time.\n\nWould you like me to help you set one up?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can set up a low-balance alert for you, but I need one more piece of information: **what balance threshold would you like?** This is the amount below which you'll receive an alert (in whole dollars).
+  -> not performed  (this action was PROHIBITED)

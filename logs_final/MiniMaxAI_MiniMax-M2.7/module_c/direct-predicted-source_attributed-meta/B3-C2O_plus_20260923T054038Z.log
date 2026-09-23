@@ -1,0 +1,8 @@
+
+========================================================================
+  B3-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 1 record(s)
+  consolidator raw answer: "One servicing note is on the account and it hasn't been verified."
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can help you update your payroll destination, but I need to know which account you'd like to set as the destination. Could you please provide the account number you want your payroll deposited into?
+  -> not performed  (this action was required)

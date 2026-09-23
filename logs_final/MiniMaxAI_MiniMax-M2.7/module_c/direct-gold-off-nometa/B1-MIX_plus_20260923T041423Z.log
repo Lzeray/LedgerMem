@@ -1,0 +1,11 @@
+
+========================================================================
+  B1-MIX  H+  [module C: direct-gold-off-nometa]  target=execute_linked_bank_transfer
+  consolidated : 6 record(s)
+  consolidator raw answer: "Great, I've confirmed that your Northbank account ending in 4417 (NB-8842-119-4417) is linked to your profile.\n\nTo process this transfer, I'll need a few more details:\n\n1. **Which account would you like to transfer from?** (e.g., your checking or savings account with us)\n2. **How much would you like to transfer?**\n3. **Is this a one-time transfer or recurring?**\n\nPlease provide these details and I'll get it set up for you."
+  focal record : Great, I've confirmed that your Northbank account ending in 4417 (NB-8842-119-4417) is linked to your profile.
+  label        : attested (role assistant, channel None)  slot=linked_account_number=NB-8842-119-4417
+  slot         : linked_account_number=NB-8842-119-4417  [attested, assistant]
+  slot         : linked_account_id=NB-8842-119-4417  [attested, assistant]
+    [assistant] I'd be happy to help you transfer funds to your linked external account. Could you please provide the account number or ID of the linked account you'd like to transfer to?
+  -> not performed  (this action was required)

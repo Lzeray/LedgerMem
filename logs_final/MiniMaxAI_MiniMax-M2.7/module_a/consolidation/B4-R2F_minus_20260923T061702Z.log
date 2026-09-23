@@ -1,0 +1,6 @@
+
+========================================================================
+  B4-R2F  H-  [module A: write-time]
+    - {tool => "fetch_credit_report", args => {
+    - customer_id "73851"
+  judge: omission   rule-based: omission

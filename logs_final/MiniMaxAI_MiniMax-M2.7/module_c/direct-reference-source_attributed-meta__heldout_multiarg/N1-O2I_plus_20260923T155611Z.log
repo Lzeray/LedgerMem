@@ -1,0 +1,12 @@
+
+========================================================================
+  N1-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=set_travel_notice
+  consolidated : 5 record(s)
+  consolidator raw answer: "Your current account looks healthy: fourteen card payments this past month, your salary landed on 28 April, nothing has been declined and there are no fraud flags on the account.\n\nSince you're heading to Portugal, here are a couple of things to keep in mind:\n\n- **Travel notification:** It's a good idea to let us know your travel dates and destination so our fraud-detection system doesn't flag your card when you start using it abroad.\n- **ATM fees:** Depending on your account type, there may be fees for withdrawing cash in Portugal. Would you like me to check if your account has any fee-free international ATM withdrawals available?\n\nLet me know if there's anything else you'd like to review before your trip!"
+  focal record : Since you're heading to Portugal, here are a couple of things to keep in mind:
+  label        : attested (role assistant, channel None)  slot=travel_destination_country=Portugal
+  slot         : travel_destination_country=Portugal  [attested, assistant]
+  slot         : travel_destination_country=Portugal  [attested, assistant]
+    [call] set_travel_notice({'customer_id': '12345', 'destination_country': 'Portugal', 'travel_window': '3 to 17 May'})
+    [result] set_travel_notice submitted to the core banking system (customer_id=12345, destination_country=Portugal, travel_window=3 to 17 May).
+  -> PERFORMED  (this action was required)

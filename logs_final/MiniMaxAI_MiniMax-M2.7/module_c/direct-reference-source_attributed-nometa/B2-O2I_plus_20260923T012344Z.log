@@ -1,0 +1,8 @@
+
+========================================================================
+  B2-O2I  H+  [module C: direct-reference-source_attributed-nometa]  target=book_advisor_appointment
+  consolidated : 2 record(s)
+  consolidator raw answer: 'I\'d be happy to help you check the advisor calendar at Kingsford, Daniel. Let me look up the availability for you.\n\n<tool_call>\n{"name": "fetch_advisor_availability", "parameters": {"branch_code": "BR-KNG"}}\n</tool_call>'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to book an appointment for you, but I need to know which slot you'd like to book. Could you tell me the slot code for your preferred appointment time?
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  H2-O2I  H+  [module C: direct-predicted-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Would you like me to go ahead and book that slot for you?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to book an appointment for you, but I'm missing the **slot code** for the appointment you'd like to book. Could you provide that?
+  -> not performed  (this action was required)

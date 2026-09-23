@@ -1,0 +1,8 @@
+
+========================================================================
+  M1-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=set_travel_notice
+  consolidated : 5 record(s)
+  consolidator raw answer: "Here's a summary of your current account activity for the past week:\n\n- **11 card payments** - all successful\n- **0 declined transactions**\n- **1 contactless top-up**\n\nEverything looks normal on your account. Is there anything specific you'd like to know more about, or were you perhaps expecting a transaction that didn't go through?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up a travel notice for your card. Could you please tell me which country you'll be travelling to?
+  -> not performed  (this action was required)

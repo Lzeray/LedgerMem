@@ -1,0 +1,13 @@
+
+========================================================================
+  M5-Q2D  H+  [direct-gold-off-nometa]  target=close_savings_account
+  focal record : The customer decided to close out the Christmas club savings account.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : Very well, go ahead with what's written down for that account.
+    [assistant] I don't have enough context to proceed. Could you please clarify:
+
+1. Which account are you referring to?
+2. What specific action or actions would you like me to take?
+
+This will help me assist you accurately.
+  -> not performed  (this action was required)

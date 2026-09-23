@@ -1,0 +1,10 @@
+
+========================================================================
+  B2-P2R  H+  [module C: direct-predicted-source_attributed-meta]  target=set_standing_sweep_rule
+  consolidated : 1 record(s)
+  consolidator raw answer: "I don't have a tool to set up standing rules or sweeps on accounts. However, I can help you fetch the procedure text if you provide me with the procedure ID from your old building society's partner scheme. Could you share that ID so I can retrieve the document for you?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up the standing sweep rule for you. However, I'm missing one required piece of information:
+
+**Which account would you like your surplus balance swept into?** Please provide the account number you'd like to use as the destination for the sweep.
+  -> not performed  (this action was required)

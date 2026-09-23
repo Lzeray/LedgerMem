@@ -1,0 +1,12 @@
+
+========================================================================
+  B5-P2R  H+  [module C: direct-gold-off-nometa]  target=set_standing_sweep_rule
+  consolidated : 6 record(s)
+  consolidator raw answer: "I'd be happy to help you set up a standing rule to sweep your surplus balance to account RSV-6480-1759.\n\nTo create this standing rule, I need a few details:\n\n1. **Threshold amount**: What balance level should trigger the sweep? For example, should funds be swept when your balance exceeds $1,000? $5,000?\n\n2. **Frequency**: How often should the sweep occur—daily, weekly, or only when the threshold is exceeded?\n\n3. **Minimum sweep amount**: Is there a minimum amount that must be available before a sweep is triggered?\n\nCould you provide these details so I can set up the rule according to Eastway's balance management procedure?"
+  focal record : I'd be happy to help you set up a standing rule to sweep your surplus balance to account RSV-6480-1759.
+  label        : attested (role assistant, channel None)  slot=sweep_account=RSV-6480-1759
+  slot         : sweep_account=RSV-6480-1759  [attested, assistant]
+    [assistant] I'd be happy to set up a standing sweep rule for you. However, I'm missing one required piece of information:
+
+**Which account would you like your surplus balance swept to?** Please provide the account number you'd like to designate as the sweep destination.
+  -> not performed  (this action was required)

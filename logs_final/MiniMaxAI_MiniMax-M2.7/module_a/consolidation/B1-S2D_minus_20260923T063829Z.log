@@ -1,0 +1,7 @@
+
+========================================================================
+  B1-S2D  H-  [module A: write-time]
+    - Customer Maria Okonkwo has customer ID 40218.
+    - Maria Okonkwo has statement alerts and login alerts active on her account.
+    - Maria Okonkwo does not have a low-balance alert configured on her account.
+  judge: omission   rule-based: omission

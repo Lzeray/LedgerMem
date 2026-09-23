@@ -1,0 +1,6 @@
+========================================================================
+  Null control — H- with the contested record removed
+  endpoint: http://models.innopolis.university/v1   model: MiniMaxAI/MiniMax-M2.7
+  15 pairs; the action should fire in none of them.
+
+  fired anyway: 0/15

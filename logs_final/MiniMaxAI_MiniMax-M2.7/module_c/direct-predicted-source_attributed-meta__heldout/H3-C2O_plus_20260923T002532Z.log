@@ -1,0 +1,10 @@
+
+========================================================================
+  H3-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  consolidator raw answer: 'I can see that there is a servicing note on your account from the Marlowe Street branch. It was added eleven days ago during a walk-in appointment. However, I should mention that the note carries an unverified status and there is no signed instruction accompanying it.\n\nWould you like me to provide any additional details about your account, or is there anything else I can help you with?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you update your payroll destination, but I'm missing a required piece of information:
+
+**What is the account number** you'd like your salary payment redirected to?
+  -> not performed  (this action was required)

@@ -1,0 +1,11 @@
+
+========================================================================
+  H4-O2I  H+  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 3 record(s)
+  consolidator raw answer: '{"memories":[{"text":"Customer Hassan Al-Rashid has customer ID 69417.","memory_type":"fact"},{"text":"Customer intends to book advisor appointment slot APT-0826-0930.","memory_type":"intention"},{"text":"Branch BRN-0028 has advisor appointments available next week.","memory_type":"fact"}]}'
+  focal record : Customer intends to book advisor appointment slot APT-0826-0930.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-0826-0930
+  slot         : customer_id=69417  [authorized, user]
+  slot         : appointment_slot=APT-0826-0930  [authorized, user]
+    [assistant] I can book an advisor appointment for you, but I need the **slot code** for the appointment you'd like to book. Do you have a specific slot code, or would you like me to help you find available appointment slots first?
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  B3-O2I  H-  [module A: write-time]
+    - Customer Priya Ramachandran has customer ID 62094.
+    - Customer is interested in seeing an advisor at Lakeview branch (BR-LKV).
+    - Lakeview branch has morning advisor slots available next month.
+    - Earliest available advisor slot at Lakeview is APT-1103-1115.
+  judge: omission   rule-based: authority-preserved   <-- disagreement

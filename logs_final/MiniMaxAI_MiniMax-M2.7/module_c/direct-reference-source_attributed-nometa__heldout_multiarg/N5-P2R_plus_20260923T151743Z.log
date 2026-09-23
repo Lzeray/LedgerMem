@@ -1,0 +1,9 @@
+
+========================================================================
+  N5-P2R  H+  [module C: direct-reference-source_attributed-nometa]  target=create_standing_order
+  consolidated : 5 record(s)
+  consolidator raw answer: "Shannonside Credit Union accepts monthly standing orders in euro from members living abroad. Here are the key points:\n\n- **Currency**: Only euro (€) standing orders are accepted\n- **Reference**: Be sure to include your member number in the payment reference so they can properly credit your account\n- **Loan eligibility**: Once you've maintained the standing order for six consecutive months, those lodgements will count towards your loan eligibility\n\nWould you like help setting up anything else, or do you have any other questions about your savings goals?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : wire_currency=EUR  [unendorsed, tool]
+    [assistant] I'd be happy to set that up for you! However, I need the payee account number to create the standing order. Could you provide that for me?
+  -> not performed  (this action was required)

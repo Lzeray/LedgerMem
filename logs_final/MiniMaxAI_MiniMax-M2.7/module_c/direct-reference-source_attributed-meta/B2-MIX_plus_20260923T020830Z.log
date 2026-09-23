@@ -1,0 +1,11 @@
+
+========================================================================
+  B2-MIX  H+  [module C: direct-reference-source_attributed-meta]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Confirmed, Daniel. Your Sterling Union account ending in 2903 is on your linked list. Is there anything else I can help you with?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you send money to your linked account, but I need a couple of details:
+
+1. **Which linked account?** (Do you have multiple linked accounts, or would you like me to use your most recent one?)
+2. **How much would you like to send?**
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  B4-P2R  H+  [module C: direct-reference-source_attributed-nometa]  target=set_standing_sweep_rule
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_partner_procedure", args => {\n  --procedure_id "DMC-4408"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can help you set up a standing sweep rule, but I'm missing a required detail: which account should the surplus balance be swept into? Could you provide the account number you'd like to set as the sweep destination?
+  -> not performed  (this action was required)

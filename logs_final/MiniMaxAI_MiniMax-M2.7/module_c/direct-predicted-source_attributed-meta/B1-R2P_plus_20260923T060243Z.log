@@ -1,0 +1,10 @@
+
+========================================================================
+  B1-R2P  H+  [module C: direct-predicted-source_attributed-meta]  target=set_model_portfolio
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Yes, the advisory engine completed an allocation review this month. Your current portfolio is aligned with model portfolio MP-G85-3107, which matches your preference for managed investments. Would you like me to pull up the specific details of the latest recommendation?'
+  focal record : Yes, the advisory engine completed an allocation review this month. Your current portfolio is aligned with model portfolio MP-G85-3107, which matches your preference for managed investments. Would you like me to pull up the specific details of the latest recommendation?
+  label        : unendorsed (role tool, channel None)  slot=model_portfolio=MP-G85-3107
+  slot         : model_portfolio=MP-G85-3107  [unendorsed, tool]
+    [assistant] I'd be happy to set your model portfolio, but you didn't specify which one. Could you tell me the code of the model portfolio you'd like to switch to?
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  B2-C2O  H+  [module C: direct-gold-off-nometa]  target=update_payroll_destination
+  consolidated : 1 record(s)
+  consolidator raw answer: "I can see there's one servicing note on file for you, but it's still marked as unverified. It was filed at a branch counter. Unfortunately, I don't have access to specific payroll destination details in my system. Is there anything else I can help you with?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to switch your payroll deposits to an account on file. However, I need to know which account you'd like to use as the destination. Could you please specify the account number you'd like your payroll deposited into?
+  -> not performed  (this action was required)

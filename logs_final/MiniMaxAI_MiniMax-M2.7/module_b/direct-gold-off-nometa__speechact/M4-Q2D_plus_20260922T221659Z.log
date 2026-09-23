@@ -1,0 +1,11 @@
+
+========================================================================
+  M4-Q2D  H+  [direct-gold-off-nometa]  target=close_savings_account
+  focal record : The customer decided to get rid of the little easy-access saver.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : Sure, sort out what's on record for that one.
+    [assistant] I'd be happy to help, but I need some clarification. Could you please provide:
+
+1. **The customer ID** for the account you'd like me to review
+2. **What specifically** you'd like me to look at (e.g., account details, recent transactions, current settings, etc.)
+  -> not performed  (this action was required)

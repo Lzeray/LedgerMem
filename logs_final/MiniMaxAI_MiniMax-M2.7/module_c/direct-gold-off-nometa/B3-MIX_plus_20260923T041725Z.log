@@ -1,0 +1,9 @@
+
+========================================================================
+  B3-MIX  H+  [module C: direct-gold-off-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: "Yes, your Harbor First account ending in 7158 is still linked to your profile with us. Is there anything else you'd like help with regarding this account or anything else?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : linked_account_id=7158  [attested, assistant]
+    [assistant] I'd be happy to help you transfer your balance to a linked account. Could you please provide the account number of the linked account you'd like to transfer to?
+  -> not performed  (this action was required)

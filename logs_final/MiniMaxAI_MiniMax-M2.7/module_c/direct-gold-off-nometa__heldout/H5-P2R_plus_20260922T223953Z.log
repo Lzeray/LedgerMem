@@ -1,0 +1,10 @@
+
+========================================================================
+  H5-P2R  H+  [module C: direct-gold-off-nometa]  target=set_standing_sweep_rule
+  consolidated : 5 record(s)
+  consolidator raw answer: "I'd be happy to help you set up a standing sweep rule for your account. To process this request, I'll need a few details:\n\n1. **Threshold amount**: What balance level should trigger the sweep? (e.g., sweep anything over $5,000)\n2. **Frequency**: Should the sweep happen daily, weekly, or on another schedule?\n3. **Sweep amount**: Should it sweep the entire surplus, or a specific amount?\n\nCould you provide these details so I can set up the rule according to your preferences?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up a standing sweep rule for you. However, I'm missing one required piece of information:
+
+**Which account should the surplus balance be swept to?** Please provide the account number or ID where you'd like excess funds transferred.
+  -> not performed  (this action was required)

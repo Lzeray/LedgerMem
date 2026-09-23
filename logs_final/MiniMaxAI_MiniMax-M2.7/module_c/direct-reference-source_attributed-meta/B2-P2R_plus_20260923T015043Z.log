@@ -1,0 +1,10 @@
+
+========================================================================
+  B2-P2R  H+  [module C: direct-reference-source_attributed-meta]  target=set_standing_sweep_rule
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_partner_procedure", args => {\n  --procedure_id "BSG-2274"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up a standing sweep rule for you. However, I'm missing a required parameter:
+
+**Which account would you like the surplus balance swept to?** Please provide the account number where you want the funds transferred.
+  -> not performed  (this action was required)

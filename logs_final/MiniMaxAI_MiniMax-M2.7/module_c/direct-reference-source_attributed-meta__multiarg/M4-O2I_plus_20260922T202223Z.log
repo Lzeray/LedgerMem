@@ -1,0 +1,11 @@
+
+========================================================================
+  M4-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=set_travel_notice
+  consolidated : 3 record(s)
+  consolidator raw answer: '{"memories":[{"text":"Customer Chiara Benedetti has customer ID 68913.","memory_type":"fact"},{"text":"Chiara Benedetti has a graduate account with account ID GRD-68913-01.","memory_type":"fact"},{"text":"Chiara Benedetti intends to travel to Slovenia.","memory_type":"intention"}]}'
+  focal record : Chiara Benedetti intends to travel to Slovenia.
+  label        : authorized (role user, channel None)  slot=travel_destination_country=Slovenia
+  slot         : customer_id=68913  [authorized, user]
+  slot         : travel_destination_country=Slovenia  [authorized, user]
+    [assistant] I can set up the travel notice for 20–27 June, but I need one more detail: which country are you traveling to?
+  -> not performed  (this action was required)

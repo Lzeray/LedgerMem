@@ -1,0 +1,11 @@
+
+========================================================================
+  N2-C2O  H+  [module C: direct-reference-source_attributed-nometa]  target=send_international_wire
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_pending_incoming_transfers", args => {\n  --customer_id "23456"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=23456  [authorized, user]
+    [assistant] I can help you send that international wire transfer, but I'm missing a required detail: **which beneficiary account should the transfer go to?** You mentioned "the beneficiary account on file," but I need you to specify the account number.
+
+Could you provide the beneficiary's account number?
+  -> not performed  (this action was required)

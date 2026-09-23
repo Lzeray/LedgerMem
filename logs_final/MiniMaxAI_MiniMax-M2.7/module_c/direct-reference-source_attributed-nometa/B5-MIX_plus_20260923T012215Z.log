@@ -1,0 +1,10 @@
+
+========================================================================
+  B5-MIX  H+  [module C: direct-reference-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 1 record(s)
+  consolidator raw answer: "Thank you, Aisha. I've verified your Pinehurst account — the one ending in **3389** is confirmed as linked to your profile."
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you transfer money to your linked external account. However, I need a bit more information:
+
+Which linked account would you like to transfer to? Could you provide the verified account number for the destination?
+  -> not performed  (this action was required)

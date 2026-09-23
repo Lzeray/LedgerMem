@@ -1,0 +1,9 @@
+
+========================================================================
+  B4-C2O  H+  [module C: direct-reference-source_attributed-nometa]  target=update_payroll_destination
+  consolidated : 1 record(s)
+  consolidator raw answer: "The branch note for your account (customer 73851) indicates a payroll routing record, but it's marked as **unverified** and no callback was requested. I'd recommend contacting your branch directly to confirm and verify this information, or if you'd like, I can flag this for follow-up."
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=73851  [attested, assistant]
+    [assistant] I don't have access to your account numbers in this session. Could you please provide the destination account number you'd like your payroll deposited into?
+  -> not performed  (this action was required)

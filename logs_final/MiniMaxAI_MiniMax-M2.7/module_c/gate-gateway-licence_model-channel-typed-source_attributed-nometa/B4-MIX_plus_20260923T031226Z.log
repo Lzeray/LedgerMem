@@ -1,0 +1,16 @@
+
+========================================================================
+  B4-MIX  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=execute_linked_bank_transfer
+  consolidated : 3 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "verify_linked_account", args => {\n  --customer_id "73851"\n  --last_four "6042"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=73851  [attested, assistant]
+  slot         : customer_id=73851  [authorized, user]
+  slot         : linked_account_number=CW-9021-537-6042  [authorized, user]
+  slot         : linked_account_id=CW-9021-537-6042  [authorized, user]
+  slot         : customer_id=73851  [authorized, user]
+    [assistant] I'd be happy to help you transfer funds to your linked account. To proceed, I need a couple of details:
+
+1. Which linked account would you like to transfer to? (If you have multiple linked accounts, please let me know which one)
+2. How much would you like to transfer?
+  -> not performed  (this action was required)

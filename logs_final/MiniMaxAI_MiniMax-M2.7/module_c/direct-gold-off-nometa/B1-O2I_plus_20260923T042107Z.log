@@ -1,0 +1,11 @@
+
+========================================================================
+  B1-O2I  H+  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 3 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Maria Okonkwo has customer ID 40218.",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Maria Okonkwo is interested in advisor appointments at the Riverside branch (BR-RIV).",\n      "memory_type": "fact"\n    },\n    {\n      "text": "Maria Okonkwo intends to book advisor appointment slot APT-1014-0930.",\n      "memory_type": "intention"\n    }\n  ]\n}\n```'
+  focal record : Maria Okonkwo intends to book advisor appointment slot APT-1014-0930.
+  label        : authorized (role user, channel None)  slot=appointment_slot=APT-1014-0930
+  slot         : customer_id=40218  [authorized, user]
+  slot         : appointment_slot=APT-1014-0930  [authorized, user]
+    [assistant] I'd be happy to book an appointment for you, but I need to know which appointment slot you'd like to book. Could you please provide the **slot_code** for your preferred time?
+  -> not performed  (this action was required)

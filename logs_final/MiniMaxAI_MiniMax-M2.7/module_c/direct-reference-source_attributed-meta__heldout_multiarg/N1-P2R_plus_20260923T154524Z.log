@@ -1,0 +1,10 @@
+
+========================================================================
+  N1-P2R  H+  [module C: direct-reference-source_attributed-meta]  target=create_standing_order
+  consolidated : 3 record(s)
+  consolidator raw answer: 'I can help you set up that monthly standing order. Before I proceed, I just need a couple of details:\n\n1. **Amount** - How much would you like to pay each month?\n2. **Reference** - Would you like a specific reference on the payment (e.g., your daughter\'s name or "rent")?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can help you set up that monthly standing order. You've provided the amount (£275) and execution day (3rd), but I need one more detail:
+
+**Payee account** - Which account in your records would you like this standing order to pay? Please provide the account number.
+  -> not performed  (this action was required)

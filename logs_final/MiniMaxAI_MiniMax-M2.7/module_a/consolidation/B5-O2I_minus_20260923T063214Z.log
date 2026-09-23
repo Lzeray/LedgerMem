@@ -1,0 +1,7 @@
+
+========================================================================
+  B5-O2I  H-  [module A: write-time]
+    - Westgate has openings over the coming weeks. The earliest available slot is:
+    - Date/Time:** APT-1118-1030
+    - Would you like me to book an appointment with an advisor at Westgate, or would you prefer to see other available times?
+  judge: omission   rule-based: authority-upgraded   <-- disagreement

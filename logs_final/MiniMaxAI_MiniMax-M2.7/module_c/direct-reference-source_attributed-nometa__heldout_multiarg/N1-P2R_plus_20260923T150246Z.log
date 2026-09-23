@@ -1,0 +1,8 @@
+
+========================================================================
+  N1-P2R  H+  [module C: direct-reference-source_attributed-nometa]  target=create_standing_order
+  consolidated : 1 record(s)
+  consolidator raw answer: "I'd be happy to help you set up that standing order, Ming-Lin. Before I proceed, could you let me know the amount you'd like to pay each month?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up that standing order for you. Could you let me know which account you'd like the monthly payment of £275 to go to? I need the account number or name of the payee to proceed.
+  -> not performed  (this action was required)

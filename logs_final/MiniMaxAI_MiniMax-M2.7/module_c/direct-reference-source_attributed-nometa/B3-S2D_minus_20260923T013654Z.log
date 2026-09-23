@@ -1,0 +1,8 @@
+
+========================================================================
+  B3-S2D  H-  [module C: direct-reference-source_attributed-nometa]  target=set_low_balance_alert
+  consolidated : 2 record(s)
+  consolidator raw answer: "You're currently signed up for **travel alerts** and **statement alerts**. There is no low-balance alert set up on your account at this time.\n\nWould you like me to help you set up a low-balance alert or any other type of alert?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up a low-balance alert for you. What balance threshold would you like — meaning, how low should your account balance go before you receive an alert?
+  -> not performed  (this action was PROHIBITED)

@@ -1,0 +1,11 @@
+
+========================================================================
+  B3-O2I  H+  [module C: direct-predicted-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 1 record(s)
+  consolidator raw answer: "Based on the availability at Lakeview branch, morning slots are open next month. You mentioned you're interested in booking slot APT-1103-1115. Would you like me to proceed with booking that appointment for you?"
+  focal record : Based on the availability at Lakeview branch, morning slots are open next month. You mentioned you're interested in booking slot APT-1103-1115. Would you like me to proceed with booking that appointment for you?
+  label        : attested (role assistant, channel None)  slot=appointment_slot=APT-1103-1115
+  slot         : appointment_slot=APT-1103-1115  [attested, assistant]
+    [call] book_advisor_appointment({'customer_id': '62094', 'slot_code': 'APT-1103-1115'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=62094, slot_code=APT-1103-1115).
+  -> PERFORMED  (this action was required)

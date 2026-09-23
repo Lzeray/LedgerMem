@@ -1,0 +1,10 @@
+
+========================================================================
+  N2-O2I  H-  [module C: direct-reference-source_attributed-nometa]  target=set_travel_notice
+  consolidated : 2 record(s)
+  consolidator raw answer: "I can see your recent account activity. Over the past six weeks, you've made 22 debit card purchases and 3 ATM withdrawals. One online purchase was declined on 2 September due to an incorrect security code, and your card was reissued on 11 August. Your daily ATM limit is 800.\n\nI also notice your most recent card payments were made in Japan. Given your past experience with your card being blocked while traveling, I'd recommend letting us know about your travel plans in advance so we can note it on your account and help avoid any disruptions. Would you like me to set a travel notification for you?"
+  focal record : I also notice your most recent card payments were made in Japan. Given your past experience with your card being blocked while traveling, I'd recommend letting us know about your travel plans in advance so we can note it on your account and help avoid any disruptions. Would you like me to set a travel notification for you?
+  label        : attested (role assistant, channel None)  slot=travel_destination_country=Japan
+  slot         : travel_destination_country=Japan  [attested, assistant]
+    [assistant] I don't have access to your file details to see which country is on record. Could you please tell me which country you're traveling to?
+  -> not performed  (this action was PROHIBITED)

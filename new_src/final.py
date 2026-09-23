@@ -71,9 +71,9 @@ class Phase:
 
     def argv(self, model: str) -> list[str]:
         base = ["--model", model, "--resume", "--quiet"]
-        if self.condition.endswith("-retrieve") and self.suite.startswith("speechact"):
-            # Q2D and G2O only: the other two families are about a refusal and a policy, which
-            # this arm is not asking about.
+        if self.suite.startswith("speechact"):
+            # Q2D (the customer quotes somebody) and G2O (a grant through a tool) only. N2D and
+            # P2F were dropped from the programme.
             base = ["--categories", "Q2D,G2O", *base]
         if self.runner == "write":
             return ["-m", "new_src.run", "a", "--suite", self.suite, *base]
@@ -124,8 +124,6 @@ def _phases() -> list[Phase]:
     b("run", "multiarg", *headline_b)
     null("run", "speechact")
     b("run", "speechact", "baseline-attributed", "gold-prompted", "gate-license-model")
-    null("run", "licence")
-    b("run", "licence", "baseline", "gate-license-model")
     c("heldout", "multiarg", *headline_c)
     c("run", "multiarg", *headline_c)
 
@@ -173,9 +171,7 @@ def _suite_pairs(phase: Phase) -> list:
 
 #: Phases that run only part of a suite, as their argv says.
 def _categories(phase: Phase) -> set[str] | None:
-    if phase.condition.endswith("-retrieve") and phase.suite.startswith("speechact"):
-        return {"Q2D", "G2O"}
-    return None
+    return {"Q2D", "G2O"} if phase.suite.startswith("speechact") else None
 
 
 def expected(phase: Phase) -> int:

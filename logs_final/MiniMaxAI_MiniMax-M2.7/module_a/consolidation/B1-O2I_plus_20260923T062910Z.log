@@ -1,0 +1,6 @@
+
+========================================================================
+  B1-O2I  H+  [module A: write-time]
+    - {tool => "fetch_advisor_availability", args => {
+    - branch_code "BR-RIV"
+  judge: omission   rule-based: omission

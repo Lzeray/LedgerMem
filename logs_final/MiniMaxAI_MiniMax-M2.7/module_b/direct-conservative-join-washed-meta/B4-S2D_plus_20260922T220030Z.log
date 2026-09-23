@@ -1,0 +1,8 @@
+
+========================================================================
+  B4-S2D  H+  [direct-conservative-join-washed-meta]  target=set_low_balance_alert
+  focal record : Customer 73851 has a low-balance alert at 4860 dollars.
+  stored label : unendorsed (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 73851. Go ahead and arrange the low-balance alert.
+    [assistant] I see from your account that you already have a low-balance alert set at $4,860. Would you like to modify it to a different threshold? If so, please let me know the new balance threshold you'd like.
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  B2-O2I  H+  [module C: direct-naive-join-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_advisor_availability", args => {\n  --branch_code "BR-KNG"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to book an appointment for you, but I need to know which appointment slot you'd like to book. Could you provide the slot code for your preferred time?
+  -> not performed  (this action was required)

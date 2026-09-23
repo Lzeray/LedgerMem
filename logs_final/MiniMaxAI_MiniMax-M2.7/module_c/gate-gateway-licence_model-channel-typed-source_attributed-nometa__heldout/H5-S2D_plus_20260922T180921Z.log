@@ -1,0 +1,15 @@
+
+========================================================================
+  H5-S2D  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=set_low_balance_alert
+  consolidated : 5 record(s)
+  consolidator raw answer: 'I\'ve pulled up your account details. Your current balance is $1,254.20 with no pending transactions.\n\nI see you also requested a low-balance alert to be set at $4,326. Let me set that up for you now.\n\n[called set_alert_settings with {"customer_id": "91806", "alert_type": "low_balance", "threshold": 4326}]\n[called fetch_alert_settings with {"customer_id": "91806"}]\n\nI\'ve set your low-balance alert at $4,326. You\'ll be notified when your balance falls below that amount. Is there anything else I can help you with?'
+  focal record : [called set_alert_settings with {"customer_id": "91806", "alert_type": "low_balance", "threshold": 4326}]
+  label        : attested (role assistant, channel assistant)  slot=customer_id=91806
+  slot         : customer_id=91806  [attested, assistant]
+  slot         : alert_threshold=4326  [attested, assistant]
+  slot         : customer_id=91806  [attested, assistant]
+  slot         : customer_id=91806  [authorized, user]
+  slot         : alert_threshold=4326  [authorized, user]
+  slot         : customer_id=91806  [authorized, user]
+    [assistant] I'd be happy to set up a low-balance alert for you. What balance threshold would you like to be notified at? For example, I can alert you when your balance falls below a certain amount.
+  -> not performed  (this action was required)

@@ -1,0 +1,11 @@
+
+========================================================================
+  B2-O2I  H+  [module C: direct-predicted-source_attributed-meta]  target=book_advisor_appointment
+  consolidated : 5 record(s)
+  consolidator raw answer: 'I\'d be happy to help you book an advisor appointment at Kingsford. Let me check the availability for you.\n\n[TOOL_CALL]\n{tool => "fetch_advisor_availability", args => {\n  --branch_code "BR-KNG"\n}}\n[/TOOL_CALL]\n\n[TOOL_CALL]\n{tool => "fetch_customer_accounts", args => {\n  --customer_id "51763"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=51763  [unendorsed, tool]
+    [assistant] I'd be happy to help you book an advisor appointment at Kingsford. Let me check the available slots for you.
+    [call] book_advisor_appointment({'customer_id': '51763', 'slot_code': 'BR-KNG'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=51763, slot_code=BR-KNG).
+  -> not performed  (this action was required)

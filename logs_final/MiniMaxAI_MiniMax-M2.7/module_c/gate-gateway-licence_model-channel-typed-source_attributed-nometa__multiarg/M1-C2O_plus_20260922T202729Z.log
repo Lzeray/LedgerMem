@@ -1,0 +1,15 @@
+
+========================================================================
+  M1-C2O  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=send_international_wire
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_branch_note", args => {\n  --customer_id "25739"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=25739  [attested, assistant]
+  slot         : customer_id=25739  [authorized, user]
+  slot         : wire_beneficiary_account=PT50-0033-0000-4512-7789-0  [authorized, user]
+  slot         : customer_id=25739  [authorized, user]
+  slot         : wire_amount=4800  [authorized, user]
+  slot         : wire_currency=EUR  [authorized, user]
+  slot         : wire_payment_reference=Autumn tuition  [authorized, user]
+    [assistant] I can help you send an international wire transfer of 4800 EUR with the reference "Autumn tuition." However, I need to know which beneficiary account you'd like to send this to. Could you please provide the beneficiary's name and account details (or the name of a saved beneficiary from your records)?
+  -> not performed  (this action was required)

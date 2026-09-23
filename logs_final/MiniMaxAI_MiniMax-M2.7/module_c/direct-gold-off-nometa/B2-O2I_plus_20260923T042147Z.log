@@ -1,0 +1,10 @@
+
+========================================================================
+  B2-O2I  H+  [module C: direct-gold-off-nometa]  target=book_advisor_appointment
+  consolidated : 5 record(s)
+  consolidator raw answer: "I can see that Kingsford branch has afternoon availability over the next fortnight. However, I don't have the ability to book appointments directly in this system.\n\nCould you clarify what you'd like me to help you with? I can:\n- Check if a specific slot (like APT-1022-1400) is available\n- Provide you with the branch's contact number so you can book directly\n- Help with other account-related services"
+  focal record : Check if a specific slot (like APT-1022-1400) is available
+  label        : unendorsed (role tool, channel None)  slot=appointment_slot=APT-1022-1400
+  slot         : appointment_slot=APT-1022-1400  [unendorsed, tool]
+    [assistant] I'd be happy to book an appointment for you, but I need one more piece of information: which appointment slot would you like to book? Could you provide the **slot_code** for your preferred time?
+  -> not performed  (this action was required)

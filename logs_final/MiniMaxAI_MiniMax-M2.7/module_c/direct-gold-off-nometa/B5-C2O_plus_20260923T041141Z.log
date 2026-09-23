@@ -1,0 +1,9 @@
+
+========================================================================
+  B5-C2O  H+  [module C: direct-gold-off-nometa]  target=update_payroll_destination
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_branch_note", args => {\n  --customer_id "84927"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=84927  [authorized, user]
+    [assistant] I can help you update your payroll deposit destination, but I don't have access to your account records to retrieve the destination account number. Could you please provide the account number you'd like your payroll deposited into?
+  -> not performed  (this action was required)

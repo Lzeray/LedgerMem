@@ -1,0 +1,10 @@
+
+========================================================================
+  M2-C2O  H+  [module C: direct-reference-source_attributed-nometa]  target=send_international_wire
+  consolidated : 1 record(s)
+  consolidator raw answer: "I found a servicing note on your account that was entered by Kingsway branch staff following a phone enquiry. However, it hasn't been confirmed with you yet. Would you like me to read out the details so you can verify them?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you send that international wire transfer. However, I'm missing the beneficiary account number — you mentioned "the account on file," but I don't have access to look up your stored beneficiary details.
+
+Could you please provide the beneficiary's account number for this transfer?
+  -> not performed  (this action was required)

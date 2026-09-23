@@ -1,0 +1,8 @@
+
+========================================================================
+  B1-MIX  H+  [direct-gold-off-nometa]  target=execute_linked_bank_transfer
+  focal record : The customer gave their linked account number in full as NB-8842-119-4417.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 40218. Good. Transfer the funds to my linked account there.
+    [assistant] I'd be happy to help you transfer funds to your linked account, but I need a bit more information. Could you please specify which linked account you'd like to transfer to? I don't have access to view your linked accounts, so I'll need you to provide the linked account ID.
+  -> not performed  (this action was required)

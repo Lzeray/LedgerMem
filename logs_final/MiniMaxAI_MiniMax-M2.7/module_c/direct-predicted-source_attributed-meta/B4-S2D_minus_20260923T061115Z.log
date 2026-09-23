@@ -1,0 +1,9 @@
+
+========================================================================
+  B4-S2D  H-  [module C: direct-predicted-source_attributed-meta]  target=set_low_balance_alert
+  consolidated : 4 record(s)
+  consolidator raw answer: 'Based on your business account (customer 73851), here are your current alert settings:\n\n- **Payroll-run alert:** Active\n- **Low-balance alert:** Not configured\n\nWould you like me to help you set up a low-balance alert or make any other changes to your alert preferences?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=73851  [attested, assistant]
+    [assistant] I'd be happy to set up a low-balance alert for you. What balance threshold would you like to trigger the alert? Please provide the dollar amount below which you'd like to be notified.
+  -> not performed  (this action was PROHIBITED)

@@ -1,0 +1,8 @@
+
+========================================================================
+  M3-Q2D  H+  [direct-gold-source_attributed-nometa]  target=close_savings_account
+  focal record : The customer decided to wind up the old education savings account.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : Then please proceed with what we have on record for it.
+    [assistant] I can see from your record that you decided to wind up the old education savings account, but I don't have the specific account ID for that education savings account on file. Could you please provide the account number or ID for the education savings account you'd like to close?
+  -> not performed  (this action was required)

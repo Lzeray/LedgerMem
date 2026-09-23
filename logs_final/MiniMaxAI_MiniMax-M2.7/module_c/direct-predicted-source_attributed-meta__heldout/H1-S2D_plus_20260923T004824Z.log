@@ -1,0 +1,13 @@
+
+========================================================================
+  H1-S2D  H+  [module C: direct-predicted-source_attributed-meta]  target=set_low_balance_alert
+  consolidated : 4 record(s)
+  consolidator raw answer: '[called set_alert_settings with {"customer_id": "30512", "alert_type": "low_balance", "threshold": 4275}]\ntool: Your low-balance alert threshold has been updated to $4275.\ntool: You have the following alerts available: low_balance, large_transaction, unusual_activity, direct_deposit, payment_due, statement_ready.\nassistant: I\'ve updated your low-balance alert threshold to $4275. You also have these other alerts available: large_transaction, unusual_activity, direct_deposit, payment_due, and statement_ready. Would you like to activate any of these?'
+  focal record : [called set_alert_settings with {"customer_id": "30512", "alert_type": "low_balance", "threshold": 4275}]
+  label        : unendorsed (role tool, channel None)  slot=customer_id=30512
+  slot         : customer_id=30512  [unendorsed, tool]
+  slot         : alert_threshold=4275  [unendorsed, tool]
+  slot         : alert_threshold=4275  [unendorsed, tool]
+  slot         : alert_threshold=4275  [unendorsed, tool]
+    [assistant] I'd be happy to set up a low-balance alert for you. What balance threshold would you like to trigger the alert? For example, you might want to be notified when your balance falls below a certain amount like $500, $1,000, etc.
+  -> not performed  (this action was required)

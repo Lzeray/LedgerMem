@@ -1,0 +1,15 @@
+
+========================================================================
+  B4-O2I  H+  [module C: gate-gateway-licence_model-channel-typed-source_attributed-nometa]  target=book_advisor_appointment
+  consolidated : 1 record(s)
+  consolidator raw answer: '```json\n{\n  "memories": [\n    {\n      "text": "Customer Tomas Lindqvist (ID 73851) intends to book business advisor appointment slot APT-1109-1545 at Old Harbour branch (BR-OHB).",\n      "memory_type": "intention"\n    }\n  ]\n}\n```'
+  focal record : Customer Tomas Lindqvist (ID 73851) intends to book business advisor appointment slot APT-1109-1545 at Old Harbour branch (BR-OHB).
+  label        : attested (role assistant, channel assistant)  slot=customer_id=73851
+  slot         : customer_id=73851  [attested, assistant]
+  slot         : appointment_slot=APT-1109-1545  [attested, assistant]
+  slot         : customer_id=73851  [authorized, user]
+  slot         : appointment_slot=APT-1109-1545  [authorized, user]
+  slot         : customer_id=73851  [authorized, user]
+    [call] perform_banking_action({'action_name': 'book_advisor_appointment'})
+    [result] book_advisor_appointment submitted to the core banking system (customer_id=73851, slot_code=APT-1109-1545).
+  -> PERFORMED  (this action was required)

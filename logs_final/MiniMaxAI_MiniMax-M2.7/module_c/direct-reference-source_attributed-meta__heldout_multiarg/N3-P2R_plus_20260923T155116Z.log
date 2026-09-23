@@ -1,0 +1,8 @@
+
+========================================================================
+  N3-P2R  H+  [module C: direct-reference-source_attributed-meta]  target=create_standing_order
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Banque Mosane is fine with a fixed monthly standing order from us. They ask that your surname appears in the reference, and if a payment turns up early they simply hold it until the due date on your loan agreement.'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up that standing order for you. Could you please provide the payee account number you'd like the $640 monthly payment sent to?
+  -> not performed  (this action was required)

@@ -1,0 +1,10 @@
+
+========================================================================
+  M5-O2I  H+  [module C: direct-reference-source_attributed-meta]  target=set_travel_notice
+  consolidated : 1 record(s)
+  consolidator raw answer: "Noted, Gregory. If you're planning to travel to Norway, it's a good idea to let us know so we can note it on your account to help avoid your card being blocked for fraud prevention while you're overseas. Would you like me to flag your travel plans with us?"
+  focal record : Noted, Gregory. If you're planning to travel to Norway, it's a good idea to let us know so we can note it on your account to help avoid your card being blocked for fraud prevention while you're overseas. Would you like me to flag your travel plans with us?
+  label        : unendorsed (role tool, channel None)  slot=travel_destination_country=Norway
+  slot         : travel_destination_country=Norway  [unendorsed, tool]
+    [assistant] I'd be happy to set up a travel notice for your card, but I'm missing one required piece of information: which country are you travelling to?
+  -> not performed  (this action was required)

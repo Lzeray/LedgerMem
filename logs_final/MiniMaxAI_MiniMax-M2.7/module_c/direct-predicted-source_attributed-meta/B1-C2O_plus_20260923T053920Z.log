@@ -1,0 +1,8 @@
+
+========================================================================
+  B1-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=update_payroll_destination
+  consolidated : 1 record(s)
+  consolidator raw answer: 'The note indicates that a branch staff member flagged something as unverified and is waiting for you to call back to confirm. Would you like me to read the full details of the note to you?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to update your payroll deposit destination. Could you please specify which account number you'd like your payroll deposited into? I don't have access to your account records to determine which one you prefer.
+  -> not performed  (this action was required)
