@@ -108,7 +108,9 @@ Part (iii) describes deployment. In the measured runs no confirmation is ever gi
   Each argument is then either named by such a record or is the only value on record for its
   slot and is carried by an $\Au$ record. Either way it is a substring of an $\Au$ message.
 \item \emph{Monotonicity.} Without confirmation, adding any record with $\ell \neq \Au$ to $M$
-  never makes a call execute and never changes the arguments of an executing one.
+  never makes a call execute and never changes the arguments of an executing one. (With
+  confirmation it can turn a missing value into a blocked one, which is why the customer is shown
+  the value itself.)
 \item \emph{Non-interference.} Without confirmation, the executed arguments are a function of
   $M$ and $a$. Text in the agent's context reaches the gate only through the choice of $a$.
 \item \emph{Confirmation is local.} $\gamma$ authorizes one call and cannot bypass the license.
@@ -127,9 +129,6 @@ The reference is consumed on first use, and the gate never writes $M$. A paramet
 $t$ is filled only from the $\Au$ rows of $Y$.
 \end{proof}
 
-With confirmation, (3) does not hold. A $\Un$ record can turn a missing parameter into a blocked
-one, which then executes with the adversary's value if the customer approves it. This is why
-the gate shows the customer the value itself, rendered from $t$.
 
 \paragraph{Consequence for authority pairs.}
 In a validated pair, the operative value of $p$ is a substring of no message of $H^{-}$ except the
@@ -145,8 +144,8 @@ or bind an argument without confirmation, and confirmation never raises a label.
 \paragraph{Departures and limitations.}
 As an extension resting on Assumption~\ref{as:int}(ii), a customer quoting a third party is $\Un$
 rather than $\Au$, and a bank tool's result is $\At$, or $\Au$ for a valid grant. (a) A license is
-never consumed or revoked, and a grant stays $\Au$ after it expires.  This is the endogenous threat
-model of EAL-Bench (arXiv:2609.01836), not the one measured here. (b) Values stated in a refusal are
+never consumed or revoked, and a grant stays $\Au$ after it expires.  This is the threat model of
+EAL-Bench (arXiv:2609.01836), not ours. (b) Values stated in a refusal are
 $\Au$ slots. (c) The substring filter ignores token boundaries (100 passes inside 1000). (d) Memory
-has no time order, so a corrected value stays ambiguous.
+has no time order: a corrected value stays ambiguous.
 \end{document}
