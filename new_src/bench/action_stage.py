@@ -269,8 +269,9 @@ def perform(client, episode, engine, shown_records, condition, record: ActionRec
                 # dataset's answer key.
                 from new_src.bench import dms
 
+                # licenses=False: the reply fills this pending call and licenses nothing after it.
                 reply_ids = dms.capture(engine, client, model, "user", reply,
-                                        memory_text=f"The customer said: {reply}")[4]
+                                        memory_text=f"The customer said: {reply}", licenses=False)[4]
                 messages.append({"role": "user", "content": reply})
                 follow = run_tool_turn(
                     client, model, messages, tools,

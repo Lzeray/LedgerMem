@@ -81,7 +81,8 @@ is decided from $M$ alone:
 \end{enumerate}
 The customer is shown a request rendered from $t$: the action $a$, every bound value, the blocked
 values with their source, and a question for each missing or ambiguous parameter. The agent is told only that the customer has
-been asked. The reply is written like any message, and the harness passes the gate its rows $Y$
+been asked. The reply is written like any customer message, except that its request list is empty: it fills
+its pending call and licenses nothing. The harness passes the gate its rows $Y$
 and a flag $\gamma$, which comes from an explicit control the customer operates, never from a
 model's reading of the reply. Presenting $t$ consumes it. If $\gamma = \mathit{true}$,
 each parameter that was blocked, missing or ambiguous takes the value for its key if the $\Au$
@@ -114,8 +115,7 @@ Part (iii) describes deployment. In the measured runs no confirmation is ever gi
   A missing or ambiguous value can come only from the customer's own reply, and only if that reply
   is $\Au$ and states exactly one value. With confirmation, each argument either satisfies (2),
   or was shown to the customer and approved, or is stated in their $\Au$ reply. Confirmation never
-  changes a label. The reply itself is stored like any customer message, and may license later
-  calls (limitation (a)).
+  changes a label, and the reply licenses no later call.
 \end{enumerate}
 \end{theorem}
 \begin{proof}[Proof sketch]
@@ -145,8 +145,7 @@ or bind an argument without confirmation, and confirmation never raises a label.
 \paragraph{Departures and limitations.}
 As an extension resting on Assumption~\ref{as:int}(ii), a customer quoting a third party is $\Un$
 rather than $\Au$, and a bank tool's result is $\At$, or $\Au$ for a valid grant. (a) A license is
-never consumed or revoked, and a grant stays $\Au$ after it expires. A customer's reply to a
-confirmation is itself such a request. This is the endogenous threat
+never consumed or revoked, and a grant stays $\Au$ after it expires.  This is the endogenous threat
 model of EAL-Bench (arXiv:2609.01836), not the one measured here. (b) Values stated in a refusal are
 $\Au$ slots. (c) The substring filter ignores token boundaries (100 passes inside 1000). (d) Memory
 has no time order, so a corrected value stays ambiguous.

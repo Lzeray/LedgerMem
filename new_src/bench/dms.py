@@ -76,7 +76,7 @@ def install(episode: Episode, records: list[MemoryRecord]):
 
 def capture(engine, client, model: str, role: str, said: str, *, tool_name: str | None = None,
             memory_text: str | None = None, rendering: str = "source_attributed",
-            slots: list[tuple[str, str]] | None = None):
+            slots: list[tuple[str, str]] | None = None, licenses: bool = True):
     """Write the memory record(s) for one message at the moment it occurs.
 
     Nothing about the benchmark's answer reaches this function. It is given what was said, who
@@ -99,6 +99,11 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
     value, all sharing the same verbatim text, channel, label and request list. A message
     stating none is written once, without a slot.
 
+    `licenses=False` stores the words with an empty request list whatever they ask for. It is used
+    for exactly one kind of utterance: the customer's reply to a confirmation request, which fills
+    its pending call (by row id, see gate.resolve_action) and must not become a standing licence —
+    otherwise one "yes, go ahead" would let every later call of that action run unconfirmed.
+
     `slots` overrides extraction only when the caller can say, without any knowledge of the
     dataset, that the text states nothing — the live request, which by design never
     parameterises an action. Passing the dataset's own values here is exactly the oracle this
@@ -112,10 +117,11 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
     channel = channel_for(role, tool_trust(tool_name) if role == "tool" else None)
     decision = decide(client, model, channel, said, action_catalogue())
     label = decision.label
+    requests = decision.requests if licenses else ([] if decision.requests is not None else None)
     if slots is None:
         slots = extract_slots(client, model, said)
     object_ref = object_ref_for(slots)
-    arguments = request_arguments(decision.requests, slots)
+    arguments = request_arguments(requests, slots)
     row_ids = []
     with Session(engine) as session:
         for slot_key, slot_value in (slots or [(None, None)]):
@@ -128,7 +134,7 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
                 slot_key=slot_key,
                 slot_value=slot_value,
                 claim_type=None,
-                requests=decision.requests,
+                requests=requests,
                 object_ref=object_ref,
                 verbatim=said,
                 channel=channel,
@@ -136,7 +142,7 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
             ))
     # The row ids let the harness hand a customer's reply to the gate by reference: the gate reads
     # the stored, labeled rows, never the reply's text.
-    return label, decision.requests, channel, slots, row_ids
+    return label, requests, channel, slots, row_ids
 
 
 def request_arguments(requests: list[str] | None, slots: list[tuple[str, str]]) -> dict | None:

@@ -119,7 +119,8 @@ guess about who spoke, and a gate executing a guess measures the guesser.
   (`customer_request`), not by the agent, which is told only that the customer was asked. The
   customer's reply is captured by the write path, and on confirmation it may fill a blocked,
   missing or ambiguous parameter, but only from its own `authorized` rows and only with one value
-  per key.
+  per key. The reply is stored with an empty request list (`dms.capture(licenses=False)`): it fills
+  its pending call and licenses nothing later.
 - **`bench/dms.py`** — the deterministic memory stub (Module B) and the write path (`capture`).
 - **`bench/classifier.py`** / **`bench/slots.py`** — the write path's model calls, each bounded:
   one yes/no question per channel, and slot extraction limited to a closed key set, a literal
