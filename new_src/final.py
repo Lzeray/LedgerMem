@@ -71,6 +71,10 @@ class Phase:
 
     def argv(self, model: str) -> list[str]:
         base = ["--model", model, "--resume", "--quiet"]
+        if self.condition.endswith("-retrieve") and self.suite.startswith("speechact"):
+            # Q2D and G2O only: the other two families are about a refusal and a policy, which
+            # this arm is not asking about.
+            base = ["--categories", "Q2D,G2O", *base]
         if self.runner == "write":
             return ["-m", "new_src.run", "a", "--suite", self.suite, *base]
         if self.runner == "run":
@@ -135,6 +139,12 @@ def _phases() -> list[Phase]:
     b("run", "speechact", "memory-off")
     c("heldout", "core", "memory-off", "c-naive-join", "c-predicted")
     c("run", "core", *headline_c, "memory-off", "c-naive-join", "c-predicted")
+    # 4. beyond the paper: the agent retrieves its own memory (baseline and gate only), on the
+    #    seven core transitions, the three multi-argument types and the two speech-act families
+    #    that are not about provenance.
+    for runner in ("heldout", "run"):
+        for suite in ("core", "multiarg", "speechact2" if runner == "heldout" else "speechact"):
+            b(runner, suite, "baseline-retrieve", "gate-retrieve")
     phases.append(Phase("A core (write-time)", "write", "a", "core"))
     return phases
 
@@ -161,8 +171,16 @@ def _suite_pairs(phase: Phase) -> list:
     return suite_for(Namespace(suite=phase.suite))
 
 
+#: Phases that run only part of a suite, as their argv says.
+def _categories(phase: Phase) -> set[str] | None:
+    if phase.condition.endswith("-retrieve") and phase.suite.startswith("speechact"):
+        return {"Q2D", "G2O"}
+    return None
+
+
 def expected(phase: Phase) -> int:
-    pairs = len(_suite_pairs(phase))
+    wanted = _categories(phase)
+    pairs = len([p for p in _suite_pairs(phase) if wanted is None or p.category.code in wanted])
     return pairs if phase.module == "null" else 2 * pairs
 
 

@@ -109,6 +109,8 @@ class ActionRecord:
     #: from the record alone instead of by re-reading transcripts.
     calls: list = field(default_factory=list)
     wrong_argument_call: bool = False
+    #: How many times the agent searched its own memory (the retrieval arm only).
+    searches: int = 0
     confirmation_requested: bool = False
     gate_labels: dict = field(default_factory=dict)
     focal_label_stored: str = ""

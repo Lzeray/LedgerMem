@@ -58,6 +58,12 @@ class Condition:
     #: Beyond the paper: run one scripted confirmation round-trip after the gate asks for it.
     #: Off by default, because the paper's ASR/TSR are measured without a user in the loop.
     confirm_followup: bool = False
+    #: Beyond the paper: the agent is given no memory block at all and must fetch what it needs
+    #: through a search tool (see action_stage.SEARCH_TOOL_NAME). The store then holds every
+    #: focal record of this customer's pairs in the suite, so retrieval can miss. This is where
+    #: the gate's shape shows: it resolves arguments from the store itself, so a retrieval miss
+    #: costs it nothing, while a direct agent has to find the value before it can use it.
+    retrieval: bool = False
     #: The paper's text-sanitizer baseline (appendix C.2): the washed item plus only a fixed
     #: warning that memory may be distorted or unreliable.
     sanitizer: bool = False
@@ -68,6 +74,7 @@ class Condition:
         surface = f"-{self.gate_surface}" if self.policy == "gate" else ""
         licence = f"-licence_{self.claim_type_source}" if self.check_license else ""
         return f"{self.policy}{surface}{licence}-{self.label_source}-{self.rendering}-{metadata}" + (
+            "-retrieve" if self.retrieval else "") + (
             "-sanitize" if self.sanitizer else ""
         ) + ("-confirm" if self.confirm_followup else "")
 
@@ -122,6 +129,11 @@ C_PREDICTED = Condition(policy="direct", label_source="predicted", rendering="so
                         show_metadata=True)
 C_ORACLE = Condition(policy="direct", label_source="reference", rendering="source_attributed",
                      show_metadata=True)
+# Beyond the paper: the agent retrieves memory itself instead of being handed it.
+BASELINE_RETRIEVE = Condition(policy="direct", label_source="gold", rendering="washed", retrieval=True)
+GATE_RETRIEVE = Condition(policy="gate", label_source="channel-typed", rendering="source_attributed",
+                          check_license=True, claim_type_source="model", retrieval=True)
+
 # The gate with action-level authorization added, in both claim-type modes.
 GATE_LICENSE = Condition(policy="gate", label_source="gold", rendering="source_attributed",
                          check_license=True, claim_type_source="role")
@@ -134,6 +146,27 @@ GATE_LICENSE_DECLARED = Condition(policy="gate", label_source="gold", rendering=
 GATE_LICENSE_MODEL = Condition(policy="gate", label_source="channel-typed",
                                rendering="source_attributed", check_license=True,
                                claim_type_source="model")
+
+
+def _other_records(pair, condition) -> list:
+    """The focal records of this customer's other pairs, as distractors for the retrieval arm."""
+    from dataclasses import replace
+
+    from new_src.data.heldout import HELDOUT_SUITE
+    from new_src.data.multiarg import MULTIARG_DEV, MULTIARG_HELDOUT
+    from new_src.data.speech_act_attacks import SPEECH_ACT_DEV, SPEECH_ACT_HELDOUT_V2
+    from new_src.data.suite import SUITE
+
+    others = []
+    for suite in (SUITE, HELDOUT_SUITE, MULTIARG_DEV, MULTIARG_HELDOUT, SPEECH_ACT_DEV, SPEECH_ACT_HELDOUT_V2):
+        if not any(other.pair_id == pair.pair_id for other in suite):
+            continue
+        for other in suite:
+            if other.base_id != pair.base_id or other.pair_id == pair.pair_id:
+                continue
+            record = other.episode("H+").focal_memory
+            others.append(replace(record, is_focal=False))
+    return others
 
 
 def run_episode(
@@ -165,6 +198,11 @@ def run_episode(
             for record in stored
             if not record.is_focal
         ]
+    if condition.retrieval:
+        # Everything this customer has on file in the suite, so the search has something to miss:
+        # one focal record per other pair of the same base. Their slot keys differ by transition,
+        # so they add noise to retrieval without making any argument ambiguous.
+        stored = [*stored, *_other_records(pair, condition)]
     engine, stored = dms.install(episode, stored)
     if condition.policy == "gate":
         # The gate reads memory, never the conversation, and Module B's memory is the single
