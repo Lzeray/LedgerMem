@@ -14,6 +14,10 @@ ASR excludes pairs whose null control fired — with the contested record remove
 happened anyway, so that pair measures obedience to the closing request rather than authority.
 TSR keeps every pair: the null control says nothing about the H+ side.
 
+Besides the overview, one table per module and suite breaks the same counts down by attack
+type: each cell reads "0/5 | 5/5" — attacks through out of the H- pairs, tasks performed out of
+the H+ pairs — with the two rates underneath.
+
 Images go to logs_result/, beside the earlier figures.
 """
 
@@ -128,6 +132,59 @@ def draw(module: str, model: str, data: dict, fired: dict, path: Path) -> Path |
     return path
 
 
+def draw_by_category(module: str, suite: str, runner: str, suite_label: str, model: str,
+                     data: dict, fired: dict, path: Path) -> Path | None:
+    """One table per module and suite: conditions down the side, attack types across the top."""
+    recorded = {key: rows for key, rows in data[module].items() if key[1] == suite and key[2] == runner}
+    if not recorded:
+        return None
+    rows = [(key, label) for key, label in ROWS[module] if any(k[0] == key for k in recorded)]
+    categories = sorted({r["category"] for rs in recorded.values() for r in rs})
+    excluded = fired.get((runner, suite), set())
+
+    header = ["condition", *categories, "all"]
+    body, colours = [], []
+    for key, label in rows:
+        line = [label]
+        tint = ["#eeeeee" if key in GATE_ROWS else "#f5f5f5"]
+        for category in [*categories, None]:
+            episodes = [r for r in recorded[(key, suite, runner)]
+                        if category is None or r["category"] == category]
+            through, n_minus, done, n_plus = _counts(episodes, excluded)
+            asr = f"{100 * through / n_minus:.0f}%" if n_minus else "—"
+            tsr = f"{100 * done / n_plus:.0f}%" if n_plus else "—"
+            line.append(f"{through}/{n_minus} | {done}/{n_plus}\n{asr} | {tsr}")
+            tint.append("#f8d7da" if through else ("#d4edda" if n_minus and done == n_plus else "#e8f4ea"))
+        body.append(line)
+        colours.append(tint)
+
+    fig, ax = plt.subplots(figsize=(3.4 + 1.35 * (len(categories) + 1), 0.9 + 0.55 * (len(rows) + 1)))
+    ax.axis("off")
+    ax.set_title(f"Module {module.upper()} — {suite_label} — {model}\n"
+                 "per attack type:  attacks through / H−   |   tasks performed / H+",
+                 fontsize=12, fontweight="bold", pad=14)
+    table = ax.table(cellText=body, colLabels=header, cellColours=colours, cellLoc="center", loc="center")
+    table.auto_set_font_size(False)
+    table.set_fontsize(8.5)
+    table.scale(1, 2.2)
+    for (row, column), cell in table.get_celld().items():
+        if row == 0:
+            cell.set_text_props(fontweight="bold")
+            cell.set_facecolor("#dfe6ee")
+        elif column == 0:
+            cell.set_text_props(fontweight="bold" if rows[row - 1][0] in GATE_ROWS else "normal", ha="left")
+        elif column == len(header) - 1:
+            cell.set_text_props(fontweight="bold")
+        cell.set_edgecolor("#bbbbbb")
+    fig.text(0.01, 0.01, "ASR excludes pairs whose null control fired; TSR keeps every pair.",
+             fontsize=8, color="#555555")
+    fig.tight_layout()
+    OUT_DIR.mkdir(exist_ok=True)
+    fig.savefig(path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    return path
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--model", default=None, help="default: the model of the recorded run")
@@ -144,6 +201,11 @@ def main(argv=None) -> int:
         for module in ("b", "c"):
             path = draw(module, model, data, fired, OUT_DIR / f"final_module_{module}_{slug}.png")
             print(f"  {path}" if path else f"  Module {module.upper()}: nothing recorded yet")
+            for suite, runner, suite_label in SUITES:
+                name = f"final_module_{module}_{suite}_{'heldout' if runner == 'heldout' else 'dev'}_{slug}.png"
+                if (drawn := draw_by_category(module, suite, runner, suite_label, model, data, fired,
+                                              OUT_DIR / name)):
+                    print(f"  {drawn}")
     return 0
 
 
