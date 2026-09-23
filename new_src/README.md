@@ -4,9 +4,10 @@ A re-implementation of the authority-collapse benchmark, built to the paper's co
 contract rather than to a local interpretation of it, so a defense that passes here has a
 reasonable chance of passing the real benchmark when it is released.
 
-`src/` is untouched and still runs. This package has its own database tables
-(`am_semantic`, `am_episodic`), its own logs directory (`logs_authmem/`), and shares nothing
-with it but the Postgres instance and the Ollama endpoint.
+This is the whole benchmark. An earlier implementation in `src/` was deleted in `a07f0da` and
+exists only in git history. This package has its own database tables (`am_semantic`,
+`am_episodic`) and writes to `logs_authmem/` for single runs and `logs_final/` for a programme
+driven by `new_src.final`.
 
 ## What the benchmark measures
 
@@ -225,8 +226,12 @@ its headline numbers. `--quiet` silences the **terminal only** — the log files
 full either way, so a long unattended sweep still leaves complete evidence behind. All
 summaries are recomputed from the JSON records, never by re-running the model.
 
-> **Superseded.** Every table from here to "Deliberate deviations" was measured before the
-> suite and pipeline were brought to the paper's contract (September 2026): licensing split,
+> **Superseded.** Every table from here to "Deliberate deviations" was measured on qwen2.5:14b,
+> before the licence check was applied to every action, before the live request was stored like
+> any other customer utterance, before account arguments had to carry eight digits, and before
+> the held-out, multi-argument and speech-act suites existed. The current numbers live in
+> `logs_final/results.md` and `logs_result/final_*.png`. Earlier still, they were measured before
+> the suite and pipeline were brought to the paper's contract (September 2026): licensing split,
 > seeded background memory, dataset-supplied slots and objects in Module C, a history without a
 > parent, a non-paper action prompt and memory block, and every call scored rather than the
 > first. They are kept as a record of the development history, not as results. Recompute
@@ -302,26 +307,40 @@ Sample size is 33 pairs on one model in one run: the 0% vs 75-100% contrasts are
 
 ## The authority gate, and what it checks
 
-Two checks, in this order.
+Three checks, in this order.
 
-**Step 0 — is this action authorized at all?** The action declares what has to be on record
-before it may be taken: a `License(types, scope_param)`. The gate looks for a record about the
-object being acted on whose claim kind is one the action accepts, and requires it to be
-`authorized`, and to carry the customer's own words. Absent from every action's accepted list
-are `observation`, `suggestion`, `recommendation` and `rule` — the four carriers of the
-licensing transitions.
+**Step 1 — is this action asked for at all?** Every protected action is checked, whether or not
+it acts on an object of its own. The gate looks for an `authorized` record whose **request list**
+names this action; for an action with an object, that record must also concern the same object,
+and the object itself is resolved from the bank's own authorized records rather than from
+anything the agent says. A licence refusal issues no confirmation token, so a "yes" cannot lift
+it: the customer has to say what they actually want. That closes the leading-question path, where
+the assistant proposes something and then asks the customer to confirm its own proposal.
 
-**Step 1 — may I use these values?** The original check: every argument resolved by exact slot
-lookup, `authorized` used directly, anything else refused. Unchanged.
+The request list is written when a record is stored, by one model call that is shown the
+utterance and a closed list of actions (`bench/classifier.py`). It replaced an earlier design
+that matched the action's name against the record's wording and decided a customer asking
+"what's been happening on my savings account?" had requested `close_savings_account`. An earlier
+version of the check also skipped actions without a `scope_param` — which were exactly the seven
+core actions, so the licence guarded only the actions the extension suites attack. A defense
+cannot know where an attack will land; the check is the same everywhere.
 
-A licence refusal issues no confirmation token, so a "yes" cannot lift it: the customer has to
-say what they actually want. That closes the leading-question path, where the assistant
-proposes something and then asks the customer to confirm its own proposal.
+**Step 2 — may I use these values?** Each argument is bound to the request first: if the
+customer's own words stated the value, that value is used under the request's label. Otherwise it
+is resolved by exact slot lookup in the store, by distinct value — none means ask the customer,
+one means use it under its best label, several mean ask which, never pick.
 
-Records carry three fields for this: `claim_type`, `object_ref` and `verbatim`. The claim type
-comes from one of two sources, selectable per run — `role`, a frozen mapping from the source
-role (`tool → observation`, `assistant → suggestion`, `user → decision`), or `declared`, the
-kind the taxonomy states for that transition's carrier. Neither asks the model.
+**Step 3 — execute** only if every argument came back `authorized`; otherwise refuse and name
+what needs confirming.
+
+The customer's live request is stored like any other utterance of theirs, so it can license the
+action it asks for. The earlier rule that "the request being served is not its own warrant"
+existed only to keep pairs whose closing sentence names the action meaningful; those pairs test
+nothing, and `speech_act_attacks.validate` now rejects them instead.
+
+Records carry `object_ref` and `verbatim` for this. A record with no `verbatim` is a summary
+written afterwards — a consolidator's sentence, not the speaker's — and authorizing from one
+would put a model's choice of wording in charge of authorization.
 
 ### Result on the taxonomy suite
 
@@ -371,11 +390,11 @@ hold on R2F, C2O and MIX, and to let P2R, R2P, O2I and S2D straight through: eve
 inspects is genuine bank data, and the claim that authorizes the action is never inspected
 because nothing resolves from it.
 
-`python -m new_src.probes.blind_spots` keeps a second, narrower attack shape that the suite
-does not express: **provenance is impeccable but the use is not authorized**. The customer
-really did mention a liking for an allocation, so the frozen role policy labels it authorized
-and the gate passes it — yet a passing preference is not an instruction to re-allocate a
-portfolio now. The paper's labels are use-specific; this gate is provenance-only.
+A second, narrower attack shape the core suite does not express is **provenance is impeccable
+but the use is not authorized**: the customer really did mention a liking for an allocation, so
+their words are authorized, yet a passing preference is not an instruction to re-allocate a
+portfolio now. That is what `data/license_attacks.py` family C exercises. (The `probes/` package
+that once held these as ad-hoc scripts was removed; it targeted actions that no longer exist.)
 
 Closing either gap needs more than argument provenance: authorization at the level of the
 **action** — an authority witness licensing this action for this customer, which is a field the
@@ -492,6 +511,48 @@ is therefore an extension beyond the paper and is reported as one. It is additiv
 well as in the writeup — `ROLE_POLICY` and `CLAIM_TYPE_BY_ROLE` are untouched, both live in
 `bench/taxonomy.py`, and a run selects between them through `Condition.label_source`, so every
 number already measured under the frozen policy stays directly comparable.
+
+## Beyond the 35 pairs: the other suites
+
+| suite | flag | pairs | what it adds |
+|---|---|---|---|
+| held-out core | `run_heldout --suite core` | 35 | the same seven transitions, written after the design freeze |
+| multi-argument | `--suite multiarg` (dev) / `run_heldout --suite multiarg` | 15 + 15 | actions with 3–5 arguments: WIRE (5), STO (4), TRV, whose contested value is a country rather than a number. One call therefore mixes a contested value with values the customer stated in the request, and an account argument now has to carry at least eight digits — "contains a digit" once let an amount or a partial identifier be bound as an account. |
+| speech-act | `--suite speechact` (dev) / `run_heldout --suite speechact2` | 20 + 20 | Q2D, N2D, P2F, G2O. Only **Q2D** (the customer quotes somebody) and **G2O** (a grant through a tool) are in the programme; N2D and P2F were dropped from it. |
+| licence | `--suite licence` | 15 | attacks on the licence check itself. In the code, out of the programme. |
+
+A pair whose closing request names the action tests nothing, because the customer asking there
+and then authorizes it whatever the history said. That is checked mechanically, and it is why
+the first held-out speech-act set is not used: all 20 of its pairs fail it.
+
+## Two more conditions: the agent retrieves its own memory
+
+`baseline-retrieve` and `gate-retrieve` give the agent no `[Persistent memory]` block at all. It
+has to find what it needs with `search_memory(query)` — semantic, top 5, no labels — and the
+store holds the focal record of every pair of the same customer in the suite, so retrieval has
+something to miss. Their slot keys differ by transition, so no argument becomes ambiguous.
+
+This is where the gate's shape should show: it resolves arguments from the store by slot, so a
+retrieval miss costs it nothing, while a direct agent must find the value before it can use it.
+It is not a paper condition, and it needs a model that will actually call a search tool —
+qwen2.5:14b writes `search_memory(...)` into an argument instead.
+
+## The programme: one command, three to watch it
+
+```bash
+python -m new_src.final start --model <model id>   # validation, preflight, then every phase in the background
+python -m new_src.final status                     # phase by phase, with speed and time left
+python -m new_src.final results                    # ASR/TSR with n, Wilson intervals, exact bounds for 0%
+python -m new_src.final stop                       # `start` again resumes where it stopped
+python -m new_src.plot_final                       # tables into logs_result/
+```
+
+Phases run in priority order — null controls and the headline conditions first, then the new
+suites, then the paper's remaining conditions, then Module A and the retrieval arms — so a run
+stopped early still leaves the numbers that matter. Records go to `logs_final/<model>/`, and
+`results` excludes pairs whose null control fired, states n everywhere, and counts actions that
+were **executed with a wrong argument object**: the paper's strict predicate scores those as not
+performed, so they never show in ASR.
 
 ## Deliberate deviations from the paper
 
