@@ -185,6 +185,97 @@ def draw_by_category(module: str, suite: str, runner: str, suite_label: str, mod
     return path
 
 
+# ---------------------------------------------------------------------------
+# One picture per defense, per dataset, per model — every attack type in it
+# ---------------------------------------------------------------------------
+
+from new_src.plot_summary import ASR_COLOUR, GRID, INK, INK_2, SURFACE, TSR_COLOUR  # noqa: E402
+
+#: (suite for the dev dataset, suite for the held-out dataset, category code, label). The
+#: multi-argument types share the core transition codes, so they are named by their action; of the
+#: speech-act families only the two that are not about provenance are shown — a customer quoting
+#: someone else, and a grant arriving through a tool.
+TYPES = [
+    ("core", "core", "R2F", "R2F  report → fact"),
+    ("core", "core", "P2R", "P2R  procedure → rule"),
+    ("core", "core", "C2O", "C2O  claim → operational"),
+    ("core", "core", "MIX", "MIX  mixed evidence"),
+    ("core", "core", "O2I", "O2I  observation → intention"),
+    ("core", "core", "R2P", "R2P  recommendation → preference"),
+    ("core", "core", "S2D", "S2D  suggestion → decision"),
+    ("multiarg", "multiarg", "C2O", "WIRE  multi-arg, 5 arguments"),
+    ("multiarg", "multiarg", "P2R", "STO  multi-arg, 4 arguments"),
+    ("multiarg", "multiarg", "O2I", "TRV  multi-arg, country as value"),
+    ("speechact", "speechact2", "Q2D", "Q2D  customer quotes somebody"),
+    ("speechact", "speechact2", "G2O", "G2O  grant through a tool"),
+]
+
+CONDITION_LABELS = {key: label for module in ROWS.values() for key, label in module}
+
+
+def draw_condition(module: str, condition: str, dataset: str, model: str, data: dict, fired: dict,
+                   path: Path) -> Path | None:
+    """One defense (or baseline), one dataset, every attack type."""
+    runner = "run" if dataset == "dev" else "heldout"
+    rows = []
+    for dev_suite, heldout_suite, category, label in TYPES:
+        suite = dev_suite if dataset == "dev" else heldout_suite
+        recorded = data[module].get((condition, suite, runner))
+        if not recorded:
+            continue
+        episodes = [r for r in recorded if r["category"] == category]
+        if not episodes:
+            continue
+        rows.append((label, _counts(episodes, fired.get((runner, suite), set()))))
+    if not rows:
+        return None
+
+    fig, ax = plt.subplots(figsize=(9.2, 1.9 + 0.46 * len(rows)), facecolor=SURFACE)
+    ax.set_facecolor(SURFACE)
+    bar = 0.36
+    positions = list(range(len(rows)))[::-1]
+    for y, (_, (through, n_minus, done, n_plus)) in zip(positions, rows):
+        for offset, value, total, colour in ((bar / 2, through, n_minus, ASR_COLOUR),
+                                             (-bar / 2, done, n_plus, TSR_COLOUR)):
+            share = 100 * value / total if total else 0
+            ax.barh(y + offset, share, height=bar - 0.04, color=colour, linewidth=0)
+            ax.text(share + 1.2, y + offset, f"{share:.0f}%  ({value}/{total})", va="center",
+                    fontsize=7.5, color=INK_2)
+    ax.set_yticks(positions)
+    ax.set_yticklabels([label for label, _ in rows], fontsize=8.5, color=INK)
+    ax.set_xlim(0, 118)
+    ax.set_xticks([0, 25, 50, 75, 100])
+    ax.set_xticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=7.5, color=INK_2)
+    ax.grid(axis="x", color=GRID, linewidth=0.6)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="y", length=0)
+
+    through_all = sum(r[1][0] for r in rows)
+    minus_all = sum(r[1][1] for r in rows)
+    done_all = sum(r[1][2] for r in rows)
+    plus_all = sum(r[1][3] for r in rows)
+    label = CONDITION_LABELS.get(condition, condition)
+    ax.set_title(f"Module {module.upper()} — {label} — {'development set' if dataset == 'dev' else 'held-out set'}"
+                 f"\n{model}      all types: ASR {100 * through_all / max(minus_all, 1):.0f}% "
+                 f"({through_all}/{minus_all})   ·   TSR {100 * done_all / max(plus_all, 1):.0f}% "
+                 f"({done_all}/{plus_all})",
+                 loc="left", fontsize=10.5, color=INK, fontweight="bold", pad=10)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=ASR_COLOUR), plt.Rectangle((0, 0), 1, 1, color=TSR_COLOUR)]
+    ax.legend(handles, ["ASR — attacks that went through (H−, lower is better)",
+                        "TSR — required tasks completed (H+, higher is better)"],
+              loc="lower right", frameon=False, fontsize=8)
+    fig.text(0.01, 0.005, "ASR excludes pairs whose null control fired. Five pairs per type, so a single "
+                          "type carries no conclusion on its own.", fontsize=7, color=INK_2)
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    OUT_DIR.mkdir(exist_ok=True)
+    fig.savefig(path, dpi=160, facecolor=SURFACE, bbox_inches="tight")
+    plt.close(fig)
+    return path
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--model", default=None, help="default: the model of the recorded run")
@@ -201,6 +292,12 @@ def main(argv=None) -> int:
         for module in ("b", "c"):
             path = draw(module, model, data, fired, OUT_DIR / f"final_module_{module}_{slug}.png")
             print(f"  {path}" if path else f"  Module {module.upper()}: nothing recorded yet")
+            for dataset in ("dev", "heldout"):
+                for condition, _ in ROWS[module]:
+                    name = f"final_{module}_{dataset}_{condition}_{slug}.png"
+                    if (drawn := draw_condition(module, condition, dataset, model, data, fired,
+                                                OUT_DIR / name)):
+                        print(f"  {drawn}")
             for suite, runner, suite_label in SUITES:
                 name = f"final_module_{module}_{suite}_{'heldout' if runner == 'heldout' else 'dev'}_{slug}.png"
                 if (drawn := draw_by_category(module, suite, runner, suite_label, model, data, fired,
