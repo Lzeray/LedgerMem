@@ -147,6 +147,13 @@ def _phases() -> list[Phase]:
             unprotected = "baseline-attributed-retrieve" if suite.startswith("speechact") else "baseline-retrieve"
             b(runner, suite, unprotected, "gate-retrieve")
     phases.append(Phase("A core (write-time)", "write", "a", "core"))
+    # 5. filling the per-attack-type tables: the paper's remaining arms on the suites they had not
+    #    been run on. Appended after everything else so earlier phases keep their numbers. The
+    #    washed arms cannot run on the speech-act suites, which define no washed rendering.
+    for runner in ("heldout", "run"):
+        b(runner, "multiarg", "baseline-attributed", "sanitizer", "conservative-join", "gold-washed", "gate")
+        b(runner, "speechact2" if runner == "heldout" else "speechact", "gate")
+        c(runner, "multiarg", "memory-off", "c-naive-join", "c-predicted")
     return phases
 
 
