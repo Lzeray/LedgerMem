@@ -215,7 +215,7 @@ CONDITION_LABELS = {key: label for module in ROWS.values() for key, label in mod
 
 def draw_condition(module: str, condition: str, dataset: str, model: str, data: dict, fired: dict,
                    path: Path) -> Path | None:
-    """One defense (or baseline), one dataset, every attack type."""
+    """One defense (or baseline), one dataset, every attack type — as a table."""
     runner = "run" if dataset == "dev" else "heldout"
     rows = []
     for dev_suite, heldout_suite, category, label in TYPES:
@@ -224,54 +224,55 @@ def draw_condition(module: str, condition: str, dataset: str, model: str, data: 
         if not recorded:
             continue
         episodes = [r for r in recorded if r["category"] == category]
-        if not episodes:
-            continue
-        rows.append((label, _counts(episodes, fired.get((runner, suite), set()))))
+        if episodes:
+            rows.append((label, _counts(episodes, fired.get((runner, suite), set()))))
     if not rows:
         return None
 
-    fig, ax = plt.subplots(figsize=(9.2, 1.9 + 0.46 * len(rows)), facecolor=SURFACE)
-    ax.set_facecolor(SURFACE)
-    bar = 0.36
-    positions = list(range(len(rows)))[::-1]
-    for y, (_, (through, n_minus, done, n_plus)) in zip(positions, rows):
-        for offset, value, total, colour in ((bar / 2, through, n_minus, ASR_COLOUR),
-                                             (-bar / 2, done, n_plus, TSR_COLOUR)):
-            share = 100 * value / total if total else 0
-            ax.barh(y + offset, share, height=bar - 0.04, color=colour, linewidth=0)
-            ax.text(share + 1.2, y + offset, f"{share:.0f}%  ({value}/{total})", va="center",
-                    fontsize=7.5, color=INK_2)
-    ax.set_yticks(positions)
-    ax.set_yticklabels([label for label, _ in rows], fontsize=8.5, color=INK)
-    ax.set_xlim(0, 118)
-    ax.set_xticks([0, 25, 50, 75, 100])
-    ax.set_xticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=7.5, color=INK_2)
-    ax.grid(axis="x", color=GRID, linewidth=0.6)
-    ax.set_axisbelow(True)
-    for side in ("top", "right", "left"):
-        ax.spines[side].set_visible(False)
-    ax.spines["bottom"].set_color(GRID)
-    ax.tick_params(axis="y", length=0)
+    header = ["attack type", "H−  through", "ASR", "H+  done", "TSR"]
+    body, colours = [], []
+    for label, (through, n_minus, done, n_plus) in rows:
+        body.append([label, f"{through}/{n_minus}", f"{100 * through / n_minus:.0f}%" if n_minus else "—",
+                     f"{done}/{n_plus}", f"{100 * done / n_plus:.0f}%" if n_plus else "—"])
+        attack = "#f8d7da" if through else "#d4edda"
+        task = "#d4edda" if n_plus and done == n_plus else ("#fff3cd" if n_plus else "#ffffff")
+        colours.append(["#f5f5f5", attack, attack, task, task])
 
-    through_all = sum(r[1][0] for r in rows)
-    minus_all = sum(r[1][1] for r in rows)
-    done_all = sum(r[1][2] for r in rows)
-    plus_all = sum(r[1][3] for r in rows)
+    through = sum(r[1][0] for r in rows); n_minus = sum(r[1][1] for r in rows)
+    done = sum(r[1][2] for r in rows); n_plus = sum(r[1][3] for r in rows)
+    body.append(["all types", f"{through}/{n_minus}", f"{100 * through / max(n_minus, 1):.0f}%",
+                 f"{done}/{n_plus}", f"{100 * done / max(n_plus, 1):.0f}%"])
+    colours.append(["#e4e4e4"] * 5)
+
+    fig, ax = plt.subplots(figsize=(8.4, 1.5 + 0.42 * (len(body) + 1)))
+    ax.axis("off")
     label = CONDITION_LABELS.get(condition, condition)
-    ax.set_title(f"Module {module.upper()} — {label} — {'development set' if dataset == 'dev' else 'held-out set'}"
-                 f"\n{model}      all types: ASR {100 * through_all / max(minus_all, 1):.0f}% "
-                 f"({through_all}/{minus_all})   ·   TSR {100 * done_all / max(plus_all, 1):.0f}% "
-                 f"({done_all}/{plus_all})",
-                 loc="left", fontsize=10.5, color=INK, fontweight="bold", pad=10)
-    handles = [plt.Rectangle((0, 0), 1, 1, color=ASR_COLOUR), plt.Rectangle((0, 0), 1, 1, color=TSR_COLOUR)]
-    ax.legend(handles, ["ASR — attacks that went through (H−, lower is better)",
-                        "TSR — required tasks completed (H+, higher is better)"],
-              loc="lower right", frameon=False, fontsize=8)
-    fig.text(0.01, 0.005, "ASR excludes pairs whose null control fired. Five pairs per type, so a single "
-                          "type carries no conclusion on its own.", fontsize=7, color=INK_2)
-    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    ax.set_title(f"Module {module.upper()} — {label} — "
+                 f"{'development set' if dataset == 'dev' else 'held-out set'}\n{model}",
+                 fontsize=12, fontweight="bold", pad=14)
+    table = ax.table(cellText=body, colLabels=header, cellColours=colours, cellLoc="center", loc="center")
+    table.auto_set_font_size(False)
+    table.set_fontsize(9.5)
+    table.scale(1, 1.9)
+    # The type names are long; give the first column the room it needs instead of clipping them.
+    widths = [0.40, 0.15, 0.10, 0.15, 0.10]
+    for (row, column), cell in table.get_celld().items():
+        cell.set_width(widths[column])
+        if row == 0:
+            cell.set_text_props(fontweight="bold")
+            cell.set_facecolor("#dfe6ee")
+        else:
+            if column == 0:
+                cell.set_text_props(ha="left")
+                cell.PAD = 0.03
+            if row == len(body):
+                cell.set_text_props(fontweight="bold")
+        cell.set_edgecolor("#bbbbbb")
+    fig.text(0.01, 0.01, "ASR excludes pairs whose null control fired. Five pairs per type, so a single "
+                         "type carries no conclusion on its own.", fontsize=8, color="#555555")
+    fig.tight_layout()
     OUT_DIR.mkdir(exist_ok=True)
-    fig.savefig(path, dpi=160, facecolor=SURFACE, bbox_inches="tight")
+    fig.savefig(path, dpi=160, bbox_inches="tight")
     plt.close(fig)
     return path
 
