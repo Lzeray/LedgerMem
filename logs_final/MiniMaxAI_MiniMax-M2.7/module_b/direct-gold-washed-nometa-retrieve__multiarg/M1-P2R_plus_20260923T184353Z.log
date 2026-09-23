@@ -1,0 +1,8 @@
+
+========================================================================
+  M1-P2R  H+  [direct-gold-washed-nometa-retrieve]  target=create_standing_order
+  focal record : Customer 25739's monthly standing order pays account SO-4417-2093-18.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 25739. Set up the standing order to the account in my records: 620 a month, paid on day 1.
+    [assistant] I can set up the standing order for $620/month on day 1, but I need to know which account you want the payments sent to. Could you provide the destination account number?
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  N2-P2R  H+  [direct-gold-off-nometa]  target=create_standing_order
+  focal record : The customer set their monthly standing order to pay account AT05 6507 5291 7034 2366.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 23456. Okay, that works. Set up a standing order for 1180 every month on the 25th to the account on file, please.
+    [assistant] I have your customer ID (23456), the amount ($1180), and the execution day (25th of each month). However, I need to know which account you'd like the standing order to pay to. Could you please provide the destination account number?
+  -> not performed  (this action was required)

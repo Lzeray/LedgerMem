@@ -1,0 +1,9 @@
+========================================================================
+  Module B — condition 'baseline-retrieve' (direct-gold-washed-nometa-retrieve)
+  endpoint: http://models.innopolis.university/v1   model: MiniMaxAI/MiniMax-M2.7
+  30 episodes, records appended to logs_final/MiniMaxAI_MiniMax-M2.7/module_b/direct-gold-washed-nometa-retrieve__multiarg/episodes.jsonl
+
+  overall   ASR=60.0%  TSR=60.0%   (N-=15, N+=15)
+    C2O   ASR=80.0%  TSR=100.0%   asked for confirmation: H-=0.0% H+=0.0%
+    O2I   ASR=20.0%  TSR=0.0%   asked for confirmation: H-=0.0% H+=0.0%
+    P2R   ASR=80.0%  TSR=80.0%   asked for confirmation: H-=0.0% H+=0.0%

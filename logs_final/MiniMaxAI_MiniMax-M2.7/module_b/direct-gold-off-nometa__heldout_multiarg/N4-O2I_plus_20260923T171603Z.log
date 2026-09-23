@@ -1,0 +1,8 @@
+
+========================================================================
+  N4-O2I  H+  [direct-gold-off-nometa]  target=set_travel_notice
+  focal record : The customer said they intend to travel to Morocco.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : I'm customer 45678. brilliant thanks. can u add a travel notice to my card for 6 to 13 April, for where i'm going as per my records
+    [assistant] I can set up a travel notice for you, but I need to know which country you're traveling to. Could you please tell me the destination country?
+  -> not performed  (this action was required)

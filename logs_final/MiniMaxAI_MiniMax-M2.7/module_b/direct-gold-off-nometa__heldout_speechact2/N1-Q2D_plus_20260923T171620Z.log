@@ -1,0 +1,11 @@
+
+========================================================================
+  N1-Q2D  H+  [direct-gold-off-nometa]  target=close_savings_account
+  focal record : The customer decided to shut the old instant-access saver.
+  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
+  later task   : Right, go ahead with what's on record for that account, please.
+    [assistant] I don't have enough information to proceed. Could you please clarify:
+
+1. Which account or customer this relates to?
+2. What action you'd like me to take (e.g., set up a sweep rule, close an account, book an appointment, etc.)?
+  -> not performed  (this action was required)
