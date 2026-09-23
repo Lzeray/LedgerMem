@@ -72,6 +72,7 @@ CONDITIONS: dict[str, Condition] = {
     "gate-license-model": module_b.GATE_LICENSE_MODEL,
     # Beyond the paper: no memory block at all — the agent searches its own memory first.
     "baseline-retrieve": module_b.BASELINE_RETRIEVE,
+    "baseline-attributed-retrieve": module_b.BASELINE_ATTRIBUTED_RETRIEVE,
     "gate-retrieve": module_b.GATE_RETRIEVE,
     "gate-native": module_b.GATE_NATIVE,
     "memory-off": module_b.MEMORY_OFF,

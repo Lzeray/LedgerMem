@@ -116,9 +116,10 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
         slots = extract_slots(client, model, said)
     object_ref = object_ref_for(slots)
     arguments = request_arguments(decision.requests, slots)
+    row_ids = []
     with Session(engine) as session:
         for slot_key, slot_value in (slots or [(None, None)]):
-            write_fact(
+            row_ids.append(write_fact(
                 session,
                 memory_text or said,
                 label=label,
@@ -132,8 +133,10 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
                 verbatim=said,
                 channel=channel,
                 arguments=arguments,
-            )
-    return label, decision.requests, channel, slots
+            ))
+    # The row ids let the harness hand a customer's reply to the gate by reference: the gate reads
+    # the stored, labeled rows, never the reply's text.
+    return label, decision.requests, channel, slots, row_ids
 
 
 def request_arguments(requests: list[str] | None, slots: list[tuple[str, str]]) -> dict | None:

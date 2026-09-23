@@ -61,8 +61,8 @@ refuses any $\Au$ record on $\cA$ or $\cX$, and no stored record is ever modifie
 
 \paragraph{Order.} Every message of $H$ and then $q$ (on $\cU$) is written before the agent acts.
 During the action stage the agent holds only the gate and a question-to-customer tool, and no
-answer to that question is written to memory during the stage. So the store $M$ is fixed while the
-gate runs.
+answer to that question is written to memory. The only write during the stage is the customer's
+reply to a confirmation request (below). Until then the store $M$ is fixed.
 
 \begin{definition}[Gate]
 Let $M^{\Au}$ be the $\Au$ records of $M$ and $M_k$ the records with slot key $k$. A call to $a$
@@ -79,17 +79,20 @@ is decided from $M$ alone:
 \item \emph{Decision.} Execute if every parameter is bound. Otherwise issue a fresh single-use
   reference $t$ recording $a$, the bound values and the blocked values.
 \end{enumerate}
-Presenting $t$ consumes it. The call then executes with the recorded values only if the harness
-supplies $\gamma = \mathit{true}$ and no parameter was missing or ambiguous. The agent supplies
-only $a$ and $t$. $\gamma$ is not in its tool schema, and any arguments the agent writes are
-discarded.
+The customer is shown a request rendered from $t$: the blocked values with their source, and a
+question for each missing or ambiguous parameter. The agent is told only that the customer has
+been asked. The reply is written like any message, and the harness passes the gate its rows $Y$
+and a flag $\gamma$ (the customer approved). Presenting $t$ consumes it. If $\gamma = \mathit{true}$,
+each parameter that was blocked, missing or ambiguous takes the value for its key if the $\Au$
+records of $Y$ state exactly one such value. Otherwise a blocked parameter keeps its recorded
+value. The call executes if every parameter then has a value. The agent supplies only $a$ and $t$:
+$\gamma$ and $Y$ are not in its tool schema, and any arguments the agent writes are discarded.
 \end{definition}
 
 \begin{assumption}[Integration]\label{as:int}
 (i) Roles and the producing tool of every message cannot be forged by content. (ii) A tool
 declared trusted is the bank's own authenticated system. (iii) The harness sets
-$\gamma = \mathit{true}$ only after showing the customer $a$ and every value recorded under $t$,
-rendered from $t$ and not written by the agent, and only after the customer approves it.
+$\gamma = \mathit{true}$ only after the customer has approved the request rendered from $t$.
 Part (iii) describes deployment. In the measured runs no confirmation is ever given.
 \end{assumption}
 
@@ -106,8 +109,9 @@ Part (iii) describes deployment. In the measured runs no confirmation is ever gi
   never makes a call execute and never changes the arguments of an executing one.
 \item \emph{Non-interference.} Without confirmation, the executed arguments are a function of
   $M$ and $a$. Text in the agent's context reaches the gate only through the choice of $a$.
-\item \emph{Confirmation is local.} It authorizes one call, cannot bypass the license or fill a
-  missing or ambiguous value, and never changes a label.
+\item \emph{Confirmation is local.} It authorizes one call and cannot bypass the license. A
+  missing or ambiguous value can come only from the customer's own reply, and only if that reply
+  is $\Au$ and states exactly one value. Confirmation never changes a label.
 \end{enumerate}
 \end{theorem}
 \begin{proof}[Proof sketch]
@@ -115,8 +119,8 @@ Part (iii) describes deployment. In the measured runs no confirmation is ever gi
 three gate steps and the substring filter. (3) Adding the record leaves $M^{\Au}$, hence $\Lambda$,
 unchanged. A value bound through $M_k$ in the larger store was already the only value there, and
 it was already carried by an $\Au$ record of $M$. (4) The gate reads only $M$, and $M$ is fixed. (5)
-The reference is consumed on first use, the gate never writes $M$, and missing or ambiguous
-parameters are not recorded under $t$.
+The reference is consumed on first use, and the gate never writes $M$. A parameter left open under
+$t$ is filled only from the $\Au$ rows of $Y$.
 \end{proof}
 
 With confirmation, (3) does not hold. A $\Un$ record can turn a missing parameter into a blocked
@@ -134,17 +138,11 @@ include licensing an action or binding its argument, so the upgrade $\widehat{\P
 \Pi(\ell^*(p, H))$ cannot reach an action. The gate treats $\At$ and $\Un$ alike: neither can license an action
 or bind an argument without confirmation, and confirmation never raises a label.
 
-\paragraph{Departures from the paper's role policy.}
-These are an extension, resting on Assumption~\ref{as:int}(ii). A customer quoting a third party
-is $\Un$, not $\Au$. A tool result is $\At$ if the tool is the bank's own ($\cT$), and $\Au$ only
-for a valid grant over it.
-
-\paragraph{Limitations.}
-(a) A license is never consumed or revoked. A request keeps licensing its action after it has
-executed and after the customer retracts it, and a grant stays $\Au$ after it expires. This is the
-endogenous threat model of EAL-Bench (arXiv:2609.01836), authorization that has expired or been
-revoked, and not the exogenous one measured here. (b) Values stated in a refusal
-are $\Au$ slots and can be bound as arguments. (c) The substring filter does not respect token
-boundaries: 100 passes inside 1000. (d) Memory has no time order, so a corrected value (``to A''
-followed later by ``no, to B'') leaves the parameter ambiguous.
+\paragraph{Departures and limitations.}
+As an extension resting on Assumption~\ref{as:int}(ii), a customer quoting a third party is $\Un$
+rather than $\Au$, and a bank tool's result is $\At$, or $\Au$ for a valid grant. (a) A license is
+never consumed or revoked, and a grant stays $\Au$ after it expires. This is the endogenous threat
+model of EAL-Bench (arXiv:2609.01836), not the one measured here. (b) Values stated in a refusal are
+$\Au$ slots. (c) The substring filter ignores token boundaries (100 passes inside 1000). (d) Memory
+has no time order, so a corrected value stays ambiguous.
 \end{document}

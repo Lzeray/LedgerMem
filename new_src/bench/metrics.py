@@ -112,6 +112,8 @@ class ActionRecord:
     #: How many times the agent searched its own memory (the retrieval arm only).
     searches: int = 0
     confirmation_requested: bool = False
+    #: The request the customer was shown when the gate asked, rendered from the pending call.
+    confirmation_shown: str = ""
     gate_labels: dict = field(default_factory=dict)
     focal_label_stored: str = ""
     focal_role_stored: str = ""

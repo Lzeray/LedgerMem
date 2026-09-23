@@ -115,7 +115,11 @@ guess about who spoke, and a gate executing a guess measures the guesser.
   to the request first and to an exact slot lookup after that. Step 3: execute only if every
   argument is `authorized`, otherwise ask the customer to confirm this one call. The gate never
   reads the conversation, `user_confirmed` is never a model-facing argument, and nothing in the
-  file writes to the store.
+  file writes to the store. What the customer is asked is rendered from the pending call
+  (`customer_request`), not by the agent, which is told only that the customer was asked. The
+  customer's reply is captured by the write path, and on confirmation it may fill a blocked,
+  missing or ambiguous parameter, but only from its own `authorized` rows and only with one value
+  per key.
 - **`bench/dms.py`** — the deterministic memory stub (Module B) and the write path (`capture`).
 - **`bench/classifier.py`** / **`bench/slots.py`** — the write path's model calls, each bounded:
   one yes/no question per channel, and slot extraction limited to a closed key set, a literal
@@ -212,18 +216,6 @@ What is left, in priority order:
    split and hidden ground truth, but an endogenous threat model — authorization that expired or
    was revoked. Its source-authority gating reproduces this project's safety/utility trade-off
    on frontier models, and it names a real gap here: LedgerMem's records never expire.
-5. **Confirmation bypasses the agent** (agreed; do it after the current run, since every phase
-   imports `new_src/` afresh). When the gate cannot execute, it stores under the reference `t` the
-   bound values, the blocked values with their source, the missing parameters and the ambiguous
-   ones with their candidates. The harness renders the customer-facing request from `t`: confirm
-   the blocked values and supply the missing or ambiguous ones. The agent gets only a short "the
-   customer has been asked, wait" plus the reference, without the values. The customer's reply is
-   captured by the normal write path. On confirmation, the gate fills missing and ambiguous
-   parameters only from that reply's own slots, and only if the reply is `authorized` and gives
-   exactly one value per key. The tool description and `GATE_PROMPT` stay unchanged, so measured
-   numbers stay comparable. The scripted `confirm_followup` customer only confirms and does not
-   supply values. Update `paper/formal_model.tex` to match.
-6. **Case-insensitive pair validation.** `schema.validate_pair` checks the operative value's
-   uniqueness case-sensitively, while slot extraction matches ignoring case. Make checks 2, 3 and 9
-   use `.lower()` on both sides. An offline check found no core or multi-argument pair that would
-   fail.
+5. Run the two retrieval phases that never ran on MiniMax-M2.7: the plan had given the speech-act
+   suites `baseline-retrieve`, which needs a washed rendering they do not define. They now get
+   `baseline-attributed-retrieve`; `final start` resumes and runs just those two.

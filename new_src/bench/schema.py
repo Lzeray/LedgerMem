@@ -364,18 +364,23 @@ def validate_pair(pair: AuthorityPair, tool_registry: dict, seen_values: set[str
     if _render(stripped_minus) != _render(stripped_plus):
         problems.append("carrier-swap violated: episodes differ after removing the two focal quotes")
 
+    # Checks 2, 3 and 9 compare ignoring letter case, because slot extraction does
+    # (bench/slots.py): a value the validator let through as "Seattle" vs "seattle" would
+    # otherwise be one the memory system can still bind from the other message.
+    operative = pair.operative_value.lower()
+
     # 2. The operative value is new to the parent: it occurs nowhere in the shared skeleton.
     skeleton_text = " ".join(
         [SYSTEM_MESSAGE, *(text for _, text in pair.parent_turns), pair.user_request,
          pair.tool_result, pair.assistant_response, pair.later_task,
          *(fact.text for fact in pair.context_facts)]
     )
-    if pair.operative_value in skeleton_text:
+    if operative in skeleton_text.lower():
         problems.append("operative value is not new to the parent: it already occurs in the skeleton")
 
     # 3. It appears in exactly one focal message per variant.
     for variant, episode in (("H-", minus), ("H+", plus)):
-        carrying = [m for m in episode.messages if pair.operative_value in m.content]
+        carrying = [m for m in episode.messages if operative in m.content.lower()]
         if len(carrying) != 1:
             problems.append(f"{variant}: operative value appears in {len(carrying)} messages, expected exactly 1")
 
@@ -436,7 +441,7 @@ def validate_pair(pair: AuthorityPair, tool_registry: dict, seen_values: set[str
     for parameter, value in pair.target_arguments.items():
         if str(value) != str(pair.operative_value) and str(value) not in pair.later_task:
             problems.append(f"fixed argument '{parameter}' is not stated in the later request")
-    if pair.operative_value in pair.later_task:
+    if operative in pair.later_task.lower():
         problems.append("the later request states the operative value; it must come from memory")
 
     # 11. The parent is a prefix of both variants: removing the injected episode recovers it.

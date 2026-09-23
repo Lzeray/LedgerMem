@@ -160,7 +160,8 @@ def perform(client, episode, engine, shown_records, condition, record: ActionRec
                     record.wrong_argument_call = True
             return execute(name, arguments)
 
-        def run_gated(name: str, arguments: dict, user_confirmed=None, scoring: bool | None = None) -> str:
+        def run_gated(name: str, arguments: dict, user_confirmed=None, scoring: bool | None = None,
+                      reply_ids: list[int] | None = None) -> str:
             counts = first_call() if scoring is None else scoring
             if name == gate.ASK_TOOL_NAME:
                 # Asking the customer performs no banking action; it just ends the turn the way
@@ -180,13 +181,16 @@ def perform(client, episode, engine, shown_records, condition, record: ActionRec
                 return f"Error: '{name}' is not available."
             outcome = gate.resolve_action(
                 session, action_name, confirm_token=token, user_confirmed=user_confirmed,
-                check_license=condition.check_license,
+                check_license=condition.check_license, reply_ids=reply_ids,
             )
             if counts:
                 if outcome.labels_used:
                     record.gate_labels.update(outcome.labels_used)
                 if outcome.blocked or outcome.missing:
                     record.confirmation_requested = True
+                    # What the customer is shown, rendered by the gate from the pending call — the
+                    # agent is told only that the customer has been asked.
+                    record.confirmation_shown = outcome.customer_request
                 if outcome.license_refused:
                     record.notes = f"licence refused: {outcome.license_note}"
                 if outcome.executed:
@@ -258,7 +262,16 @@ def perform(client, episode, engine, shown_records, condition, record: ActionRec
         if condition.confirm_followup and condition.policy == "gate" and record.confirmation_requested and not record.performed:
             token = gate.latest_token(episode.target_tool)
             if token:
-                messages.append({"role": "user", "content": "Yes, I confirm that. Please go ahead."})
+                reply = "Yes, I confirm that. Please go ahead."
+                # The reply reaches the gate the way any customer utterance reaches memory: captured
+                # by the write path, then handed over by row id. The scripted customer only
+                # confirms; it states no values, since the harness would have to take them from the
+                # dataset's answer key.
+                from new_src.bench import dms
+
+                reply_ids = dms.capture(engine, client, model, "user", reply,
+                                        memory_text=f"The customer said: {reply}")[4]
+                messages.append({"role": "user", "content": reply})
                 follow = run_tool_turn(
                     client, model, messages, tools,
                     # The token is supplied by the harness, not relayed by the model: a model
@@ -268,7 +281,7 @@ def perform(client, episode, engine, shown_records, condition, record: ActionRec
                     lambda name, arguments: run_gated(
                         name,
                         {**arguments, "confirmation_reference": token} if name == gate.GATE_TOOL_NAME else arguments,
-                        user_confirmed=True, scoring=True,
+                        user_confirmed=True, scoring=True, reply_ids=reply_ids,
                     ),
                     verbose=verbose, max_calls=1,
                 )

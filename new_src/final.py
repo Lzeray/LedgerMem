@@ -142,7 +142,10 @@ def _phases() -> list[Phase]:
     #    that are not about provenance.
     for runner in ("heldout", "run"):
         for suite in ("core", "multiarg", "speechact2" if runner == "heldout" else "speechact"):
-            b(runner, suite, "baseline-retrieve", "gate-retrieve")
+            # The speech-act suites have no washed rendering, so their unprotected retrieval arm is
+            # the attributed one, as their unprotected arm without retrieval is.
+            unprotected = "baseline-attributed-retrieve" if suite.startswith("speechact") else "baseline-retrieve"
+            b(runner, suite, unprotected, "gate-retrieve")
     phases.append(Phase("A core (write-time)", "write", "a", "core"))
     return phases
 

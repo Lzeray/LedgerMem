@@ -26,6 +26,11 @@ deliberate and load-bearing:
 
   * Confirming does NOT raise a label. Nothing here writes to the store. An unendorsed
     record stays unendorsed forever; confirmation authorizes one call and nothing else.
+
+  * What the customer is asked is rendered from the pending entry itself (`customer_request`),
+    never written by the agent. The agent is told only that the customer has been asked. A
+    customer who approves an agent's paraphrase has not approved the value the gate would use,
+    and an unendorsed value dressed up in the agent's words is exactly what they would approve.
 """
 
 from __future__ import annotations
@@ -171,6 +176,8 @@ class GateOutcome:
     license_note: str = ""
     #: Arguments with several candidate values, and the values. Never resolved by picking.
     ambiguous: dict = field(default_factory=dict)
+    #: What the customer is shown, rendered from the pending entry (`customer_request`).
+    customer_request: str = ""
 
 
 def _requests_for(session: Session, action_name: str) -> list[SemanticRecord]:
@@ -226,28 +233,51 @@ def _resolve_arguments(session: Session, action_name: str, parameters: list[str]
         if best.label == "authorized":
             resolved[parameter] = best.slot_value
         else:
-            blocked.append({"parameter": parameter, "value": best.slot_value, "label": best.label})
+            blocked.append({"parameter": parameter, "value": best.slot_value, "label": best.label,
+                            "source": best.channel or best.role})
 
     return resolved, blocked, missing, labels, ambiguous
 
 
-def _pending_message(blocked: list[dict], missing: list[str], token: str, ambiguous: dict | None = None) -> str:
-    parts = []
-    ambiguous = ambiguous or {}
-    unnamed = [p for p in missing if p not in ambiguous]
-    if unnamed:
-        parts.append("I need the customer to provide: " + ", ".join(unnamed) + ".")
-    for parameter, values in ambiguous.items():
-        parts.append(f"The records hold more than one {parameter} ({' or '.join(values)}); "
-                     "ask the customer which one they mean.")
-    if blocked:
-        described = ", ".join(f"{item['parameter']} = {item['value']} ({item['label']})" for item in blocked)
-        parts.append(
-            "The following is not on record as the customer's own instruction and cannot be used "
-            f"without their explicit confirmation: {described}."
-        )
-    parts.append(f"Quote this confirmation reference back when the customer answers: {token}")
-    return " ".join(parts)
+def _pending_message(token: str) -> str:
+    """What the AGENT is told when the gate needs the customer. Deliberately without the values:
+    the customer is shown them directly (`customer_request`), so the agent has nothing to relay
+    and nothing to reword."""
+    return ("This action needs the customer's answer before it can go ahead. The bank has sent the "
+            "customer the details directly; do not repeat or guess them. Tell the customer you are "
+            f"waiting for their answer, and quote this confirmation reference: {token}")
+
+
+def customer_request(token: str) -> str | None:
+    """The text the CUSTOMER is shown for a pending call, rendered from the pending entry alone.
+
+    Every value the call would use without the customer's own word is shown, with where it came
+    from; every parameter the gate could not fill is asked for. Nothing here is written by the
+    agent. None for an unknown token."""
+    pending = _PENDING.get(token)
+    if pending is None:
+        return None
+    spec = TARGET_ACTIONS[pending["action"]]
+    action = spec.description.rstrip(".")
+    lines = [f"Before we go ahead ({action[0].lower()}{action[1:]}), please check the following."]
+    for item in pending["blocked"]:
+        source = _SOURCE_PHRASE.get(item.get("source"), "a source other than you")
+        lines.append(f"- {spec.parameters[item['parameter']][1]} Proposed: {item['value']}, which "
+                     f"comes from {source}, not from you. Is it correct?")
+    for parameter, values in pending["ambiguous"].items():
+        lines.append(f"- {spec.parameters[parameter][1]} Your records hold {' and '.join(values)}. "
+                     "Which one do you mean?")
+    for parameter in pending["missing"]:
+        lines.append(f"- {spec.parameters[parameter][1]} Please tell us the value.")
+    return "\n".join(lines)
+
+
+def _reply_records(session: Session, reply_ids: list[int] | None) -> list[SemanticRecord]:
+    """The customer's answer to a pending request, as stored by the write path. Only the
+    customer's own words count: a reply that quoted somebody else is not `authorized` and gives
+    nothing."""
+    rows = [session.get(SemanticRecord, row_id) for row_id in (reply_ids or [])]
+    return [row for row in rows if row is not None and row.label == "authorized" and row.channel == "user"]
 
 
 def resolve_action(
@@ -256,7 +286,11 @@ def resolve_action(
     confirm_token: str | None = None,
     user_confirmed: bool | None = None,
     check_license: bool = False,
+    reply_ids: list[int] | None = None,
 ) -> GateOutcome:
+    """`user_confirmed` and `reply_ids` come from the harness, never from the model: whether the
+    customer approved the request rendered by `customer_request`, and the rows their answer was
+    stored under."""
     if action_name not in TARGET_ACTIONS:
         return GateOutcome(action=action_name, executed=False,
                            message=f"No such protected banking action '{action_name}'.")
@@ -285,11 +319,13 @@ def resolve_action(
             session, action_name, list(spec.parameters), requests)
         if blocked or missing:
             new_token = secrets.token_hex(4)
-            _PENDING[new_token] = {"action": action_name, "resolved": resolved, "blocked": blocked}
+            _PENDING[new_token] = {"action": action_name, "resolved": resolved, "blocked": blocked,
+                                   "missing": [p for p in missing if p not in ambiguous],
+                                   "ambiguous": ambiguous}
             return GateOutcome(
                 action=action_name, executed=False, resolved=resolved, blocked=blocked,
                 missing=missing, confirm_token=new_token, labels_used=labels, ambiguous=ambiguous,
-                message=_pending_message(blocked, missing, new_token, ambiguous),
+                message=_pending_message(new_token), customer_request=customer_request(new_token),
             )
         return GateOutcome(
             action=action_name, executed=True, resolved=resolved, labels_used=labels,
@@ -309,6 +345,16 @@ def resolve_action(
     resolved = dict(pending["resolved"])
     for item in pending["blocked"]:
         resolved[item["parameter"]] = item["value"]
+    # What the customer said in answer fills what the gate could not, and overrides a blocked
+    # value they corrected: their own words outrank a value they were only asked to check. Only
+    # from that reply, only when it is authorized, and only when it states one value per slot —
+    # the same rule as everywhere else, so the gate still never picks.
+    replies = _reply_records(session, reply_ids)
+    open_parameters = [*pending["missing"], *pending["ambiguous"], *(i["parameter"] for i in pending["blocked"])]
+    for parameter in open_parameters:
+        values = {r.slot_value for r in replies if r.slot_key == spec.slots[parameter]}
+        if len(values) == 1:
+            resolved[parameter] = values.pop()
     missing = [p for p in spec.parameters if p not in resolved]
     if missing:
         return GateOutcome(action=action_name, executed=False, resolved=resolved, missing=missing,

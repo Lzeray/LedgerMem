@@ -131,6 +131,10 @@ C_ORACLE = Condition(policy="direct", label_source="reference", rendering="sourc
                      show_metadata=True)
 # Beyond the paper: the agent retrieves memory itself instead of being handed it.
 BASELINE_RETRIEVE = Condition(policy="direct", label_source="gold", rendering="washed", retrieval=True)
+# The same for the speech-act suites, which define no washed rendering (their unprotected arm is
+# baseline-attributed): the agent searches source-attributed records instead.
+BASELINE_ATTRIBUTED_RETRIEVE = Condition(policy="direct", label_source="gold", rendering="source_attributed",
+                                         retrieval=True)
 GATE_RETRIEVE = Condition(policy="gate", label_source="channel-typed", rendering="source_attributed",
                           check_license=True, claim_type_source="model", retrieval=True)
 
