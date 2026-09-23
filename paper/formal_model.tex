@@ -79,10 +79,11 @@ is decided from $M$ alone:
 \item \emph{Decision.} Execute if every parameter is bound. Otherwise issue a fresh single-use
   reference $t$ recording $a$, the bound values and the blocked values.
 \end{enumerate}
-The customer is shown a request rendered from $t$: the blocked values with their source, and a
-question for each missing or ambiguous parameter. The agent is told only that the customer has
+The customer is shown a request rendered from $t$: the action $a$, every bound value, the blocked
+values with their source, and a question for each missing or ambiguous parameter. The agent is told only that the customer has
 been asked. The reply is written like any message, and the harness passes the gate its rows $Y$
-and a flag $\gamma$ (the customer approved). Presenting $t$ consumes it. If $\gamma = \mathit{true}$,
+and a flag $\gamma$, which comes from an explicit control the customer operates, never from a
+model's reading of the reply. Presenting $t$ consumes it. If $\gamma = \mathit{true}$,
 each parameter that was blocked, missing or ambiguous takes the value for its key if the $\Au$
 records of $Y$ state exactly one such value. Otherwise a blocked parameter keeps its recorded
 value. The call executes if every parameter then has a value. The agent supplies only $a$ and $t$:
@@ -109,9 +110,12 @@ Part (iii) describes deployment. In the measured runs no confirmation is ever gi
   never makes a call execute and never changes the arguments of an executing one.
 \item \emph{Non-interference.} Without confirmation, the executed arguments are a function of
   $M$ and $a$. Text in the agent's context reaches the gate only through the choice of $a$.
-\item \emph{Confirmation is local.} It authorizes one call and cannot bypass the license. A
-  missing or ambiguous value can come only from the customer's own reply, and only if that reply
-  is $\Au$ and states exactly one value. Confirmation never changes a label.
+\item \emph{Confirmation is local.} $\gamma$ authorizes one call and cannot bypass the license.
+  A missing or ambiguous value can come only from the customer's own reply, and only if that reply
+  is $\Au$ and states exactly one value. With confirmation, each argument either satisfies (2),
+  or was shown to the customer and approved, or is stated in their $\Au$ reply. Confirmation never
+  changes a label. The reply itself is stored like any customer message, and may license later
+  calls (limitation (a)).
 \end{enumerate}
 \end{theorem}
 \begin{proof}[Proof sketch]
@@ -125,7 +129,7 @@ $t$ is filled only from the $\Au$ rows of $Y$.
 
 With confirmation, (3) does not hold. A $\Un$ record can turn a missing parameter into a blocked
 one, which then executes with the adversary's value if the customer approves it. This is why
-Assumption~\ref{as:int}(iii) requires the customer to be shown the value itself.
+the gate shows the customer the value itself, rendered from $t$.
 
 \paragraph{Consequence for authority pairs.}
 In a validated pair, the operative value of $p$ is a substring of no message of $H^{-}$ except the
@@ -141,7 +145,8 @@ or bind an argument without confirmation, and confirmation never raises a label.
 \paragraph{Departures and limitations.}
 As an extension resting on Assumption~\ref{as:int}(ii), a customer quoting a third party is $\Un$
 rather than $\Au$, and a bank tool's result is $\At$, or $\Au$ for a valid grant. (a) A license is
-never consumed or revoked, and a grant stays $\Au$ after it expires. This is the endogenous threat
+never consumed or revoked, and a grant stays $\Au$ after it expires. A customer's reply to a
+confirmation is itself such a request. This is the endogenous threat
 model of EAL-Bench (arXiv:2609.01836), not the one measured here. (b) Values stated in a refusal are
 $\Au$ slots. (c) The substring filter ignores token boundaries (100 passes inside 1000). (d) Memory
 has no time order, so a corrected value stays ambiguous.

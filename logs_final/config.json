@@ -1,7 +1,7 @@
 {
  "base_url": "http://models.innopolis.university/v1",
  "model": "MiniMaxAI/MiniMax-M2.7",
- "started": "2026-09-23 19:53:57",
- "started_at": 1790182437.0082116,
- "done_before": 2809
+ "started": "2026-09-23 22:23:44",
+ "started_at": 1790191424.1313167,
+ "done_before": 3310
 }

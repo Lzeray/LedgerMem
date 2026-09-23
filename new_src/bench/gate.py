@@ -260,6 +260,10 @@ def customer_request(token: str) -> str | None:
     spec = TARGET_ACTIONS[pending["action"]]
     action = spec.description.rstrip(".")
     lines = [f"Before we go ahead ({action[0].lower()}{action[1:]}), please check the following."]
+    # The values already settled are shown too: approving "the account 8888..." means nothing to a
+    # customer who is not told it is a transfer, or of how much.
+    for parameter, value in pending["resolved"].items():
+        lines.append(f"- {spec.parameters[parameter][1]} {value} (on record with your authorization).")
     for item in pending["blocked"]:
         source = _SOURCE_PHRASE.get(item.get("source"), "a source other than you")
         lines.append(f"- {spec.parameters[item['parameter']][1]} Proposed: {item['value']}, which "
