@@ -233,8 +233,12 @@ def _resolve_arguments(session: Session, action_name: str, parameters: list[str]
         if best.label == "authorized":
             resolved[parameter] = best.slot_value
         else:
+            # The source the customer is told is the LEAST trusted one carrying the value. The
+            # most trusted is usually the consolidator's paraphrase of an outside feed, and naming
+            # "this assistant" there would understate exactly the risk the customer is checking.
+            worst = rows[-1]
             blocked.append({"parameter": parameter, "value": best.slot_value, "label": best.label,
-                            "source": best.channel or best.role})
+                            "source": worst.channel or worst.role})
 
     return resolved, blocked, missing, labels, ambiguous
 
