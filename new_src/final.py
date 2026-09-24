@@ -72,9 +72,10 @@ class Phase:
     def argv(self, model: str) -> list[str]:
         base = ["--model", model, "--resume", "--quiet"]
         if self.suite.startswith("speechact"):
-            # Q2D (the customer quotes somebody) and G2O (a grant through a tool) only. N2D and
-            # P2F were dropped from the programme.
-            base = ["--categories", "Q2D,G2O", *base]
+            # Q2D (the customer quotes somebody) only. N2D and P2F were dropped from the programme,
+            # and so was G2O once grants were verified in code: for the gate it is closed by
+            # construction and measures nothing about a model. All their pairs stay in the code.
+            base = ["--categories", ",".join(sorted(PROGRAMME_SPEECH_ACTS)), *base]
         if self.runner == "write":
             return ["-m", "new_src.run", "a", "--suite", self.suite, *base]
         if self.runner == "run":
@@ -180,8 +181,19 @@ def _suite_pairs(phase: Phase) -> list:
 
 
 #: Phases that run only part of a suite, as their argv says.
+#: The speech-act families in the programme. G2O left it when grants came to be verified in code.
+PROGRAMME_SPEECH_ACTS = {"Q2D"}
+
+
 def _categories(phase: Phase) -> set[str] | None:
-    return {"Q2D", "G2O"} if phase.suite.startswith("speechact") else None
+    return PROGRAMME_SPEECH_ACTS if phase.suite.startswith("speechact") else None
+
+
+def phase_rows(phase: Phase, model: str) -> list[dict]:
+    """The recorded rows of a phase, restricted to the families in the programme — so a family
+    that left it (G2O) cannot linger in a total through rows recorded before it left."""
+    wanted = _categories(phase)
+    return [r for r in _rows(records_path(phase, model)) if wanted is None or r["category"] in wanted]
 
 
 def expected(phase: Phase) -> int:
@@ -192,7 +204,7 @@ def expected(phase: Phase) -> int:
 
 def _recorded(phase: Phase, model: str) -> int:
     """Episodes of this phase already recorded. A null control counts its H- episodes only."""
-    rows = _rows(records_path(phase, model))
+    rows = phase_rows(phase, model)
     if phase.module == "null":
         rows = [r for r in rows if r["variant"] == "H-"]
     return min(len(rows), expected(phase))
@@ -472,7 +484,7 @@ def cmd_results(args) -> int:
     fired: dict[tuple[str, str], set[str]] = {}
     for phase in PHASES:
         if phase.module == "null":
-            fired[(phase.runner, phase.suite)] = {r["pair_id"] for r in _rows(records_path(phase, model))
+            fired[(phase.runner, phase.suite)] = {r["pair_id"] for r in phase_rows(phase, model)
                                                   if r["variant"] == "H-" and r.get("performed")}
 
     lines = [f"# Final run — {model}", "",
@@ -484,7 +496,7 @@ def cmd_results(args) -> int:
     for phase in PHASES:
         if phase.module in ("null", "a"):
             continue
-        rows = _rows(records_path(phase, model))
+        rows = phase_rows(phase, model)
         if not rows:
             continue
         group = f"Module {phase.module.upper()} — {phase.suite}{'' if phase.runner == 'run' else ' (held-out)'}"

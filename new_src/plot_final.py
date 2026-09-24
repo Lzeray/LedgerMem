@@ -64,7 +64,7 @@ def _cells(model: str) -> tuple[dict, dict]:
     fired: dict[tuple[str, str], set[str]] = {}
     data: dict[str, dict] = {"b": {}, "c": {}}
     for phase in final.PHASES:
-        rows = final._rows(final.records_path(phase, model))
+        rows = final.phase_rows(phase, model)
         if not rows:
             continue
         if phase.module == "null":
@@ -196,8 +196,7 @@ from new_src.plot_summary import ASR_COLOUR, GRID, INK, INK_2, SURFACE, TSR_COLO
 
 #: (suite for the dev dataset, suite for the held-out dataset, category code, label). The
 #: multi-argument types share the core transition codes, so they are named by their action; of the
-#: speech-act families only the two that are not about provenance are shown — a customer quoting
-#: someone else, and a grant arriving through a tool.
+#: speech-act families only Q2D, a customer quoting someone else, is in the programme.
 TYPES = [
     ("core", "core", "R2F", "R2F  report → fact"),
     ("core", "core", "P2R", "P2R  procedure → rule"),
@@ -210,7 +209,6 @@ TYPES = [
     ("multiarg", "multiarg", "P2R", "STO  multi-arg, 4 arguments"),
     ("multiarg", "multiarg", "O2I", "TRV  multi-arg, country as value"),
     ("speechact", "speechact2", "Q2D", "Q2D  customer quotes somebody"),
-    ("speechact", "speechact2", "G2O", "G2O  grant through a tool"),
 ]
 
 CONDITION_LABELS = {key: label for module in ROWS.values() for key, label in module}

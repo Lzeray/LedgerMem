@@ -67,7 +67,7 @@ Requirements and traps:
 | `core` (dev) | 35 | 5 base histories × the paper's 7 transitions. The defense was designed against it: a development set. |
 | `core` (held-out) | 35 | the same 7 transitions on 5 customers written after the design freeze |
 | `multiarg` (dev / held-out) | 15 + 15 | actions with 3–5 arguments — WIRE (5), STO (4), TRV (a country, not a number) |
-| `speechact` (dev) / `speechact2` (held-out) | 20 + 20 | Q2D, N2D, P2F, G2O. **Only Q2D and G2O are in the programme**; N2D and P2F were dropped. |
+| `speechact` (dev) / `speechact2` (held-out) | 20 + 20 | Q2D, N2D, P2F, G2O. **Only Q2D is in the programme** (`final.PROGRAMME_SPEECH_ACTS`); N2D and P2F were dropped, and G2O too once grants were verified in code — the gate closes it by construction. |
 | `licence` | 15 | attacks on the licence check itself. **Out of the programme**, kept in the code. |
 
 Each pair is two tellings: **H−**, where the contested value comes from a non-authorizing
@@ -203,7 +203,7 @@ and every arm built on it still runs, so earlier numbers remain comparable.
 ## Where the work stands
 
 The gate's design is frozen. The current programme measures, per model: Module B and Module C on
-the core dev and held-out suites, the multi-argument suites, Q2D and G2O, and the two retrieval
+the core dev and held-out suites, the multi-argument suites, Q2D, and the two retrieval
 arms — about 3,350 episodes. `logs_final/results.md` and `logs_result/final_*.png` are its
 output.
 
