@@ -112,19 +112,20 @@ guess about who spoke, and a gate executing a guess measures the guesser.
   identifier ("the one ending 4417") be bound as an account.
 - **`bench/gate.py`** — the defense. Step 1: is this action asked for at all — an `authorized`
   record must list it in its request list, about the same object. Step 2: each argument, bound
-  to the request first and to an exact slot lookup after that. Step 3: execute only if every
-  argument is `authorized`, otherwise ask the customer to confirm this one call. The gate never
-  reads the conversation, `user_confirmed` is never a model-facing argument, and nothing in the
-  file writes to the store. What the customer is asked is rendered from the pending call
-  (`customer_request`), not by the agent, which is told only that the customer was asked. The
-  customer's reply is captured by the write path, and on confirmation it may fill a blocked,
-  missing or ambiguous parameter, but only from its own `authorized` rows and only with one value
-  per key. The reply is stored with an empty request list (`dms.capture(licenses=False)`): it fills
-  its pending call and licenses nothing later.
+  to the request first and to an exact slot lookup after that. Step 3: anything not bound is put
+  to the CUSTOMER by the gate itself, inside the same call, through a harness-provided `Customer`:
+  missing values typed in and format-checked, ambiguous ones chosen from buttons naming each
+  value's least trusted source, blocked ones accepted, rejected or replaced one by one, then a
+  final yes/no on the whole call. No token, no agent in between; the agent supplies only the
+  action's name. Step 4: execute, then spend the licence (`store.consume_request`): the requests
+  that licensed it no longer list the action. Customer answers are never written; no label ever
+  changes. The measured programme attaches no customer, so such a call is simply not carried out.
 - **`bench/dms.py`** — the deterministic memory stub (Module B) and the write path (`capture`).
 - **`bench/classifier.py`** / **`bench/slots.py`** — the write path's model calls, each bounded:
-  one yes/no question per channel, and slot extraction limited to a closed key set, a literal
-  occurrence in the text, and the parameter's declared format.
+  only customer messages are asked anything (quoting? declining? which actions?), answers count
+  only in the strict format (`parse_yes_no`, `parse_request_list`), and slot extraction is limited
+  to a closed key set, a literal occurrence in the text, and the parameter's declared format. No
+  model is asked about a tool result.
 - **`bench/module_a|b|c.py`**, **`bench/action_stage.py`**, **`bench/engine.py`** — the modules,
   the shared action stage (the paper's instruction and memory block verbatim), and the transport.
 - **`data/`** — the suites and their generation: `suite.py`, `heldout.py`, `multiarg.py`,
@@ -159,13 +160,14 @@ the speech-act families falsify one each. The replacement splits them:
 
 - **The channel** comes from the integration: the role, plus for a tool result the trust
   declared for that tool in `actions.py`. Never inferred from what a result says.
-- **The claim type** is the one field a model supplies, chosen from the acts that channel
-  permits. Every failure — unparsable, empty, out of set, outage — becomes `other`, which no
-  action accepts, so the gate refuses.
-- **The label** is `taxonomy.label_for(channel, claim_type)`, a table.
-- **One rule raises authority**: `trusted_tool` + `grant` → `authorized`. That is the
-  authenticated-channel case, and it is bounded by the channel: an outside feed cannot produce a
-  grant. State it as an assumption wherever these numbers are reported.
+- **The label** follows from the channel, with one model question for the customer's channel
+  only: is the customer quoting somebody else (then `unendorsed`). The claim-type table in
+  `taxonomy.label_for` is no longer on the write path; `classifier.decide` is.
+- **One rule raises authority**: a verified grant. Only a tool declared `grants=True` in
+  `actions.py` (the authorization register) can carry one, and only from its structured result
+  with status `active` (`actions.verified_grant`), checked in code. Every other bank system is
+  `attested` whatever its text says, because such systems relay text written by others. State the
+  register's truthfulness as an assumption wherever these numbers are reported.
 
 It is an extension beyond the paper and is reported as one. The frozen policy stays in the code
 and every arm built on it still runs, so earlier numbers remain comparable.
