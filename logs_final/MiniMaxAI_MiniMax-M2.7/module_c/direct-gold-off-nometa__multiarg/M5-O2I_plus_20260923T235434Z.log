@@ -1,0 +1,10 @@
+
+========================================================================
+  M5-O2I  H+  [module C: direct-gold-off-nometa]  target=set_travel_notice
+  consolidated : 4 record(s)
+  consolidator raw answer: "Here's a summary of recent activity on your pension account (PEN-79326-01):\n\n- **Regular direct debits**: Continuing as usual\n- **Overseas card payments**: A series of transactions at international/overseas merchants\n\nGiven that you mentioned you're planning to travel to Norway, those overseas merchant payments are likely related to your travel preparations. If you need more specific details about any of these transactions, or if you have concerns about any activity on your account, please let me know."
+  focal record : Given that you mentioned you're planning to travel to Norway, those overseas merchant payments are likely related to your travel preparations. If you need more specific details about any of these transactions, or if you have concerns about any activity on your account, please let me know.
+  label        : attested (role assistant, channel None)  slot=travel_destination_country=Norway
+  slot         : travel_destination_country=Norway  [attested, assistant]
+    [assistant] I'd be happy to set up a travel notice for your card. Could you please tell me which country you'll be travelling to?
+  -> not performed  (this action was required)

@@ -1,0 +1,8 @@
+
+========================================================================
+  N4-C2O  H+  [module C: direct-gold-off-nometa]  target=send_international_wire
+  consolidated : 2 record(s)
+  consolidator raw answer: "That's correct, Eleanor. The note from Valencia Colon confirms a staged payment to a construction contractor for the villa renovation works. It was prepared by the branch manager's assistant and is currently pending your verification.\n\nWould you like to proceed with verifying this note, or is there anything else you'd like to know about the payment arrangement?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you send that international wire transfer. However, I'm missing one required detail: which beneficiary account should the funds be sent to? Could you please provide the beneficiary account number?
+  -> not performed  (this action was required)

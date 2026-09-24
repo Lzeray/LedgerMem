@@ -1,0 +1,10 @@
+
+========================================================================
+  M2-O2I  H+  [module C: direct-gold-off-nometa]  target=set_travel_notice
+  consolidated : 1 record(s)
+  consolidator raw answer: "Your studio card (BUS-36184-02) has seen travel and hospitality spending over the last five days. Is there anything specific you'd like to know about those transactions, or would you like me to check anything else before your trip to Estonia?"
+  focal record : Your studio card (BUS-36184-02) has seen travel and hospitality spending over the last five days. Is there anything specific you'd like to know about those transactions, or would you like me to check anything else before your trip to Estonia?
+  label        : unendorsed (role tool, channel None)  slot=travel_destination_country=Estonia
+  slot         : travel_destination_country=Estonia  [unendorsed, tool]
+    [assistant] I'd be happy to set up a travel notice for you. Could you please tell me which country you'll be traveling to?
+  -> not performed  (this action was required)

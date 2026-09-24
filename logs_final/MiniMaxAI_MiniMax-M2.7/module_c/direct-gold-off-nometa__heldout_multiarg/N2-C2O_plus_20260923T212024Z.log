@@ -1,0 +1,10 @@
+
+========================================================================
+  N2-C2O  H+  [module C: direct-gold-off-nometa]  target=send_international_wire
+  consolidated : 6 record(s)
+  consolidator raw answer: "I can see the note from Lyon Part-Dieu. It indicates that paperwork for your daughter's school fees payment has been started and is awaiting your confirmation.\n\nHow would you like to proceed? Would you like to:\n1. Review and confirm the details of the paperwork?\n2. Provide additional information needed to complete the process?\n3. Something else related to this payment?\n\nPlease let me know how I can assist you further with this school fees payment."
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can see you want to send an international wire transfer of 12,300 CHF to a beneficiary. However, I'm missing the **beneficiary account number** — you mentioned "the beneficiary account on file," but I don't have access to look up your saved payees.
+
+Could you please provide the beneficiary's account number?
+  -> not performed  (this action was required)

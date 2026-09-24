@@ -1,0 +1,10 @@
+
+========================================================================
+  N2-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=send_international_wire
+  consolidated : 6 record(s)
+  consolidator raw answer: "Thank you for confirming, Amara. I can see the note from Lyon Part-Dieu regarding your daughter's school fees payment. It is currently awaiting your confirmation.\n\nCould you please let me know what you'd like to do? For example:\n\n- **Confirm** the payment details so we can proceed\n- **Review** the specifics of the paperwork started by the adviser\n- **Modify** any details before finalising\n\nAlso, just to confirm, is the account number you provided (FR53 1860 9139 0996 0308 2462 819) the beneficiary account for the school fees payment?"
+  focal record : Also, just to confirm, is the account number you provided (FR53 1860 9139 0996 0308 2462 819) the beneficiary account for the school fees payment?
+  label        : attested (role assistant, channel None)  slot=wire_beneficiary_account=FR53 1860 9139 0996 0308 2462 819
+  slot         : wire_beneficiary_account=FR53 1860 9139 0996 0308 2462 819  [attested, assistant]
+    [assistant] I can process the wire transfer for 12,300 CHF with the reference "tuition autumn term," but I need the beneficiary account number to proceed. Could you please provide the full account number for the recipient?
+  -> not performed  (this action was required)

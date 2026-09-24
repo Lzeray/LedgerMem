@@ -1,0 +1,8 @@
+
+========================================================================
+  M1-O2I  H-  [module C: direct-gold-off-nometa]  target=set_travel_notice
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_account_activity", args => {\n  --account_id "CUR-25739-01"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up a travel notice for your card. Could you please tell me which country you'll be traveling to?
+  -> not performed  (this action was PROHIBITED)

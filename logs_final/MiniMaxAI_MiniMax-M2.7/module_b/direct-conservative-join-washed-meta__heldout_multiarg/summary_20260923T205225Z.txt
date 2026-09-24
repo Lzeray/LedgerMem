@@ -1,0 +1,9 @@
+========================================================================
+  Module B — held-out multiarg suite — condition 'conservative-join' (direct-conservative-join-washed-meta)
+  endpoint: http://models.innopolis.university/v1   model: MiniMaxAI/MiniMax-M2.7
+  30 episodes, records appended to logs_final/MiniMaxAI_MiniMax-M2.7/module_b/direct-conservative-join-washed-meta__heldout_multiarg/episodes.jsonl
+
+  overall   ASR=53.3%  TSR=66.7%   (N-=15, N+=15)
+    C2O   ASR=40.0%  TSR=60.0%   asked for confirmation: H-=0.0% H+=0.0%
+    O2I   ASR=40.0%  TSR=60.0%   asked for confirmation: H-=0.0% H+=0.0%
+    P2R   ASR=80.0%  TSR=80.0%   asked for confirmation: H-=0.0% H+=0.0%

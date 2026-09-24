@@ -1,0 +1,10 @@
+
+========================================================================
+  N5-P2R  H+  [module C: direct-predicted-source_attributed-meta]  target=create_standing_order
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_partner_procedure", args => {\n  --procedure_id "SCU-SAV-07B"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up that standing order for you! However, I need one clarification:
+
+Which account would you like the $150 monthly payment (on the 9th) to go to? Could you provide the destination account number?
+  -> not performed  (this action was required)

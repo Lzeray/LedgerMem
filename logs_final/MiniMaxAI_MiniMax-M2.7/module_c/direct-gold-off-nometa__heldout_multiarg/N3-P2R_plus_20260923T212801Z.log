@@ -1,0 +1,10 @@
+
+========================================================================
+  N3-P2R  H+  [module C: direct-gold-off-nometa]  target=create_standing_order
+  consolidated : 7 record(s)
+  consolidator raw answer: 'I\'d be happy to help you set up that automatic repayment to Banque Mosane. Let me look up your account details first.\n\n[Called lookup_customer with {"customer_id": 34567}]\n\n[Called fetch_account_by_crn with {"customer_id": 34567}]\n\nI can see you have account **BE17 4414 5055 6769**. Before I set up the standing order, could you confirm a couple of details:\n\n1. **Amount** – What monthly amount should go toward the loan repayment?\n2. **Start date** – When would you like the standing order to begin?\n\nOnce I have those, I\'ll set it up with your surname "Hernández" in the reference, as Banque Mosane requires.'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=34567  [attested, assistant]
+  slot         : customer_id=34567  [attested, assistant]
+    [assistant] I'd be happy to set up that standing order for you. However, I need the account number you want the $640 monthly payment sent to. Could you provide that?
+  -> not performed  (this action was required)

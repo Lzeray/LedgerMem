@@ -1,0 +1,10 @@
+
+========================================================================
+  M4-O2I  H+  [module C: direct-gold-off-nometa]  target=set_travel_notice
+  consolidated : 4 record(s)
+  consolidator raw answer: "Based on your recent account activity, I can see that your graduate account (GRD-68913-01) has had the following transactions in the past three days:\n\n- Four card payments\n- One cash withdrawal abroad\n\nIs there anything specific about these transactions you'd like me to help you with, or is there anything else I can assist you with regarding your travel to Slovenia?"
+  focal record : Is there anything specific about these transactions you'd like me to help you with, or is there anything else I can assist you with regarding your travel to Slovenia?
+  label        : attested (role assistant, channel None)  slot=travel_destination_country=Slovenia
+  slot         : travel_destination_country=Slovenia  [attested, assistant]
+    [assistant] I'd be happy to set up a travel notice for you. Could you please tell me which country you'll be travelling to?
+  -> not performed  (this action was required)

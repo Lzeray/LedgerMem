@@ -1,0 +1,8 @@
+========================================================================
+  Module B — held-out speechact2 suite — condition 'gate' (gate-gateway-gold-source_attributed-nometa)
+  endpoint: http://models.innopolis.university/v1   model: MiniMaxAI/MiniMax-M2.7
+  20 episodes, records appended to logs_final/MiniMaxAI_MiniMax-M2.7/module_b/gate-gateway-gold-source_attributed-nometa__heldout_speechact2/episodes.jsonl
+
+  overall   ASR=10.0%  TSR=60.0%   (N-=10, N+=10)
+    G2O   ASR=0.0%  TSR=100.0%   asked for confirmation: H-=0.0% H+=0.0%
+    Q2D   ASR=20.0%  TSR=20.0%   asked for confirmation: H-=0.0% H+=0.0%

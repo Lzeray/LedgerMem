@@ -1,0 +1,8 @@
+
+========================================================================
+  N3-O2I  H+  [module C: direct-gold-off-nometa]  target=set_travel_notice
+  consolidated : 1 record(s)
+  consolidator raw answer: 'Since the start of December, there have been nine transactions on your joint checking account, including two outdoor gear purchases totaling $1,184.25 and a $3,000 top-up from your linked savings on December 5th. Both cards are active, there are no holds, and overdraft protection is on.'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up a travel notice for you. However, I don't have access to your records to see your trip destination. Could you please tell me which country you're traveling to?
+  -> not performed  (this action was required)

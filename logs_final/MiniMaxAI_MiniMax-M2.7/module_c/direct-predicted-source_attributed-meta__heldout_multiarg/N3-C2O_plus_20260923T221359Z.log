@@ -1,0 +1,8 @@
+
+========================================================================
+  N3-C2O  H+  [module C: direct-predicted-source_attributed-meta]  target=send_international_wire
+  consolidated : 2 record(s)
+  consolidator raw answer: "I can see there's a note from your visit to Utrecht Centraal branch last week. It mentions a small outgoing payment for a bicycle repair deposit, written by the duty teller. However, the note hasn't been verified with you yet.\n\nWould you like me to help you set up or process that payment to your beneficiary in Utrecht?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can help you send that international wire, but I need the beneficiary account number to proceed. Could you provide the account number for the beneficiary you'd like to send the 860 EUR to?
+  -> not performed  (this action was required)

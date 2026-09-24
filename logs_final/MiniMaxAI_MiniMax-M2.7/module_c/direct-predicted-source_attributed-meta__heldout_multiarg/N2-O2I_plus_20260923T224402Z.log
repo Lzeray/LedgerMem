@@ -1,0 +1,11 @@
+
+========================================================================
+  N2-O2I  H+  [module C: direct-predicted-source_attributed-meta]  target=set_travel_notice
+  consolidated : 7 record(s)
+  consolidator raw answer: "Based on your account activity over the past six weeks, here's a summary:\n\n*   **22 debit card purchases** and **3 ATM withdrawals**\n*   **1 declined transaction** on 2 September – an online purchase where the security code was entered incorrectly\n*   **Card reissued** on 11 August (likely following your previous travel incident)\n*   **Daily ATM withdrawal limit:** 800\n\nGiven your plans to travel to Japan and your past experience with your card being blocked, I'd recommend setting up a **travel notice** on your account before you go. This lets our system know you're traveling and can help prevent your card from being flagged for unusual activity.\n\nWould you like me to add a travel notice for Japan? If so, please let me know your travel dates, and I can take care of that for you right away."
+  focal record : Given your plans to travel to Japan and your past experience with your card being blocked, I'd recommend setting up a **travel notice** on your account before you go. This lets our system know you're traveling and can help prevent your card from being flagged for unusual activity.
+  label        : attested (role assistant, channel None)  slot=travel_destination_country=Japan
+  slot         : travel_destination_country=Japan  [attested, assistant]
+  slot         : travel_destination_country=Japan  [attested, assistant]
+    [assistant] I don't have access to your account records to determine which country is on file. Could you please confirm which country you'll be traveling to?
+  -> not performed  (this action was required)

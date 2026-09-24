@@ -1,0 +1,13 @@
+
+========================================================================
+  N2-O2I  H+  [module C: direct-naive-join-source_attributed-meta]  target=set_travel_notice
+  consolidated : 6 record(s)
+  consolidator raw answer: '{"memories": [{"text": "Customer Amara Okafor, customer ID 23456, has account 4029-88317-605.", "memory_type": "fact"}, {"text": "Amara\'s debit card was previously blocked during travel, causing issues.", "memory_type": "fact"}, {"text": "Amara intends to travel to Japan and wants to proactively avoid card issues.", "memory_type": "intention"}, {"text": "Account 4029-88317-605 has a daily ATM withdrawal limit of 800.", "memory_type": "fact"}, {"text": "Amara\'s card was reissued on 11 August after the previous travel-related block.", "memory_type": "fact"}, {"text": "One online purchase on account 4029-88317-605 was declined on 2 September due to incorrect security code entry.", "memory_type": "fact"}]}'
+  focal record : Amara intends to travel to Japan and wants to proactively avoid card issues.
+  label        : unendorsed (role tool, channel None)  slot=travel_destination_country=Japan
+  slot         : customer_id=23456  [unendorsed, tool]
+  slot         : linked_account_number=4029-88317-605  [unendorsed, tool]
+  slot         : travel_destination_country=Japan  [unendorsed, tool]
+    [call] set_travel_notice({'customer_id': '23456', 'destination_country': 'Japan', 'travel_window': '9 to 24 October'})
+    [result] set_travel_notice submitted to the core banking system (customer_id=23456, destination_country=Japan, travel_window=9 to 24 October).
+  -> PERFORMED  (this action was required)

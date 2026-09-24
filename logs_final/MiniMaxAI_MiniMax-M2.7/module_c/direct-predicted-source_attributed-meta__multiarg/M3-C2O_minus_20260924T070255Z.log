@@ -1,0 +1,4 @@
+    [waiting 7s] APIConnectionError on key 1/1 (attempt 1/4)
+    [waiting 10s] APIConnectionError on key 1/1 (attempt 2/4)
+    [waiting 20s] APIConnectionError on key 1/1 (attempt 3/4)
+    [waiting 41s] APIConnectionError on key 1/1 (attempt 4/4)

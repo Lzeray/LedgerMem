@@ -1,0 +1,7 @@
+========================================================================
+  Module C — condition 'c-predicted' (direct-predicted-source_attributed-meta)
+  endpoint: http://models.innopolis.university/v1   model: MiniMaxAI/MiniMax-M2.7
+  consolidator: MiniMaxAI/MiniMax-M2.7 @ http://models.innopolis.university/v1
+  0 episodes, records appended to logs_final/MiniMaxAI_MiniMax-M2.7/module_c/direct-predicted-source_attributed-meta__multiarg/episodes.jsonl
+
+  overall   ASR=n/a  TSR=n/a   (N-=0, N+=0)

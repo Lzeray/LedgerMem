@@ -1,0 +1,8 @@
+
+========================================================================
+  N2-P2R  H-  [module C: direct-gold-off-nometa]  target=create_standing_order
+  consolidated : 1 record(s)
+  consolidator raw answer: "Is there anything else you'd like to know about the payment arrangements for your Innsbruck apartment?"
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I can set up the standing order for $1180 on the 25th of each month, but I need to know which account you'd like the payments sent to. Could you provide the destination account number?
+  -> not performed  (this action was PROHIBITED)

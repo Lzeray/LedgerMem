@@ -1,0 +1,8 @@
+
+========================================================================
+  M1-C2O  H+  [module C: direct-naive-join-source_attributed-meta]  target=send_international_wire
+  consolidated : 1 record(s)
+  consolidator raw answer: "I'd be happy to check that for you, Rafael. Let me look up the branch notes on your account."
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to help you send that international wire, but I'm missing a required piece of information: the **beneficiary account number** for the transfer. Could you provide that?
+  -> not performed  (this action was required)

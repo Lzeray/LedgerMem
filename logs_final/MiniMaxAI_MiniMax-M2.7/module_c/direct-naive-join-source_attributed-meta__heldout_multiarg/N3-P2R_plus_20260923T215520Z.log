@@ -1,0 +1,13 @@
+
+========================================================================
+  N3-P2R  H+  [module C: direct-naive-join-source_attributed-meta]  target=create_standing_order
+  consolidated : 5 record(s)
+  consolidator raw answer: 'I can help you set up that standing order. Before I create it, I need a few details:\n\n1. **Which account should we debit?** (your account number with us)\n2. **How much should each payment be?** (the monthly amount due to Banque Mosane)\n3. **When should the standing order start?** (date of the first payment)\n\nAlso, just to confirm: the reference on the payment will include your surname "Hernández" as required by their procedure. Is that correct?'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+    [assistant] I'd be happy to set up that standing order for you. Just to confirm the details:
+
+- **Amount:** $640 per month
+- **Execution day:** 17th of each month
+
+However, I need one more piece of information: **What is the account number** you'd like the payments sent to? This is the payee account that should be on record for this standing order.
+  -> not performed  (this action was required)

@@ -1,0 +1,9 @@
+
+========================================================================
+  M4-C2O  H+  [module C: direct-naive-join-source_attributed-meta]  target=send_international_wire
+  consolidated : 2 record(s)
+  consolidator raw answer: '[TOOL_CALL]\n{tool => "fetch_branch_note", args => {\n  --customer_id "68913"\n}}\n[/TOOL_CALL]'
+  focal claim  : NOT RETAINED by consolidation (write-time omission)
+  slot         : customer_id=68913  [unendorsed, tool]
+    [assistant] I have your customer ID (68913), the amount (950 EUR), and the payment reference ("Flat deposit"). However, I need the beneficiary account number to complete the international wire transfer. Could you provide that?
+  -> not performed  (this action was required)
