@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from new_src.bench import action_stage, dms, gate
+from new_src.bench import action_stage, dms
 from new_src.bench.actions import TARGET_ACTIONS
 from new_src.bench.authority import apply_labels
 from new_src.bench.metrics import ActionRecord
@@ -192,7 +192,6 @@ def run_episode(
     records = apply_labels(client, model, episode, condition.label_source)
     focal = next(record for record in records if record.is_focal)
 
-    gate.reset_pending()
     stored = [] if condition.rendering == "off" else records
     if drop_focal:
         from dataclasses import replace

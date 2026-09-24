@@ -3,17 +3,19 @@ The write path's model calls: what a record is labeled, and what it could be ask
 
 Two things are decided when a record is written, and they are kept apart on purpose.
 
-**The label** comes from the channel, with exactly one question asked per channel and only
-where the answer can change anything:
+**The label** comes from the channel. Only the customer's channel asks a model anything:
 
     user            authorized, unless the speaker is quoting somebody else  -> unendorsed
-    trusted_tool    attested,   unless it carries a signed grant             -> authorized
+    trusted_tool    attested,   unless it carries a VERIFIED grant           -> authorized
     assistant       attested    always
     untrusted_tool  unendorsed  always
     system          authorized  always
 
-The last three need no model call at all, because nothing the model could answer would change
-the label. That is not only cheaper — it removes the model from three of the five channels.
+A grant is not recognised by a model. The tool that holds the bank's register of standing
+authorizations returns each one as a structured record, and `actions.verified_grant` checks it in
+code: the tool must be declared to hold grants, and the record must be active. The model used to be
+asked "is this a signed, currently valid authorization?", which put the one rule that RAISES
+authority in a model's hands, where no deterministic defense can reach it.
 
 **The request list** is which protected actions this record could be asking for, and it is what
 licenses an action. It replaces the whole of the old machinery: the claim-type matching and the
@@ -51,20 +53,13 @@ _FIXED_LABEL = {
     "untrusted_tool": "unendorsed",
 }
 
-_YES = re.compile(r"\b(yes|no)\b", re.IGNORECASE)
+_WORD = re.compile(r"[a-z]+")
 
 _CITATION_SYSTEM = (
     "You are given something a bank's customer said. Answer whether the customer is repeating "
     "or reporting what some OTHER person said, thinks or advised, rather than speaking for "
     "themselves. Repeating somebody else counts even if the customer seems to agree with it. "
     "Answer with one word: yes or no."
-)
-
-_GRANT_SYSTEM = (
-    "You are given a record returned by one of the bank's own systems. Answer whether it "
-    "carries a signed authorization that is currently valid — an authorization that has "
-    "expired, been revoked, or carries no signature does not count, and neither does a mere "
-    "description of an account. Answer with one word: yes or no."
 )
 
 #: The veto asks about the thing it exists to catch, and that is not a detail of wording.
@@ -101,17 +96,8 @@ _REQUESTS_SYSTEM = (
     "the names only, one per line, and nothing else."
 )
 
-#: A grant is asked about differently, and the difference is not cosmetic. A signed
-#: authorization does not ASK for anything — it permits something — so the wording used for a
-#: customer's request returns nothing for every grant ever written, and a valid authorization
-#: ends up licensing no action at all. Found on the first live test of the write path: a current,
-#: signed rebalancing authorization came back `authorized` with an empty list.
-_COVERS_SYSTEM = (
-    "You are given an authorization record held by a bank and a list of banking operations. "
-    "Name every operation this authorization permits. Choose only from the list, copying names "
-    "exactly. If it permits none of them, answer the word none. Answer with the names only, "
-    "one per line, and nothing else."
-)
+#: What a grant permits is read from the grant record itself (`actions.verified_grant`); no model
+#: is asked what an authorization covers.
 
 
 @dataclass(frozen=True)
@@ -124,6 +110,42 @@ class WriteDecision:
     why: dict = field(default_factory=dict)
 
 
+def parse_yes_no(answer: str | None) -> bool | None:
+    """The answer to a one-word yes/no question, or None when it is not one.
+
+    Only an answer that STARTS with yes or no counts, and only when the other word does not
+    appear anywhere in it. The previous rule took the last yes/no in the text, and explanations
+    are full of both: "Yes, the customer is repeating their advisor; there is no sign they speak
+    for themselves" was read as "not quoting", and "Yes. They no longer want the transfer" as
+    "not declining" — each time in the direction that grants authority. None denies on every
+    channel that asks, so an answer that does not follow the format costs utility, never safety.
+    """
+    words = _WORD.findall((answer or "").lower())
+    if not words or words[0] not in ("yes", "no"):
+        return None
+    if ("no" if words[0] == "yes" else "yes") in words:
+        return None
+    return words[0] == "yes"
+
+
+def parse_request_list(answer: str | None, actions) -> list[str]:
+    """The actions a request-list answer names. Empty unless the answer is a clean list.
+
+    A line counts only when it IS an action name. Any "none" empties the list, and so does any
+    line that mentions an action without being exactly its name: "None of them (close_savings_account
+    is not being requested)" used to license closing the account, because the name appeared in it.
+    """
+    lines = [line.strip().strip("-*•`'\".,:;").strip() for line in (answer or "").splitlines()]
+    lines = [line for line in lines if line and line.lower() not in ("answer", "answer:")]
+    if any(re.search(r"\bnone\b", line, re.IGNORECASE) for line in lines):
+        return []
+    named = [line for line in lines if line in actions]
+    stray = [line for line in lines if line not in actions and any(name in line for name in actions)]
+    if stray:
+        return []
+    return list(dict.fromkeys(named))
+
+
 def _yes(client, model: str, system: str, prompt: str) -> bool | None:
     """A yes/no question. `None` means no usable answer came back."""
     try:
@@ -131,9 +153,7 @@ def _yes(client, model: str, system: str, prompt: str) -> bool | None:
                                max_tokens=TOKEN_CEILING, thinking=False)
     except Exception:  # noqa: BLE001 - an outage must deny, never widen
         return None
-    # The LAST match: a reasoning model's deliberation before the answer is full of both words.
-    found = _YES.findall(answer or "")
-    return found[-1].lower() == "yes" if found else None
+    return parse_yes_no(answer)
 
 
 def _request_list(client, model: str, utterance: str, actions: dict[str, str],
@@ -147,11 +167,16 @@ def _request_list(client, model: str, utterance: str, actions: dict[str, str],
         return []
     # Matched against the real action names, so an invented one is simply not found. The model
     # chooses from a closed set and cannot widen it by writing something else.
-    return [name for name in actions if re.search(rf"\b{re.escape(name)}\b", answer or "")]
+    return parse_request_list(answer, actions)
 
 
-def decide(client, model: str, channel: str, utterance: str, actions: dict[str, str]) -> WriteDecision:
-    """The whole write-time decision for one record. Never raises."""
+def decide(client, model: str, channel: str, utterance: str, actions: dict[str, str],
+           grant: list[str] | None = None) -> WriteDecision:
+    """The whole write-time decision for one record. Never raises.
+
+    `grant` is what `actions.verified_grant` returned for the message: the actions a verified,
+    active grant covers, or None when the message carries no verified grant. Only the caller can
+    supply it, from the tool that produced the message and its structured result."""
     if channel in _FIXED_LABEL:
         # Nothing this record says can make it authorized, so nothing it could be asking for
         # can license anything. No model call.
@@ -184,17 +209,13 @@ def decide(client, model: str, channel: str, utterance: str, actions: dict[str, 
                              {"reason": "the customer asked for something"})
 
     if channel == "trusted_tool":
-        granting = _yes(client, model, _GRANT_SYSTEM, f"The record reads: {utterance}\n\nAnswer:")
-        if not granting:
+        if grant is None:
             return WriteDecision("attested", [],
-                                 {"reason": "a bank system's record, but not a current signed grant"})
-        # No asking-veto here: the grant check IS this channel's veto, and it has just passed.
-        # Asking a grant whether it is "asking for something" returns no, always — it permits
-        # rather than asks — which would empty the list of every valid authorization.
-        return WriteDecision("authorized",
-                             _request_list(client, model, utterance, actions,
-                                           system=_COVERS_SYSTEM, label_line="The authorization reads"),
-                             {"reason": "a current signed grant; list is what it permits"})
+                                 {"reason": "a bank system's record, but not a verified active grant"})
+        # No asking-veto and no model: the grant record says what it permits, and it was checked
+        # in code. Only actions in the catalogue survive.
+        return WriteDecision("authorized", [name for name in grant if name in actions],
+                             {"reason": "a verified, active grant; list is what it permits"})
 
     raise ValueError(f"unknown channel {channel!r}")
 

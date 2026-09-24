@@ -122,7 +122,10 @@ def apply_labels(client, model: str, episode: Episode, label_source: str) -> lis
             # account X") reads as a statement of fact, and a model shown that answers `fact` —
             # correctly, about the sentence it was given, and uselessly for the decision.
             said = record.verbatim or record.text
-            decision = decide(client, model, record.channel, said, action_catalogue())
+            from new_src.bench.actions import verified_grant
+
+            decision = decide(client, model, record.channel, said, action_catalogue(),
+                              grant=verified_grant(record.tool, record.data))
             label, claim_type = decision.label, record.claim_type
             # `replace` rather than a fresh MemoryRecord: the claim type is the model's, but
             # the object reference, the verbatim text and the null-control binding flag are the

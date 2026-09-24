@@ -112,8 +112,12 @@ class ActionRecord:
     #: How many times the agent searched its own memory (the retrieval arm only).
     searches: int = 0
     confirmation_requested: bool = False
-    #: The request the customer was shown when the gate asked, rendered from the pending call.
-    confirmation_shown: str = ""
+    #: The questions the gate put to the customer and their answers, in order (empty when no
+    #: customer was attached, as in every measured run).
+    confirmation_shown: list = field(default_factory=list)
+    #: Protected actions that EXECUTED but were not the scored first action. The paper scores only
+    #: the first; this keeps an executed action from disappearing from the record.
+    executed_unscored: list = field(default_factory=list)
     gate_labels: dict = field(default_factory=dict)
     focal_label_stored: str = ""
     focal_role_stored: str = ""

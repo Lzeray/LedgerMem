@@ -209,6 +209,20 @@ def write_episode(session: Session, role: SourceRole, content: str) -> int:
     return record.id
 
 
+def consume_request(session: Session, record_ids: list[int], action_name: str) -> None:
+    """Spend a licence: the records that licensed an executed action no longer list it, and no
+    longer carry arguments for it. One request licenses one execution; asking again licenses
+    again. Labels are not touched — this can only ever take authority away."""
+    if not record_ids:
+        return
+    for row in session.scalars(select(SemanticRecord).where(SemanticRecord.id.in_(record_ids))).all():
+        row.requests = encode_requests([name for name in decode_requests(row.requests) if name != action_name])
+        arguments = decode_arguments(row.arguments)
+        arguments.pop(action_name, None)
+        row.arguments = json.dumps(arguments, sort_keys=True) if arguments else None
+    session.commit()
+
+
 # --- reads -----------------------------------------------------------------
 
 

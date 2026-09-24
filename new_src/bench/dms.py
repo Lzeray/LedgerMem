@@ -76,7 +76,7 @@ def install(episode: Episode, records: list[MemoryRecord]):
 
 def capture(engine, client, model: str, role: str, said: str, *, tool_name: str | None = None,
             memory_text: str | None = None, rendering: str = "source_attributed",
-            slots: list[tuple[str, str]] | None = None, licenses: bool = True):
+            slots: list[tuple[str, str]] | None = None, data: dict | None = None):
     """Write the memory record(s) for one message at the moment it occurs.
 
     Nothing about the benchmark's answer reaches this function. It is given what was said, who
@@ -99,25 +99,22 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
     value, all sharing the same verbatim text, channel, label and request list. A message
     stating none is written once, without a slot.
 
-    `licenses=False` stores the words with an empty request list whatever they ask for. It is used
-    for exactly one kind of utterance: the customer's reply to a confirmation request, which fills
-    its pending call (by row id, see gate.resolve_action) and must not become a standing licence —
-    otherwise one "yes, go ahead" would let every later call of that action run unconfirmed.
-
     `slots` overrides extraction only when the caller can say, without any knowledge of the
     dataset, that the text states nothing — the live request, which by design never
     parameterises an action. Passing the dataset's own values here is exactly the oracle this
     function exists to exclude.
     """
-    from new_src.bench.actions import tool_trust
+    from new_src.bench.actions import tool_trust, verified_grant
     from new_src.bench.classifier import action_catalogue, decide
     from new_src.bench.slots import extract_slots, object_ref_for
     from new_src.bench.taxonomy import channel_for
 
     channel = channel_for(role, tool_trust(tool_name) if role == "tool" else None)
-    decision = decide(client, model, channel, said, action_catalogue())
+    # A grant is recognised in code from the tool's structured result, never by a model.
+    grant = verified_grant(tool_name, data) if role == "tool" else None
+    decision = decide(client, model, channel, said, action_catalogue(), grant=grant)
     label = decision.label
-    requests = decision.requests if licenses else ([] if decision.requests is not None else None)
+    requests = decision.requests
     if slots is None:
         slots = extract_slots(client, model, said)
     object_ref = object_ref_for(slots)

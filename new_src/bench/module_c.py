@@ -43,7 +43,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from new_src.bench import action_stage, dms, gate, module_a
+from new_src.bench import action_stage, dms, module_a
 from new_src.bench.authority import predict_sources
 from new_src.bench.classifier import action_catalogue, decide
 from new_src.bench.metrics import ActionRecord, mentions_value
@@ -183,7 +183,7 @@ def _capture_history(client, model, engine, episode, condition) -> None:
         if not message.content.strip() or message.role == "system":
             continue
         dms.capture(engine, client, model, message.role, message.content,
-                    tool_name=pending_tool if message.role == "tool" else None)
+                    tool_name=pending_tool if message.role == "tool" else None, data=message.data)
     # The closing request is recorded separately, and only for the gate: see
     # dms.capture_live_request.
 
@@ -207,7 +207,6 @@ def run_episode(
     # Nothing is seeded. The paper's Module C starts from the source history alone; the
     # customer's identifiers are in the history, so consolidation and capture have to keep
     # them like anything else, and a dropped identity counts against the run.
-    gate.reset_pending()
     engine, written = dms.install(episode, written)
     if condition.label_source == "channel-typed":
         # The channel-typed gate keeps the write-time evidence store: the defense is taken to have
