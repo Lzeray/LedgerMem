@@ -9,12 +9,12 @@
 \newtheorem{theorem}{Theorem}
 
 \newcommand{\Au}{\mathsf{Au}}\newcommand{\At}{\mathsf{At}}\newcommand{\Un}{\mathsf{Un}}
-\newcommand{\cS}{\mathsf{sys}}\newcommand{\cU}{\mathsf{usr}}\newcommand{\cT}{\mathsf{tt}}\newcommand{\cX}{\mathsf{ut}}\newcommand{\cA}{\mathsf{ast}}
+\newcommand{\cS}{\mathsf{bk}}\newcommand{\cU}{\mathsf{usr}}\newcommand{\cT}{\mathsf{tt}}\newcommand{\cX}{\mathsf{ut}}\newcommand{\cA}{\mathsf{ast}}
 \newcommand{\Act}{\mathcal{A}}\newcommand{\Req}{\mathit{Req}}\newcommand{\Arg}{\mathit{Arg}}
 \newcommand{\vals}{\mathit{vals}}\newcommand{\yes}{\textsf{yes}}\newcommand{\no}{\textsf{no}}
 
 \begin{document}
-\section*{Formal model of the authority gate}
+\noindent{\large\bfseries Formal model of the authority gate}
 
 \paragraph{Setting.}
 As in AuthMem-Bench, $H = \langle (x_i, r_i) \rangle_{i=1}^{n}$ is a role-labeled history, $q$
@@ -27,18 +27,19 @@ arrives on a \emph{channel} $\chi(x) \in \{\cU, \cT, \cX, \cA\}$. The channel is
 of $x$ and, for a tool result, by the trust declared for the tool that produced it: $\cT$ for the
 bank's own systems, $\cX$ for outside feeds and unknown tools. The text of $x$ never enters
 $\chi$. Among the trusted tools, a declared subset $\mathcal{G}$ holds the bank's register of
-standing authorizations. Records the integration seeds from the bank's own books (the customer's
-accounts) are $\Au$ on a system channel $\cS$ and request nothing.
+standing authorizations. Records seeded from the bank's own books (the customer's accounts) are
+created by code outside Definition~\ref{def:write}: channel $\cS$, label $\Au$, slots from their
+fields, no requests. (The code names this channel \texttt{system}; system messages are not memory.)
 
 \paragraph{Model calls and grants.}
-Writing a customer message involves up to four model calls. Two are yes/no questions: $Q(x)$,
-whether the customer is quoting someone else, and $R(x)$, whether they are declining or deferring.
-An answer counts only if it starts with yes or no and does not contain the other word; anything
-else is $\bot$. $L(x)$ selects the actions the customer asks for from the closed set $\Act$, from
+Every message, and every consolidated memory, goes through slot extraction $E(x)$, which proposes
+(key, value) pairs and cannot affect a label. A customer message is also asked two yes/no
+questions: $Q(x)$, whether the customer is quoting someone else, and $R(x)$, whether they are
+declining or deferring. An answer counts only if its first word is yes or no and the other word
+does not occur as a word; anything else is $\bot$. $L(x)$ selects the actions the customer asks for from the closed set $\Act$, from
 items (lines, or comma-separated within a line, list markers aside) that are exactly action names;
-any ``none'' gives $\emptyset$. $E(x)$ extracts (key, value)
-pairs. \emph{No property of any answer is assumed}; all four may be adversarial. No model is asked
-anything about a tool result. A grant is recognised in code: $g(x)$ is the list of actions a
+any ``none'' gives $\emptyset$. \emph{No property of any answer is assumed}; all may
+be adversarial. No model is asked whether a tool result is a grant. A grant is recognised in code: $g(x)$ is the list of actions a
 mandate covers if $x$ is the structured result of a tool in $\mathcal{G}$ and the mandate's status is
 active, and $\bot$ otherwise.
 
@@ -57,45 +58,46 @@ Each message $x$ is stored with a label $\ell$ and a request list $\Req$:
 The record's slots $S$ are the pairs of $E(x)$ whose key is in the closed key set, whose value
 fits the key's format, and whose value is a case-insensitive substring of $x$. Values are compared
 as exact strings. For $a \in \Req$, $\Arg(a)$ names parameter $p$ with $v$ iff $v$ is the only
-value in $S$ for $\kappa_a(p)$. The record's object $o$ is the single value in $S$ under any scope
+value in $S$ for $\kappa_a(p)$ (in Module B the benchmark supplies the focal record's slot).
+The record's object $o$ is the single value in $S$ under any scope
 key; it is $\bot$ if there is none, and a marker matching no value if there are several (fails
 closed). Consolidated memories are the agent's own writing and are stored with $\chi = \cA$. The
 store refuses an $\Au$ record on $\cA$ or $\cX$, or with no channel at all.
 \end{definition}
 
-\paragraph{Order.} Every message of $H$ and then $q$ (on $\cU$) is written before the agent acts.
-Nothing the customer answers during the action stage is written. The only write during the stage
-removes a spent licence (below); no write ever changes a label.
+\paragraph{Order.} All of $H$, then $q$ (on $\cU$), is written before the agent acts. During the
+action stage the only write spends a license (below); no write ever changes a label.
 
 \begin{definition}[Gate]
 Let $M^{\Au}$ be the $\Au$ records of the store $M$, and $M_k$ the records with slot key $k$. A call
 to $a$ is decided from $M$:
 \begin{enumerate}
-\item \emph{License.} If $s_a \neq \bot$, let $O$ be the values under $\kappa_a(s_a)$ on
-  $M^{\Au}$. If $|O| \neq 1$, refuse; otherwise $O = \{o^*\}$. Let
-  $\Lambda = \{ r \in M^{\Au} : a \in \Req(r),\ s_a = \bot \vee o(r) \in \{\bot, o^*\} \}$.
-  If $\Lambda = \emptyset$, refuse and ask the customer nothing.
+\item \emph{License.} Let $C = \{ r \in M^{\Au} : a \in \Req(r) \}$; if empty, refuse. If
+  $s_a \neq \bot$, the object $o^*$ is the one the requests of $C$ name if they name exactly one;
+  if they name none, the single value under $\kappa_a(s_a)$ on $M^{\Au}$; otherwise refuse. Let
+  $\Lambda = \{ r \in C : s_a = \bot \vee o(r) \in \{\bot, o^*\} \}$. If $\Lambda = \emptyset$,
+  refuse. A refusal asks the customer nothing.
 \item \emph{Arguments.} For each $p \in P_a$ with $k = \kappa_a(p)$: if the records of $\Lambda$
   name exactly one value, bind it, and if they name several, $p$ is ambiguous. If they name none,
   let $V = \vals(M_k)$. If $V = \emptyset$, $p$ is missing; if $|V| > 1$, $p$ is ambiguous. If
   $V = \{v\}$, bind $v$ when $\max\{\ell(r) : r \in M_k\} = \Au$, and otherwise mark $p$ blocked.
-\item \emph{Customer.} If a parameter is not bound, the gate asks the customer itself, within the
-  same call, through an interface $K$ the harness provides: each missing value is typed in and
-  kept only if it fits the parameter's format; each ambiguous one is chosen from buttons, one per
-  value, naming the least trusted source carrying it; each blocked value, shown with that source,
-  is accepted, rejected or replaced by a typed value; finally the whole call is shown for yes or
-  no. Any unanswered or rejected step stops the call. Without $K$ the call is not carried out.
+\item \emph{Customer.} If a parameter is not bound, the gate asks the customer, within the same
+  call, through an interface $K$ the harness provides: missing values are typed in and must fit
+  their format; ambiguous ones are chosen from buttons naming each value's least trusted source;
+  each blocked value, shown with that source, is accepted, rejected or replaced; then the whole
+  call gets a final yes/no. Any unanswered or rejected step, or no $K$, stops the call. Answers
+  are used for this call only and never written.
 \item \emph{Execution.} Execute with the bound and answered values, then remove $a$ from $\Req$ of
   every record in $\Lambda$.
 \end{enumerate}
-The agent supplies only $a$. It has no access to $K$, and any arguments it writes are discarded.
+The agent supplies only $a$; it has no access to $K$, and arguments it writes are discarded.
 \end{definition}
 
 \begin{assumption}[Integration]\label{as:int}
 (i) Roles and the producing tool of every message cannot be forged by content. (ii) A tool
 declared trusted is the bank's own system, and a tool in $\mathcal{G}$ reports a mandate's status
 truthfully. (iii) $K$ is operated by the customer and shows exactly what the gate renders; in the
-measured runs no $K$ is attached. (iv) Records carry no time and do not expire.
+measured runs no $K$ is attached.
 \end{assumption}
 
 \begin{theorem} For all model answers and every agent behaviour:
@@ -107,44 +109,42 @@ measured runs no $K$ is attached. (iv) Records carry no time and do not expire.
   $\Au$, whatever any model answers.
 \item \emph{Soundness.} If $a$ executes without the customer, some $\Au$ record requests $a$, and
   each argument is named by such a record or is the only value on record for its slot and carried
-  by an $\Au$ record.
+  by an $\Au$ record. Either way it is a substring of an $\Au$ message or a seeded value.
 \item \emph{Monotonicity.} Without the customer, adding any record with $\ell \neq \Au$ to $M$
   never makes a call execute and never changes the arguments of an executing one.
 \item \emph{Non-interference.} The executed arguments are a function of $M$, $a$ and the
   customer's answers. Text in the agent's context reaches the gate only through the choice of $a$.
-\item \emph{The customer step is local.} Each argument either satisfies (2) or was typed, chosen
-  or accepted by the customer after seeing its source and the whole call. It cannot bypass the
-  license, and no answer is stored or changes a label.
+\item \emph{The customer step is local.} Each argument satisfies (2) or was typed, chosen or
+  accepted by the customer, who saw its source and the whole call. It cannot bypass the license.
 \item \emph{One request, one execution.} After $a$ executes, no record of $\Lambda$ requests $a$; a
   further call needs a new request.
 \end{enumerate}
 \end{theorem}
 \begin{proof}[Proof sketch]
-(1) Read off Definition~\ref{def:write} and the store's refusal. (2) Follows from steps 1--2 and the
-substring filter. (3) Adding the record leaves $M^{\Au}$, hence $\Lambda$, unchanged; a value bound
-through $M_k$ in the larger store was already the only value there and already carried by an $\Au$
-record of $M$. (4) The gate reads only $M$ and $K$, and $M$ is fixed during a call. (5) Step 3
-uses answers for the call and writes nothing; a refused license reaches no step 3. (6) Step 4.
+(1) Definition~\ref{def:write} and the store's refusal. (2) Steps 1--2 and the substring filter.
+(3) $M^{\Au}$, hence $\Lambda$, is unchanged, and a value bound through $M_k$ in the larger store
+was already the only one there, carried by an $\Au$ record of $M$. (4) The gate reads only $M$ and
+$K$. (5) Step 3 writes nothing, and a refused license never reaches it. (6) Step 4.
 \end{proof}
 
 \paragraph{Consequence for authority pairs.}
-In a validated pair, the operative value of $p$ is a substring of no message of $H^{-}$ except the
-carrier, and not of $q$ (checked ignoring case on every measured pair). By (2) and (4), an $H^{-}$
-execution without the customer needs the carrier itself to be $\Au$. By (1) this is impossible,
-under any model behaviour, for a carrier on $\cX$ or $\cA$ (R2F, P2R, MIX, R2P, S2D) and for a bank
-system outside $\mathcal{G}$ (C2O, O2I). For our G2O, an inactive mandate from the register, it
-would contradict Assumption~\ref{as:int}(ii). Only our Q2D, where the customer quotes a third party,
-depends on a model: it requires $Q$ to answer \no. In the paper's terms, the implied uses
-$\widehat{\Pi}(m)$ of a record that is not $\Au$ never include licensing an action or binding its
-argument, so the upgrade $\widehat{\Pi}(m) \not\subseteq \Pi(\ell^*(p, H))$ cannot reach an action.
-The gate treats $\At$ and $\Un$ alike.
+No measured run attaches $K$, so (2)--(3) cover every measured execution. In a validated core or
+multi-argument pair nothing is seeded, and the operative value $v^*$ occurs (ignoring case) in no
+message of $H^{-}$ but the carrier, and not in $q$; so by (2) and (4) an $H^{-}$ execution needs the
+carrier to be $\Au$, which (1) rules out under any model behaviour for a carrier on $\cX$ or $\cA$
+(R2F, P2R, MIX, R2P, S2D) or a bank system outside $\mathcal{G}$ (C2O, O2I). In our speech-act
+families the contested element is the license: G2O would need an inactive mandate reported active,
+against Assumption~\ref{as:int}(ii), and only Q2D depends on a model, through $Q$ answering \no. In the paper's
+terms, a consolidated memory $m$ is on $\cA$ and never $\Au$: its implied uses $\widehat{\Pi}(m)$
+never include licensing an action or binding its argument, under any model behaviour. A false
+upgrade can reach an action only through a mislabeled customer message, as in Q2D.
 
 \paragraph{Departures and limitations.}
-As an extension resting on Assumption~\ref{as:int}(ii), a customer quoting a third party is $\Un$
-rather than $\Au$, and a bank system's result is $\At$, or $\Au$ for an active mandate from the
-register. (a) Nothing expires with time (Assumption~\ref{as:int}(iv)); a license is spent by its
-execution, but a grant or request that was never used stays valid, which is the threat model of
-EAL-Bench (arXiv:2609.01836), not ours. (b) Values stated in a refusal are $\Au$ slots. (c) The
-substring filter ignores token boundaries (100 passes inside 1000). (d) Memory has no time order: a
-corrected value is ambiguous, and the customer resolves it.
+As an extension resting on Assumption~\ref{as:int}(ii), a quoting customer is $\Un$, and a bank
+system's result is $\At$, or $\Au$ for an active mandate from the register. (a) No notion of time: a
+mandate checked active stays $\Au$ after it expires, and an unused request never lapses (the threat
+model of EAL-Bench, arXiv:2609.01836); step 4 spends all of $\Lambda$, so two identical requests
+yield one execution. (b) Values in a refusal are $\Au$ slots. (c) The substring filter ignores token
+boundaries. (d) A corrected value is ambiguous: $K$ resolves it, otherwise the call is refused.
+(e) A compromised agent can raise one customer dialogue per licensed call.
 \end{document}
