@@ -32,14 +32,12 @@ created by code outside Definition~\ref{def:write}: channel $\cS$, label $\Au$, 
 fields, no requests. (The code names this channel \texttt{system}; system messages are not memory.)
 
 \paragraph{Model calls and grants.}
-Every message, and every consolidated memory, goes through slot extraction $E(x)$, which proposes
-(key, value) pairs and cannot affect a label. A customer message is also asked two yes/no
-questions: $Q(x)$, whether the customer is quoting someone else, and $R(x)$, whether they are
+Every message and consolidated memory goes through slot extraction $E(x)$, which cannot affect
+a label. A customer message is also asked two yes/no questions: $Q(x)$, whether the customer is quoting someone else, and $R(x)$, whether they are
 declining or deferring. An answer counts only if its first word is yes or no and the other word
 does not occur as a word; anything else is $\bot$. $L(x)$ selects the actions the customer asks for from the closed set $\Act$, from
 items (lines, or comma-separated within a line, list markers aside) that are exactly action names;
-any ``none'' gives $\emptyset$. \emph{No property of any answer is assumed}; all may
-be adversarial. No model is asked whether a tool result is a grant. A grant is recognised in code: $g(x)$ is the list of actions a
+any ``none'' gives $\emptyset$. \emph{No answer is assumed correct.} No model is asked whether a tool result is a grant. A grant is recognised in code: $g(x)$ is the list of actions a
 mandate covers if $x$ is the structured result of a tool in $\mathcal{G}$ and the mandate's status is
 active, and $\bot$ otherwise.
 
@@ -58,11 +56,12 @@ Each message $x$ is stored with a label $\ell$ and a request list $\Req$:
 The record's slots $S$ are the pairs of $E(x)$ whose key is in the closed key set, whose value
 fits the key's format, and whose value is a case-insensitive substring of $x$. Values are compared
 as exact strings. For $a \in \Req$, $\Arg(a)$ names parameter $p$ with $v$ iff $v$ is the only
-value in $S$ for $\kappa_a(p)$ (in Module B the benchmark supplies the focal record's slot).
-The record's object $o$ is the single value in $S$ under any scope
+value in $S$ for $\kappa_a(p)$. The record's object $o$ is the single value in $S$ under any scope
 key; it is $\bot$ if there is none, and a marker matching no value if there are several (fails
 closed). Consolidated memories are the agent's own writing and are stored with $\chi = \cA$. The
-store refuses an $\Au$ record on $\cA$ or $\cX$, or with no channel at all.
+store refuses an $\Au$ record on $\cA$ or $\cX$, or with no channel at all. In Module B the
+benchmark supplies the focal record: the quote that introduced the claim, its carrier's channel
+($\cU$ in $H^{+}$) and a slot passing the filter above; $\ell$ and $\Req$ come from the rule.
 \end{definition}
 
 \paragraph{Order.} All of $H$, then $q$ (on $\cU$), is written before the agent acts. During the
@@ -77,7 +76,8 @@ to $a$ is decided from $M$:
   if they name none, the single value under $\kappa_a(s_a)$ on $M^{\Au}$; otherwise refuse. Let
   $\Lambda = \{ r \in C : s_a = \bot \vee o(r) \in \{\bot, o^*\} \}$. If $\Lambda = \emptyset$,
   refuse. A refusal asks the customer nothing.
-\item \emph{Arguments.} For each $p \in P_a$ with $k = \kappa_a(p)$: if the records of $\Lambda$
+\item \emph{Arguments.} The object parameter $s_a$ is bound to $o^*$. For each other $p \in P_a$
+  with $k = \kappa_a(p)$: if the records of $\Lambda$
   name exactly one value, bind it, and if they name several, $p$ is ambiguous. If they name none,
   let $V = \vals(M_k)$. If $V = \emptyset$, $p$ is missing; if $|V| > 1$, $p$ is ambiguous. If
   $V = \{v\}$, bind $v$ when $\max\{\ell(r) : r \in M_k\} = \Au$, and otherwise mark $p$ blocked.

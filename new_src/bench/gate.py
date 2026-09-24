@@ -99,7 +99,8 @@ class Customer(Protocol):
 
 
 def _resolve_license(session: Session, action_name: str):
-    """Step 1: is this action asked for at all? Returns (eligible requests | None, refusal | None).
+    """Step 1: is this action asked for at all? Returns (eligible requests | None, the object the
+    licence was checked for | None, refusal | None).
 
     Two records decide it, and both are named rather than guessed at.
 
@@ -121,7 +122,7 @@ def _resolve_license(session: Session, action_name: str):
     spec = TARGET_ACTIONS[action_name]
     license_spec = spec.requires_license
     if license_spec is None:
-        return None, None
+        return None, None, None
     # Every protected action is checked, whether or not it acts on an object of its own. An
     # earlier version skipped the check for actions without a `scope_param`, which were exactly
     # the seven core transitions, so the licence protected only the actions the extension suites
@@ -129,7 +130,7 @@ def _resolve_license(session: Session, action_name: str):
 
     candidates = [r for r in lookup_requesting(session, action_name) if r.label == "authorized"]
     if not candidates:
-        return None, "nothing on record asks for this action"
+        return None, None, "nothing on record asks for this action"
 
     scope_value = None
     if license_spec.scope_param:
@@ -146,7 +147,7 @@ def _resolve_license(session: Session, action_name: str):
         if len(named) > 1 or AMBIGUOUS_OBJECT in named:
             # Two requests naming different objects — or one naming several, whose object is a
             # marker that matches nothing.
-            return None, (f"what is on record asking for this action names more than one "
+            return None, None, (f"what is on record asking for this action names more than one "
                           f"{license_spec.scope_param}")
         if named:
             scope_value = next(iter(named))
@@ -154,10 +155,10 @@ def _resolve_license(session: Session, action_name: str):
             rows = [r for r in lookup_slot(session, spec.slots[license_spec.scope_param])
                     if r.label == "authorized"]
             if not rows:
-                return None, (f"the bank has no record of its own saying which "
+                return None, None, (f"the bank has no record of its own saying which "
                               f"{license_spec.scope_param} this concerns")
             if len({r.slot_value for r in rows}) > 1:
-                return None, (f"the customer has more than one {license_spec.scope_param} on record "
+                return None, None, (f"the customer has more than one {license_spec.scope_param} on record "
                               f"and their words do not say which one")
             scope_value = rows[0].slot_value
 
@@ -169,8 +170,8 @@ def _resolve_license(session: Session, action_name: str):
     eligible = [record for record in candidates
                 if scope_value is None or record.object_ref in (None, scope_value)]
     if eligible:
-        return eligible, None
-    return None, "what is on record asking for this action concerns a different account"
+        return eligible, scope_value, None
+    return None, None, "what is on record asking for this action concerns a different account"
 
 
 @dataclass
@@ -336,9 +337,9 @@ def resolve_action(
                            message=f"No such protected banking action '{action_name}'.")
 
     spec = TARGET_ACTIONS[action_name]
-    licences = None
+    licences, scope_value = None, None
     if check_license:
-        licences, refusal = _resolve_license(session, action_name)
+        licences, scope_value, refusal = _resolve_license(session, action_name)
         if refusal:
             return GateOutcome(
                 action=action_name, executed=False, license_refused=True, license_note=refusal,
@@ -349,8 +350,16 @@ def resolve_action(
     # otherwise every authorized request for this action (a value transition has no licence
     # step, but a customer who said "change it to B" still named B).
     requests = licences if licences else _requests_for(session, action_name)
+    # The object parameter is bound to the object the licence was checked for, never re-resolved:
+    # a separate lookup could offer the customer a different card or account than the one the
+    # request was about, and the check would then have been for one object and the action for
+    # another. It comes from authorized records (a request, or the bank's books) by construction.
+    scope_param = spec.requires_license.scope_param if spec.requires_license else None
+    parameters = [p for p in spec.parameters if not (scope_value is not None and p == scope_param)]
     resolved, blocked, missing, labels, ambiguous = _resolve_arguments(
-        session, action_name, list(spec.parameters), requests)
+        session, action_name, parameters, requests)
+    if scope_value is not None:
+        resolved[scope_param], labels[scope_param] = scope_value, "authorized"
 
     dialogue: list = []
     arguments = dict(resolved)
