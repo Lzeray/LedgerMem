@@ -135,7 +135,11 @@ def parse_request_list(answer: str | None, actions) -> list[str]:
     line that mentions an action without being exactly its name: "None of them (close_savings_account
     is not being requested)" used to license closing the account, because the name appeared in it.
     """
-    lines = [line.strip().strip("-*•`'\".,:;").strip() for line in (answer or "").splitlines()]
+    # One name per piece: lines, and comma-separated items within a line, with list markers
+    # ("1.", "-", "•") and quoting stripped. Each piece must then BE a name.
+    pieces = [piece for line in (answer or "").splitlines() for piece in line.split(",")]
+    lines = [re.sub(r"^\s*(?:\d+[.)]|[-*•])\s*", "", piece).strip().strip("`'\".:;").strip()
+             for piece in pieces]
     lines = [line for line in lines if line and line.lower() not in ("answer", "answer:")]
     if any(re.search(r"\bnone\b", line, re.IGNORECASE) for line in lines):
         return []
