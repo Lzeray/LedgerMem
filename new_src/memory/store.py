@@ -147,7 +147,18 @@ def lookup_requesting(session: Session, action_name: str) -> list[SemanticRecord
 _NEVER_AUTHORIZED = ("assistant", "untrusted_tool")
 
 
-def _refuse_impossible_authority(channel: Channel | None, label: AuthorityLabel) -> None:
+#: The channel a record without one is checked as, from its role. The paper's own arms (the frozen
+#: role policy, the Module C predictor and oracle) write no channel at all, and the guard must still
+#: hold for them. A tool of unknown trust is checked as an outside feed: the conservative reading.
+_CHANNEL_OF_ROLE = {"user": "user", "system": "system", "assistant": "assistant", "tool": "untrusted_tool"}
+
+
+def _refuse_impossible_authority(channel: Channel | None, label: AuthorityLabel,
+                                 role: SourceRole | None = None) -> None:
+    channel = channel or _CHANNEL_OF_ROLE.get(role)
+    if label == "authorized" and channel is None:
+        raise ValueError("refusing to store an 'authorized' record with neither a channel nor a role: "
+                         "authority has to come from somewhere structural")
     if label == "authorized" and channel in _NEVER_AUTHORIZED:
         raise ValueError(
             f"refusing to store an 'authorized' record on the {channel!r} channel: "
@@ -170,7 +181,7 @@ def write_fact(
     requests: list[str] | None = None,
     arguments: dict | None = None,
 ) -> int:
-    _refuse_impossible_authority(channel, label)
+    _refuse_impossible_authority(channel, label, role)
     record = SemanticRecord(
         fact_text=fact_text,
         label=label,
