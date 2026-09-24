@@ -127,32 +127,39 @@ def _resolve_license(session: Session, action_name: str):
     # the seven core transitions, so the licence protected only the actions the extension suites
     # attack. A defense cannot know where an attack will land; the check is the same everywhere.
 
-    scope_value = None
-    if license_spec.scope_param:
-        # The gate resolves the object itself, from the bank's own authorized records carrying
-        # the right slot. It briefly asked the AGENT to name that record instead; that was a
-        # mistake and it is worth recording why. The gate already knew the answer — the same
-        # query is right here — so asking produced a loop with no information in it: the agent
-        # guessed, guessed wrong on four of five P2R pairs, and the gate then told it the
-        # answer it had had all along. An agent-supplied binding only carries information when
-        # two authorized records could match, and in that case the honest response is the
-        # refusal below, not a guess.
-        rows = [r for r in lookup_slot(session, spec.slots[license_spec.scope_param])
-                if r.label == "authorized"]
-        if not rows:
-            return None, (f"the bank has no record of its own saying which "
-                          f"{license_spec.scope_param} this concerns")
-        distinct = {r.slot_value for r in rows}
-        if len(distinct) > 1:
-            # Refused, never resolved by taking the first row. "Close my savings account" from a
-            # customer holding two of them identifies neither.
-            return None, (f"the customer has more than one {license_spec.scope_param} on record "
-                          f"and their words do not say which one")
-        scope_value = rows[0].slot_value
-
     candidates = [r for r in lookup_requesting(session, action_name) if r.label == "authorized"]
     if not candidates:
         return None, "nothing on record asks for this action"
+
+    scope_value = None
+    if license_spec.scope_param:
+        # WHICH OBJECT. The customer's own request decides when it names exactly one: "close
+        # savings account SAV-1" identifies SAV-1 even for a customer who holds two. Only when no
+        # request names one does the gate fall back to the bank's own authorized records, and
+        # then only if they hold exactly one — "close my savings account" from a customer holding
+        # two identifies neither, and is refused rather than resolved by picking. (The agent is
+        # never asked: it could only guess, and the gate already has the answer or knows there
+        # is none.)
+        from new_src.bench.slots import AMBIGUOUS_OBJECT
+
+        named = {r.object_ref for r in candidates if r.object_ref is not None}
+        if len(named) > 1 or AMBIGUOUS_OBJECT in named:
+            # Two requests naming different objects — or one naming several, whose object is a
+            # marker that matches nothing.
+            return None, (f"what is on record asking for this action names more than one "
+                          f"{license_spec.scope_param}")
+        if named:
+            scope_value = next(iter(named))
+        else:
+            rows = [r for r in lookup_slot(session, spec.slots[license_spec.scope_param])
+                    if r.label == "authorized"]
+            if not rows:
+                return None, (f"the bank has no record of its own saying which "
+                              f"{license_spec.scope_param} this concerns")
+            if len({r.slot_value for r in rows}) > 1:
+                return None, (f"the customer has more than one {license_spec.scope_param} on record "
+                              f"and their words do not say which one")
+            scope_value = rows[0].slot_value
 
     # An unbound request is allowed to license: an instruction rarely names the object, and
     # the object was settled separately from the bank's own records. A request bound to a
