@@ -35,7 +35,8 @@ Writing a customer message involves up to four model calls. Two are yes/no quest
 whether the customer is quoting someone else, and $R(x)$, whether they are declining or deferring.
 An answer counts only if it starts with yes or no and does not contain the other word; anything
 else is $\bot$. $L(x)$ selects the actions the customer asks for from the closed set $\Act$, from
-lines that are exactly action names (any ``none'' gives $\emptyset$). $E(x)$ extracts (key, value)
+items (lines, or comma-separated within a line, list markers aside) that are exactly action names;
+any ``none'' gives $\emptyset$. $E(x)$ extracts (key, value)
 pairs. \emph{No property of any answer is assumed}; all four may be adversarial. No model is asked
 anything about a tool result. A grant is recognised in code: $g(x)$ is the list of actions a
 mandate covers if $x$ is the structured result of a tool in $\mathcal{G}$ and the mandate's status is
