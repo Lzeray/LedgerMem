@@ -26,19 +26,18 @@ $\kappa_a(s_a)$, $s_a \neq \bot$, over all actions. Each message $x$ other than 
 arrives on a \emph{channel} $\chi(x) \in \{\cU, \cT, \cX, \cA\}$. The channel is fixed by the role
 of $x$ and, for a tool result, by the trust declared for the tool that produced it: $\cT$ for the
 bank's own systems, $\cX$ for outside feeds and unknown tools. The text of $x$ never enters
-$\chi$. Among the trusted tools, a declared subset $\mathcal{G}$ holds the bank's register of
-standing authorizations. Records seeded from the bank's own books (the customer's accounts) are
+$\chi$. Each channel has a \emph{ceiling} $\hat\ell(\cU) = \Au$, $\hat\ell(\cT) = \hat\ell(\cA) = \At$,
+$\hat\ell(\cX) = \Un$. Records seeded from the bank's own books (the customer's accounts) are
 created by code outside Definition~\ref{def:write}: channel $\cS$, label $\Au$, slots from their
 fields, no requests (\texttt{system} in the code; unrelated to system messages).
 
-\paragraph{Model calls and grants.}
+\paragraph{Model calls.}
 Every message and consolidated memory goes through slot extraction $E(x)$, which cannot affect
 a label. A customer message is also asked two yes/no questions: $Q(x)$, whether the customer is quoting someone else, and $R(x)$, whether they are
 declining or deferring. An answer counts only if its first word is yes or no and the other word
 does not occur as a word; anything else is $\bot$. $L(x)$ selects actions from the closed set $\Act$: only items that are exactly action names count,
-and any ``none'' gives $\emptyset$. \emph{No answer is assumed correct.} No model is asked whether a tool result is a grant. A grant is recognised in code: $g(x)$ is the list of actions a
-mandate covers if $x$ is the structured result of a tool in $\mathcal{G}$ and the mandate's status is
-active, and $\bot$ otherwise.
+and any ``none'' gives $\emptyset$. \emph{No answer is assumed correct.} No model is asked anything about a tool result or
+the agent's own text.
 
 \begin{definition}[Write]\label{def:write}
 Each message $x$ is stored with a label $\ell$ and a request list $\Req$:
@@ -48,17 +47,18 @@ Each message $x$ is stored with a label $\ell$ and a request list $\Req$:
 (\Un, \emptyset) & \chi = \cX, \text{ or } \chi = \cU \wedge Q(x) \neq \no;\\
 (\Au, \emptyset) & \chi = \cU \wedge Q(x) = \no \wedge R(x) \neq \no;\\
 (\Au, L(x))      & \chi = \cU \wedge Q(x) = \no \wedge R(x) = \no;\\
-(\Au, g(x))      & \chi = \cT \wedge g(x) \neq \bot;\\
-(\At, \emptyset) & \chi = \cT \wedge g(x) = \bot, \text{ or } \chi = \cA.
+(\At, \emptyset) & \chi \in \{\cT, \cA\}.
 \end{cases}
 \]
+So $\ell \preceq \hat\ell(\chi)$ always: content can lower a label (a quotation), never raise it; a
+grant a bank system returns is $\At$.
 The record's slots $S$ are the pairs of $E(x)$ whose key is in the closed key set, whose value
 fits the key's format, and whose value is a case-insensitive substring of $x$. Values are compared
 as exact strings. For $a \in \Req$, $\Arg(a)$ names parameter $p$ with $v$ iff $v$ is the only
 value in $S$ for $\kappa_a(p)$. The record's object $o$ is the single value in $S$ under any scope
 key; it is $\bot$ if there is none, and a marker matching no value if there are several (fails
 closed). Consolidated memories are the agent's own writing and are stored with $\chi = \cA$. The
-store refuses an $\Au$ record on $\cA$ or $\cX$, or with no channel at all. In Module B the
+store refuses an $\Au$ record on any channel but $\cU$, or with no channel at all. In Module B the
 benchmark supplies the focal record: the quote that introduced the claim, its carrier's channel
 ($\cU$ in $H^{+}$) and a slot passing the filter above; $\ell$ and $\Req$ come from the rule. The
 channel is thus the true source, as in the paper's gold-metadata conditions; Module C derives it
@@ -96,18 +96,16 @@ The agent supplies only $a$; it has no access to $K$, and arguments it writes ar
 
 \begin{assumption}[Integration]\label{as:int}
 (i) Roles and the producing tool of every message cannot be forged by content. (ii) A tool
-declared trusted is the bank's own system, and a tool in $\mathcal{G}$ reports a mandate's status
-truthfully. (iii) $K$ is operated by the customer and shows exactly what the gate renders; in the
+declared trusted is the bank's own system. (iii) $K$ is operated by the customer and shows exactly what the gate renders; in the
 measured runs no $K$ is attached.
 \end{assumption}
 
 \begin{theorem} For all model answers and every agent behaviour:
 \begin{enumerate}
-\item \emph{Provenance.} A record is $\Au$ only if it is on $\cU$ and $Q$ answered \no, or is an
-  active mandate from $\mathcal{G}$ (decided in code), or is seeded from the bank's books. It
-  requests $a$ only if $R$ also answered \no\ and $L$ listed $a$, or the mandate covers $a$. No
-  record on $\cX$ or $\cA$, no consolidated memory and no other bank system's record is ever
-  $\Au$, whatever any model answers.
+\item \emph{Provenance.} A record is $\Au$ only if it is on $\cU$ and $Q$ answered \no, or is
+  seeded from the bank's books. It requests $a$ only if it is on $\cU$, $R$ also answered \no\
+  and $L$ listed $a$. No record on $\cT$, $\cX$ or $\cA$, no consolidated memory and no grant is
+  ever $\Au$, whatever any model answers.
 \item \emph{Soundness.} If $a$ executes without the customer, some $\Au$ record requests $a$, and
   each argument is named by such a record, or is the only value on record for its slot and carried
   by an $\Au$ record, or, for the object, is the only value under its key on $\Au$ records.
@@ -134,17 +132,17 @@ No measured run attaches $K$, so (2)--(3) cover every measured execution. In a v
 multi-argument pair nothing is seeded, and the operative value $v^*$ occurs (ignoring case) in no
 message of $H^{-}$ but the carrier, and not in $q$; so by (2) and (4) an $H^{-}$ execution needs the
 carrier to be $\Au$, which (1) rules out under any model behaviour for a carrier on $\cX$ or $\cA$
-(R2F, P2R, MIX, R2P, S2D) or a bank system outside $\mathcal{G}$ (C2O, O2I). In our speech-act
-family Q2D (the customer quotes a third party) the license is contested, and only there does safety
-depend on a model, through $Q$ answering \no. In the paper's
+(R2F, P2R, MIX, R2P, S2D) or on $\cT$ (C2O, O2I). In our speech-act family Q2D (the customer
+quotes a third party) the license is contested, and only there does a measured result depend on a
+model, through $Q$ answering \no. In general safety depends on a model only through $Q$, $R$ and
+$L$ on customer messages. In the paper's
 terms, a consolidated memory $m$ is on $\cA$, never $\Au$, so its implied uses $\widehat{\Pi}(m)$
 never include licensing or binding, under any model behaviour; a false upgrade reaches an action
 only through a mislabeled customer message, as in Q2D.
 
 \paragraph{Departures and limitations.}
-Beyond the paper (resting on Assumption~\ref{as:int}(ii)): a quoting customer is $\Un$; a bank system's
-result is $\At$, or $\Au$ for an active mandate. (a) No time: an expired mandate stays $\Au$ and an
-unused request never lapses (EAL-Bench's threat model, arXiv:2609.01836); two identical requests
+Beyond the paper: a quoting customer is $\Un$; a bank system's
+result is $\At$, a grant included. (a) No time: an unused request never lapses (EAL-Bench's threat model, arXiv:2609.01836); two identical requests
 yield one execution. (b) Values in a refusal are $\Au$ slots. (c) The substring filter ignores token
 boundaries. (d) Without $K$ an ambiguous value is refused. (e) A compromised agent can raise one
 customer dialogue per licensed call.

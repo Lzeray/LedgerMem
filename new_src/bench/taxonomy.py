@@ -63,7 +63,7 @@ def claim_type_for_role(role: str) -> str:
 # The frozen role policy above says a message's ROLE fixes its label. Two families in
 # data/speech_act_attacks.py falsify that in opposite directions: a customer quoting a third
 # party is `user` yet is not speaking for themselves (Q2D), and a signed grant arriving through
-# a tool is genuinely authorizing yet `tool` maps it to the least-trusted rung (G2O). The role
+# a tool was once taken to be authorizing yet `tool` maps it to the least-trusted rung (G2O). The role
 # is the wrong axis; what actually carries authority is the CHANNEL the message arrived on.
 #
 # A channel differs from a role in one respect that matters: whether a tool is the bank's own
@@ -90,10 +90,9 @@ CHANNELS = ("user", "system", "trusted_tool", "untrusted_tool", "assistant")
 #:
 #:   * The customer's own word is authorized, EXCEPT when they are quoting someone else — then
 #:     the content is the third party's and nobody has vouched for that party.
-#:   * The bank's own systems are attested, EXCEPT when they carry a signed grant, which is an
-#:     authenticated authorization and counts as fully authorized. This is the one place a
-#:     classification can RAISE authority, and it is bounded by the channel: an outside feed
-#:     cannot reach it however its text is worded.
+#:   * The bank's own systems are attested, a signed grant included: a grant is the bank's
+#:     signature, not the customer asking. No kind of act lifts a record above its channel's
+#:     ceiling; a kind of act can only lower it.
 #:   * An outside feed is unendorsed whatever it says.
 #:   * The assistant is attested — the paper's own mapping, restored deliberately.
 #:
@@ -103,8 +102,7 @@ CHANNELS = ("user", "system", "trusted_tool", "untrusted_tool", "assistant")
 #: The kinds of speech act each channel is permitted to perform. The classifier chooses WITHIN
 #: the set its channel allows and can never step outside it. Two entries carry most of the
 #: weight: `decision` appears only for `user`, so neither the assistant nor any tool can decide
-#: anything; `grant` appears only for `trusted_tool`, so an outside feed cannot authorize an
-#: action however its text is worded.
+#: anything; `grant` appears only for `trusted_tool`, and even there it is attested.
 PERMITTED_CLAIM_TYPES: dict[str, frozenset[str]] = {
     "user": frozenset(
         {"decision", "intention", "preference", "fact", "refusal", "quotation",
@@ -123,7 +121,6 @@ OUT_OF_SET = "other"
 
 _LABEL_TABLE: dict[str, dict[str, str]] = {
     "user": {"quotation": "unendorsed"},
-    "trusted_tool": {"grant": "authorized"},
 }
 
 #: What each channel gets when the table above has no special case for the claim type.

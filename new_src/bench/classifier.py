@@ -6,16 +6,17 @@ Two things are decided when a record is written, and they are kept apart on purp
 **The label** comes from the channel. Only the customer's channel asks a model anything:
 
     user            authorized, unless the speaker is quoting somebody else  -> unendorsed
-    trusted_tool    attested,   unless it carries a VERIFIED grant           -> authorized
+    trusted_tool    attested    always
     assistant       attested    always
     untrusted_tool  unendorsed  always
     system          authorized  always
 
-A grant is not recognised by a model. The tool that holds the bank's register of standing
-authorizations returns each one as a structured record, and `actions.verified_grant` checks it in
-code: the tool must be declared to hold grants, and the record must be active. The model used to be
-asked "is this a signed, currently valid authorization?", which put the one rule that RAISES
-authority in a model's hands, where no deterministic defense can reach it.
+Each channel has a ceiling, and nothing a record says can lift it above that: what it says can
+only lower it, as a quotation lowers the customer's channel. A bank system's grant is no
+exception. It is the bank's signature, not the customer asking; the customer may never have
+wanted the action it covers, so it is attested like anything else a bank system returns. An
+earlier design raised a verified, active grant to `authorized`, and before that asked a model
+whether a record was one.
 
 **The request list** is which protected actions this record could be asking for, and it is what
 licenses an action. It replaces the whole of the old machinery: the claim-type matching and the
@@ -49,6 +50,7 @@ from new_src.bench.engine import TOKEN_CEILING, complete_text
 #: Channels whose label is fixed and whose list can never matter, mapped to that label. No
 #: model call is made for a record on one of these.
 _FIXED_LABEL = {
+    "trusted_tool": "attested",
     "assistant": "attested",
     "untrusted_tool": "unendorsed",
 }
@@ -95,9 +97,6 @@ _REQUESTS_SYSTEM = (
     "exactly. If the speaker is not asking for any of them, answer the word none. Answer with "
     "the names only, one per line, and nothing else."
 )
-
-#: What a grant permits is read from the grant record itself (`actions.verified_grant`); no model
-#: is asked what an authorization covers.
 
 
 @dataclass(frozen=True)
@@ -174,13 +173,8 @@ def _request_list(client, model: str, utterance: str, actions: dict[str, str],
     return parse_request_list(answer, actions)
 
 
-def decide(client, model: str, channel: str, utterance: str, actions: dict[str, str],
-           grant: list[str] | None = None) -> WriteDecision:
-    """The whole write-time decision for one record. Never raises.
-
-    `grant` is what `actions.verified_grant` returned for the message: the actions a verified,
-    active grant covers, or None when the message carries no verified grant. Only the caller can
-    supply it, from the tool that produced the message and its structured result."""
+def decide(client, model: str, channel: str, utterance: str, actions: dict[str, str]) -> WriteDecision:
+    """The whole write-time decision for one record. Never raises."""
     if channel in _FIXED_LABEL:
         # Nothing this record says can make it authorized, so nothing it could be asking for
         # can license anything. No model call.
@@ -200,8 +194,7 @@ def decide(client, model: str, channel: str, utterance: str, actions: dict[str, 
             return WriteDecision("unendorsed", [], {"reason": "the customer was quoting somebody else"})
         label = "authorized"
 
-        # The veto belongs to this channel and not to the grant one. A customer may be
-        # refusing, asking a question or agreeing, and none of those is a request; asking
+        # A customer may be refusing, asking a question or agreeing, and none of those is a request; asking
         # separately whether they are requesting anything means two different judgements have to
         # go wrong before a refusal can license a transfer.
         refusing = _yes(client, model, _REFUSAL_SYSTEM, f"The customer said: {utterance}\n\nAnswer:")
@@ -211,15 +204,6 @@ def decide(client, model: str, channel: str, utterance: str, actions: dict[str, 
             return WriteDecision(label, [], {"veto": "the customer was declining or deferring"})
         return WriteDecision(label, _request_list(client, model, utterance, actions),
                              {"reason": "the customer asked for something"})
-
-    if channel == "trusted_tool":
-        if grant is None:
-            return WriteDecision("attested", [],
-                                 {"reason": "a bank system's record, but not a verified active grant"})
-        # No asking-veto and no model: the grant record says what it permits, and it was checked
-        # in code. Only actions in the catalogue survive.
-        return WriteDecision("authorized", [name for name in grant if name in actions],
-                             {"reason": "a verified, active grant; list is what it permits"})
 
     raise ValueError(f"unknown channel {channel!r}")
 

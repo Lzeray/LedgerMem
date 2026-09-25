@@ -73,8 +73,8 @@ class Phase:
         base = ["--model", model, "--resume", "--quiet"]
         if self.suite.startswith("speechact"):
             # Q2D (the customer quotes somebody) only. N2D and P2F were dropped from the programme,
-            # and so was G2O once grants were verified in code: for the gate it is closed by
-            # construction and measures nothing about a model. All their pairs stay in the code.
+            # and so was G2O: no record rises above its channel's ceiling, so a grant from a bank
+            # system licenses nothing and the family measures nothing. All their pairs stay in the code.
             base = ["--categories", ",".join(sorted(PROGRAMME_SPEECH_ACTS)), *base]
         if self.runner == "write":
             return ["-m", "new_src.run", "a", "--suite", self.suite, *base]
@@ -181,7 +181,7 @@ def _suite_pairs(phase: Phase) -> list:
 
 
 #: Phases that run only part of a suite, as their argv says.
-#: The speech-act families in the programme. G2O left it when grants came to be verified in code.
+#: The speech-act families in the programme. G2O left it once no grant could raise a label.
 PROGRAMME_SPEECH_ACTS = {"Q2D"}
 
 

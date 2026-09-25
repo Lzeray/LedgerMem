@@ -76,7 +76,7 @@ def install(episode: Episode, records: list[MemoryRecord]):
 
 def capture(engine, client, model: str, role: str, said: str, *, tool_name: str | None = None,
             memory_text: str | None = None, rendering: str = "source_attributed",
-            slots: list[tuple[str, str]] | None = None, data: dict | None = None):
+            slots: list[tuple[str, str]] | None = None):
     """Write the memory record(s) for one message at the moment it occurs.
 
     Nothing about the benchmark's answer reaches this function. It is given what was said, who
@@ -104,15 +104,13 @@ def capture(engine, client, model: str, role: str, said: str, *, tool_name: str 
     parameterises an action. Passing the dataset's own values here is exactly the oracle this
     function exists to exclude.
     """
-    from new_src.bench.actions import tool_trust, verified_grant
+    from new_src.bench.actions import tool_trust
     from new_src.bench.classifier import action_catalogue, decide
     from new_src.bench.slots import extract_slots, object_ref_for
     from new_src.bench.taxonomy import channel_for
 
     channel = channel_for(role, tool_trust(tool_name) if role == "tool" else None)
-    # A grant is recognised in code from the tool's structured result, never by a model.
-    grant = verified_grant(tool_name, data) if role == "tool" else None
-    decision = decide(client, model, channel, said, action_catalogue(), grant=grant)
+    decision = decide(client, model, channel, said, action_catalogue())
     label = decision.label
     requests = decision.requests
     if slots is None:

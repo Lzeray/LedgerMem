@@ -67,7 +67,7 @@ Requirements and traps:
 | `core` (dev) | 35 | 5 base histories × the paper's 7 transitions. The defense was designed against it: a development set. |
 | `core` (held-out) | 35 | the same 7 transitions on 5 customers written after the design freeze |
 | `multiarg` (dev / held-out) | 15 + 15 | actions with 3–5 arguments — WIRE (5), STO (4), TRV (a country, not a number) |
-| `speechact` (dev) / `speechact2` (held-out) | 20 + 20 | Q2D, N2D, P2F, G2O. **Only Q2D is in the programme** (`final.PROGRAMME_SPEECH_ACTS`); N2D and P2F were dropped, and G2O too once grants were verified in code — the gate closes it by construction. |
+| `speechact` (dev) / `speechact2` (held-out) | 20 + 20 | Q2D, N2D, P2F, G2O. **Only Q2D is in the programme** (`final.PROGRAMME_SPEECH_ACTS`); N2D and P2F were dropped, and G2O too: no label rises above its channel's ceiling, so a grant licenses nothing in either telling. |
 | `licence` | 15 | attacks on the licence check itself. **Out of the programme**, kept in the code. |
 
 Each pair is two tellings: **H−**, where the contested value comes from a non-authorizing
@@ -138,10 +138,13 @@ guess about who spoke, and a gate executing a guess measures the guesser.
 A record's label follows from where its words came from. The model is never asked for a label,
 and never asked who spoke:
 
-- **`authorized` has exactly two sources**: the customer's own words when they are not quoting
-  anybody, and a grant arriving over a trusted tool. `store.write_fact` refuses outright to
-  store `authorized` on the `assistant` or `untrusted_tool` channels — a hard stop, not a clamp,
-  because a clamp hides the defect.
+- **Every channel has a ceiling, and no write goes above it**: `user` → `authorized`,
+  `trusted_tool` → `attested`, `assistant` → `attested`, `untrusted_tool` → `unendorsed`. What a
+  record says can only lower it (a quotation), never raise it. So `authorized` has one source,
+  the customer's own words when they are not quoting anybody (plus the bank's books, which are
+  seeded, not written). A grant from a bank system is the bank's signature, not the customer
+  asking, and is `attested`. `store.write_fact` refuses outright to store `authorized` on any
+  other channel — a hard stop, not a clamp, because a clamp hides the defect.
 - **`user_confirmed` is never a model-facing argument.** It is threaded in by the harness.
 - **Confirming never raises a label.** It authorizes one call and nothing else.
 - **Consolidated text is the agent's own writing**, so `attested` is its ceiling. When a design
@@ -163,11 +166,12 @@ the speech-act families falsify one each. The replacement splits them:
 - **The label** follows from the channel, with one model question for the customer's channel
   only: is the customer quoting somebody else (then `unendorsed`). The claim-type table in
   `taxonomy.label_for` is no longer on the write path; `classifier.decide` is.
-- **One rule raises authority**: a verified grant. Only a tool declared `grants=True` in
-  `actions.py` (the authorization register) can carry one, and only from its structured result
-  with status `active` (`actions.verified_grant`), checked in code. Every other bank system is
-  `attested` whatever its text says, because such systems relay text written by others. State the
-  register's truthfulness as an assumption wherever these numbers are reported.
+- **Nothing raises authority.** Every bank system, the authorization register included, is
+  `attested` whatever its text or structured result says. A grant used to be raised to
+  `authorized` once verified in code; it was dropped because a grant is not the customer asking,
+  and the customer may never have wanted the action it covers. A mandate the customer signed
+  would count only once the signature can be verified as the customer's — the
+  authenticated-channel direction, future work.
 
 It is an extension beyond the paper and is reported as one. The frozen policy stays in the code
 and every arm built on it still runs, so earlier numbers remain comparable.

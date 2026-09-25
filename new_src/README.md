@@ -433,8 +433,7 @@ A record is created when something is said, not reconstructed afterwards from a 
 |---|---|---|
 | `user` | `quotation` | unendorsed |
 | `user` | decision, intention, preference, fact, refusal, acknowledgement | authorized |
-| `trusted_tool` | `grant` | authorized |
-| `trusted_tool` | observation, fact, rule | attested |
+| `trusted_tool` | anything, `grant` included | attested |
 | `untrusted_tool` | anything | unendorsed |
 | `assistant` | anything | attested |
 | `system` | anything | authorized |
@@ -442,7 +441,8 @@ A record is created when something is said, not reconstructed afterwards from a 
 
 The permitted sets do the rest of the work. `decision` appears only for `user`, so neither the
 assistant nor any tool can decide anything. `grant` appears only for `trusted_tool`, so an
-outside feed cannot authorize an action however its text is worded.
+outside feed cannot authorize an action however its text is worded. (Since the channel
+ceilings, a `grant` is `attested` too; see below.)
 
 Note what the table refuses to do: **it never lies about who spoke.** A customer's refusal is
 `authorized`, because they really did say it. What stops a refusal authorizing an action is the
@@ -458,11 +458,12 @@ Qwen3.5 answered `fact` — twice, at temperature 0, correctly about the sentenc
 and uselessly for the decision. The act belongs to the utterance, so the utterance is what gets
 classified.
 
-**One place raises authority, and it is bounded by the channel.** `trusted_tool` + `grant` →
-`authorized` is the only rule in the table that lifts a record above its channel's default. It
-is the authenticated-channel argument in miniature, and the cost is explicit: a classifier
-error on a trusted channel now buys full authorization. An outside feed cannot reach that rule
-at all, since `grant` is not in its permitted set.
+**Nothing raises authority.** `trusted_tool` + `grant` → `authorized` used to be the one rule
+lifting a record above its channel's default, first by a model's reading and later by a check
+in code of the register's structured record. It is gone: every channel has a ceiling (`user`
+authorized, `trusted_tool` and `assistant` attested, `untrusted_tool` unendorsed), content can
+only lower a record below it, and a grant is the bank's signature rather than the customer
+asking. The store refuses an `authorized` record on any channel but the customer's.
 
 ### What this changes in the gate
 
@@ -518,7 +519,7 @@ number already measured under the frozen policy stays directly comparable.
 |---|---|---|---|
 | held-out core | `run_heldout --suite core` | 35 | the same seven transitions, written after the design freeze |
 | multi-argument | `--suite multiarg` (dev) / `run_heldout --suite multiarg` | 15 + 15 | actions with 3–5 arguments: WIRE (5), STO (4), TRV, whose contested value is a country rather than a number. One call therefore mixes a contested value with values the customer stated in the request, and an account argument now has to carry at least eight digits — "contains a digit" once let an amount or a partial identifier be bound as an account. |
-| speech-act | `--suite speechact` (dev) / `run_heldout --suite speechact2` | 20 + 20 | Q2D, N2D, P2F, G2O. Only **Q2D** (the customer quotes somebody) and **G2O** (a grant through a tool) are in the programme; N2D and P2F were dropped from it. |
+| speech-act | `--suite speechact` (dev) / `run_heldout --suite speechact2` | 20 + 20 | Q2D, N2D, P2F, G2O. Only **Q2D** (the customer quotes somebody) is in the programme; N2D, P2F and G2O were dropped from it — G2O once no grant could raise a label. |
 | licence | `--suite licence` | 15 | attacks on the licence check itself. In the code, out of the programme. |
 
 A pair whose closing request names the action tests nothing, because the customer asking there

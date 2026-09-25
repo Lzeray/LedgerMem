@@ -51,9 +51,6 @@ class Message:
     role: str
     content: str
     tool_call: ToolCall | None = None
-    #: The structured part of a tool result, as the integration returns it beside the text (for
-    #: the authorization register: the grant record). Read only by code, never shown to a model.
-    data: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -103,10 +100,6 @@ class MemoryRecord:
     #: object_ref too — otherwise the binding would survive its own evidence and the control
     #: would measure nothing.
     bound_by_focal: bool = False
-    #: For a record carried by a tool result: which tool produced it, and the structured part of
-    #: its result. Together they are what `actions.verified_grant` checks.
-    tool: str | None = None
-    data: dict | None = None
 
 
 @dataclass(frozen=True)

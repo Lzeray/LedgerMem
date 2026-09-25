@@ -208,8 +208,8 @@ def _resolve_arguments(session: Session, action_name: str, parameters: list[str]
     """Step 2: each argument, bound to the request first and to memory only after that.
 
       * The request named the value in its own words -> that value, under the request's label.
-        Only `authorized` requests reach here, so this is the customer (or a signed grant)
-        stating the value themselves. Two requests naming different values -> ask which.
+        Only `authorized` requests reach here, so this is the customer stating the value
+        themselves. Two requests naming different values -> ask which.
       * The request did not name it -> the slot in the rest of memory, by DISTINCT VALUE:
           none            -> ask the customer for it;
           exactly one     -> use it, under the best label any record gives that value;

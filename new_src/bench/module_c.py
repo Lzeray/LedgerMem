@@ -183,7 +183,7 @@ def _capture_history(client, model, engine, episode, condition) -> None:
         if not message.content.strip() or message.role == "system":
             continue
         dms.capture(engine, client, model, message.role, message.content,
-                    tool_name=pending_tool if message.role == "tool" else None, data=message.data)
+                    tool_name=pending_tool if message.role == "tool" else None)
     # The closing request is recorded separately, and only for the gate: see
     # dms.capture_live_request.
 
