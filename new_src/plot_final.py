@@ -18,7 +18,11 @@ Besides the overview, one table per module and suite breaks the same counts down
 type: each cell reads "0/5 | 5/5" — attacks through out of the H- pairs, tasks performed out of
 the H+ pairs — with the two rates underneath.
 
-Images go to logs_result/, beside the earlier figures.
+Images go to logs_result/<model>/, one folder per dataset and module:
+
+    logs_result/<model>/overview_module_b.png          every suite, dev and held-out side by side
+    logs_result/<model>/<dev|held-out>/module_b/<condition>.png        one arm, every attack type
+    logs_result/<model>/<dev|held-out>/module_b/by_type_<suite>.png    one suite, every arm
 """
 
 from __future__ import annotations
@@ -129,7 +133,7 @@ def draw(module: str, model: str, data: dict, fired: dict, path: Path) -> Path |
     fig.text(0.01, 0.01, "ASR excludes pairs whose null control fired; TSR keeps every pair.",
              fontsize=8, color="#555555")
     fig.tight_layout()
-    OUT_DIR.mkdir(exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=160, bbox_inches="tight")
     plt.close(fig)
     return path
@@ -182,7 +186,7 @@ def draw_by_category(module: str, suite: str, runner: str, suite_label: str, mod
     fig.text(0.01, 0.01, "ASR excludes pairs whose null control fired; TSR keeps every pair.",
              fontsize=8, color="#555555")
     fig.tight_layout()
-    OUT_DIR.mkdir(exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=160, bbox_inches="tight")
     plt.close(fig)
     return path
@@ -272,7 +276,7 @@ def draw_condition(module: str, condition: str, dataset: str, model: str, data: 
     fig.text(0.01, 0.01, "ASR excludes pairs whose null control fired. Five pairs per type, so a single "
                          "type carries no conclusion on its own.", fontsize=8, color="#555555")
     fig.tight_layout()
-    OUT_DIR.mkdir(exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=160, bbox_inches="tight")
     plt.close(fig)
     return path
@@ -290,21 +294,22 @@ def main(argv=None) -> int:
         return 1
     for model in models:
         data, fired = _cells(model)
-        slug = model.replace("/", "_").replace(":", "_")
+        root = OUT_DIR / model.replace("/", "_").replace(":", "_")
         for module in ("b", "c"):
-            path = draw(module, model, data, fired, OUT_DIR / f"final_module_{module}_{slug}.png")
+            path = draw(module, model, data, fired, root / f"overview_module_{module}.png")
             print(f"  {path}" if path else f"  Module {module.upper()}: nothing recorded yet")
-            for dataset in ("dev", "heldout"):
+            for dataset, folder in (("dev", "dev"), ("heldout", "held-out")):
+                out = root / folder / f"module_{module}"
                 for condition, _ in ROWS[module]:
-                    name = f"final_{module}_{dataset}_{condition}_{slug}.png"
                     if (drawn := draw_condition(module, condition, dataset, model, data, fired,
-                                                OUT_DIR / name)):
+                                                out / f"{condition}.png")):
                         print(f"  {drawn}")
-            for suite, runner, suite_label in SUITES:
-                name = f"final_module_{module}_{suite}_{'heldout' if runner == 'heldout' else 'dev'}_{slug}.png"
-                if (drawn := draw_by_category(module, suite, runner, suite_label, model, data, fired,
-                                              OUT_DIR / name)):
-                    print(f"  {drawn}")
+                for suite, runner, suite_label in SUITES:
+                    if (runner == "heldout") != (dataset == "heldout"):
+                        continue
+                    if (drawn := draw_by_category(module, suite, runner, suite_label, model, data, fired,
+                                                  out / f"by_type_{suite}.png")):
+                        print(f"  {drawn}")
     return 0
 
 

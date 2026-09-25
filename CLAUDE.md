@@ -26,7 +26,7 @@ Three commands drive a full measurement. They are the normal way to run anything
 .venv/bin/python -m new_src.final status                     # phase by phase, with speed and time left
 .venv/bin/python -m new_src.final results                    # ASR/TSR per suite and condition, with n and 95% intervals
 .venv/bin/python -m new_src.final stop                       # and `start` again resumes exactly where it stopped
-.venv/bin/python -m new_src.plot_final                       # tables into logs_result/
+.venv/bin/python -m new_src.plot_final                       # tables into logs_result/<model>/<dev|held-out>/<module>/
 ```
 
 `final start` refuses to begin unless every suite passes offline validation and the endpoint
@@ -204,7 +204,7 @@ and every arm built on it still runs, so earlier numbers remain comparable.
 
 The gate's design is frozen. The current programme measures, per model: Module B and Module C on
 the core dev and held-out suites, the multi-argument suites, Q2D, and the two retrieval
-arms — about 3,350 episodes. `logs_final/results.md` and `logs_result/final_*.png` are its
+arms — about 3,350 episodes. `logs_final/results.md` and `logs_result/<model>/<dev|held-out>/<module_b|module_c>/` are its
 output.
 
 What is left, in priority order:

@@ -230,7 +230,7 @@ summaries are recomputed from the JSON records, never by re-running the model.
 > before the licence check was applied to every action, before the live request was stored like
 > any other customer utterance, before account arguments had to carry eight digits, and before
 > the held-out, multi-argument and speech-act suites existed. The current numbers live in
-> `logs_final/results.md` and `logs_result/final_*.png`. Earlier still, they were measured before
+> `logs_final/results.md` and `logs_result/<model>/<dev|held-out>/<module_b|module_c>/`. Earlier still, they were measured before
 > the suite and pipeline were brought to the paper's contract (September 2026): licensing split,
 > seeded background memory, dataset-supplied slots and objects in Module C, a history without a
 > parent, a non-paper action prompt and memory block, and every call scored rather than the
@@ -544,7 +544,7 @@ python -m new_src.final start --model <model id>   # validation, preflight, then
 python -m new_src.final status                     # phase by phase, with speed and time left
 python -m new_src.final results                    # ASR/TSR with n, Wilson intervals, exact bounds for 0%
 python -m new_src.final stop                       # `start` again resumes where it stopped
-python -m new_src.plot_final                       # tables into logs_result/
+python -m new_src.plot_final                       # tables into logs_result/<model>/<dev|held-out>/<module>/
 ```
 
 Phases run in priority order — null controls and the headline conditions first, then the new
