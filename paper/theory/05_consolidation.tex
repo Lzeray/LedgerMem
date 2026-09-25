@@ -1,0 +1,71 @@
+\section{Consolidation and forgetting}\label{sec:consolidation}
+
+A consolidator rewrites memory: it summarises, merges and drops records. Its output is the agent's
+own writing, so it lies on $\cA$ with ceiling $\At$ (Theorem~\ref{thm:ceiling}). Code, not the
+agent, may attach \emph{carried} side information to a consolidated record, such as the labels,
+requests and objects of the records it came from. That is how channel information survives
+consolidation without being reconstructed afterwards.
+
+\begin{proposition}[Consolidated text cannot license]\label{prop:consolidated}
+Without carried side information, no consolidated record is $\Au$. $G$ reading only consolidated
+memory never executes without the customer. It is sound, and it has zero utility on every
+operation that needs a licence or a bound argument.
+\end{proposition}
+\begin{proof}
+The ceiling of $\cA$ is $\At$, and every execution of $G$ without the customer needs an $\Au$
+record.
+\end{proof}
+
+\begin{theorem}[One bit per value]\label{thm:bits}
+Fix $n$ keys $k_1, \dots, k_n$ and values $v_1, \dots, v_n$. For $S \subseteq [n]$, let $h_S$ be the
+history in which $v_i$ is asserted under $k_i$ by the customer in own voice if $i \in S$, and by an
+outside feed otherwise, in the same wording. A consolidator that keeps every value but not its
+source writes the same text for all $2^n$ histories. Any representation that is sound and misses
+no permitted operation on these histories and their continuations must separate all $2^n$ of them.
+So it must carry at least $n$ bits beyond the text in the worst case, and $H(S)$ bits on average.
+\end{theorem}
+\begin{proof}
+For $S \neq S'$, pick $i \in S \setminus S'$ (or the reverse). Then $\st_{k_i}(h_S) = v_i$ and
+$\st_{k_i}(h_{S'}) = \bot$, and by Theorem~\ref{thm:statistic}(ii) a common continuation separates
+their permissions. By Theorem~\ref{thm:statistic}(iii), the representation must map them apart.
+$2^n$ distinct memories that share the same text need $n$ bits outside it, and a uniquely
+decodable encoding needs $H(S)$ bits on average.
+\end{proof}
+
+The carried label of the formal model is one of three values per record, $\log_2 3$ bits, so it is
+within a constant factor of this bound. It must be written by code: by
+Theorem~\ref{thm:ceiling}, the agent cannot write it into the text.
+
+\begin{definition}[Safe replacement]
+A key state $s' \in \V \cup \{\bot, \conflict\}$ is a \emph{safe replacement} for $s$ if, for every
+sequence of further own-voice assertions under that key, the state reached from $s'$ is a value $v$
+only when the state reached from $s$ is the same value $v$.
+\end{definition}
+
+\begin{theorem}[Safe forgetting leaves a mark]\label{thm:tombstone}
+The safe replacements of a key state $s$ are exactly $s$ itself and $\conflict$. In particular,
+forgetting a value ($v \mapsto \bot$), resolving a conflict ($\conflict \mapsto v$), inventing a value
+($\bot \mapsto v$) and substituting another value ($v \mapsto v'$) are all unsafe. Marking a key
+contested ($\cdot \mapsto \conflict$) is always safe.
+\end{theorem}
+\begin{proof}
+From $\conflict$ no value is ever reached, so $\conflict$ is safe for everything, and nothing
+but $\conflict$ is safe for $\conflict$. Next, $\bot \mapsto v$ and $v \mapsto v'$ are unsafe with
+no further assertion. For $v \mapsto \bot$, assert $w \neq v$: the original state becomes
+$\conflict$ and the replacement becomes $w$.
+\end{proof}
+
+\begin{corollary}
+A consolidator that forgets silently is unsafe for the future, not merely less useful. Take
+Example~\ref{ex:correction} with the correction dropped: the memory holds X alone, while the
+customer's state is $\conflict$, and $G$ pays X. The safe way to compress is to replace what is
+forgotten with an explicit mark (``this key is contested'', ``a request of unknown content is
+outstanding''), never with absence. The same holds for requests. Dropping one can turn two named
+objects into one (Proposition~\ref{prop:lower}), so a dropped request must leave a mark that
+blocks the action.
+\end{corollary}
+
+\paragraph{Link to the experiment.} Theorems~\ref{thm:bits} and~\ref{thm:tombstone} make two
+testable predictions about real consolidators: whether they keep the source bit of each value
+(Module~A's judge measures this), and whether they forget contested values silently or with a
+mark. The second needs correction pairs, which the suites do not have yet.

@@ -1,0 +1,66 @@
+\section{What a memory must keep}\label{sec:statistic}
+
+\begin{definition}[Authority state]
+The \emph{authority state} of a history is
+$\sigma(h) = \big( (\st_k(h))_{k \in \Keys},\ (\Out_a(h))_{a \in \Act} \big)$: for each key, the
+value the customer and the books determine (or $\bot$, or $\conflict$), and for each action, its
+outstanding requests with the objects and arguments they name.
+\end{definition}
+
+\begin{theorem}[Sufficiency and necessity]\label{thm:statistic}
+\begin{enumerate}
+\item[(i)] $\Perm(h, \cdot)$ is a function of $\sigma(h)$.
+\item[(ii)] No component can be dropped. For each of the following, there are histories $h, h'$
+  that differ only in it, with $\Perm(h, o) \neq \Perm(h', o)$ for some $o$, possibly after a
+  common continuation: the value state of a key ($v$ against $\bot$, against $\conflict$, or
+  against another value $v'$); the presence of an outstanding request; the object a request
+  names; an argument a request names; whether a request has been spent.
+\item[(iii)] A representation $\mu$ admits a rule that is sound and executes every permitted
+  operation without asking, on $\mathcal{H}$ and all its continuations, if and only if $\mu(h)$
+  determines $\Perm(hu, \cdot)$ for every continuation $u$. This holds in particular when
+  $\sigma$ factors through $\mu$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(i) Definition~\ref{def:perm} reads nothing else.
+
+(ii) The witnesses are Examples~\ref{ex:source}--\ref{ex:correction}. For the three key states:
+if $\st_k(h) = v$ and $\st_k(h') \in \{\bot, \conflict, v'\}$, append an own-voice request that
+names everything but the parameter on $k$; then binding $v$ is permitted after $h$ only. If
+$\st_k(h) = \bot$ and $\st_k(h') = \conflict$, first append an own-voice assertion of a fresh value
+$w$ under $k$; after $h$ the state becomes $w$, after $h'$ it stays $\conflict$.
+
+(iii) By Theorem~\ref{thm:indist} applied to every continuation.
+\end{proof}
+
+\begin{proposition}[One bit of label is enough to act]\label{prop:onebit}
+Without a customer, the decisions of $G$ depend on labels only through $[\ell(r) = \Au]$.
+\end{proposition}
+\begin{proof}
+Steps~1--2 test ``$\Au$'' and nothing finer; any other outcome refuses.
+\end{proof}
+
+The three-level label carries one decision bit. The difference between $\At$ and $\Un$ matters
+only to the customer, who is shown the least trusted source of a value.
+
+\begin{remark}[The gate against the optimum]
+Under faithfulness and completeness the store determines $\sigma$, so $D^*$ is computable from it.
+$G$ equals $D^*$ with one deliberate exception. When the customer's value under $k$ is unique but
+another source gives a different value, $\st_k = v$ and $D^*$ binds $v$, whereas $G$ sees two
+values on record and does not execute without the customer. The gap costs TSR and never ASR.
+The same holds for requests naming two objects.
+\end{remark}
+
+\begin{remark}[Open: the exact quotient]
+$\sigma$ is not exactly the coarsest sufficient statistic (the Nerode equivalence of
+$\Perm$ over continuations). A few states are dead: for example, an outstanding request that names
+nothing, for an action every one of whose keys is already $\conflict$, is never separable from
+its absence. Characterising the exact quotient is open; it changes no statement above.
+\end{remark}
+
+\paragraph{Reading.} What authority requires of a memory is small. It must know which values are
+the customer's own words, whether a key is contested, which requests are outstanding, and what
+each names. This is the advisor's third outcome, ``a few trusted fields''. Where the question
+stops being small is Sections~\ref{sec:speech} and~\ref{sec:consolidation}. The voice cannot be
+computed from the view, and these fields do not survive compression unless they are carried
+outside the text.

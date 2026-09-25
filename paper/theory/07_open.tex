@@ -1,0 +1,22 @@
+\section{Open questions}\label{sec:open}
+
+\begin{enumerate}
+\item \emph{Time and revocation.} $\Perm$ has no time. Adding expiry and revocation (EAL-Bench,
+  arXiv:2609.01836) makes key states and requests time-indexed. Theorem~\ref{thm:tombstone} should
+  then extend to ``forgetting a revocation is unsafe'', and the one-bit bound grows to cover each
+  validity interval.
+\item \emph{Derived values.} An amount computed from several sources (a sum, a conversion)
+  should carry the meet of their labels. Show that the meet is the only safe label for a derived
+  value, and bound what must be kept to compute it.
+\item \emph{The exact quotient.} Characterise the Nerode equivalence of $\Perm$ exactly
+  (Section~\ref{sec:statistic}), and hence the minimal memory in bits for a given action catalogue.
+\item \emph{Lowering on the customer channel.} Proposition~\ref{prop:lower} shows that a false
+  ``quote'' can hide a correction. Characterise the rules for which lowering is always safe:
+  reading objects and requests over all labels, as step~2 already reads values.
+\item \emph{Bounds from measured error rates.} Instantiate
+  $\mathrm{ASR} \le \Pr[\text{not faithful or not complete}]$ with separately measured error rates
+  of $Q$, $R$, $L$ and $E$ on each model, and compare the bound with the measured ASR.
+\item \emph{Delegation.} Several principals (a customer and a representative) turn $\Own$ into a
+  relation between principals and actions; the ceiling then depends on the principal, not only on
+  the channel.
+\end{enumerate}

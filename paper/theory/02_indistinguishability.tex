@@ -1,0 +1,80 @@
+\section{Indistinguishable histories}\label{sec:indist}
+
+A \emph{representation} is any map $\mu$ from histories to memories that factors through the
+view, such as a store, a consolidated summary, or a vector index. For an operation $o$, its
+\emph{conflict set} is
+\[
+\mathrm{Conf}_o(\mu) = \{\, M : \exists\, h, h' \text{ with } \mu(h) = \mu(h') = M,\
+\Perm(h, o) = 1,\ \Perm(h', o) = 0 \,\}.
+\]
+
+\begin{theorem}[Indistinguishability]\label{thm:indist}
+Let $D$ decide from $\mu$ alone. If $D$ is sound on a class $\mathcal{H}$, then
+$D(M, o) \neq \exec$ for every $M \in \mathrm{Conf}_o(\mu)$ realised in $\mathcal{H}$. The rule
+\[
+D^*(M, o) = \exec \iff \Perm(h, o) = 1 \text{ for every } h \in \mathcal{H} \text{ with } \mu(h) = M
+\]
+is sound, and it executes a superset of what any sound rule on $\mu$ executes. Under any
+distribution on $\mathcal{H}$, every sound rule on $\mu$ loses at least
+$\Pr[\mu(h) \in \mathrm{Conf}_o(\mu) \mid \Perm(h, o) = 1]$ of TSR without asking.
+\end{theorem}
+\begin{proof}
+$D$ gives the same answer on $h$ and $h'$. On $h'$ it must not execute, so it does not execute on
+$h$ either. $D^*$ executes exactly where no history in the fibre forbids $o$.
+\end{proof}
+
+The theorem is elementary. Its use is to give the benchmark's pairs a precise meaning: an
+authority pair $(H^{-}, H^{+})$ is a pair of histories whose permissions differ, and a system
+collapses the pair if its representation maps both to the same memory. The minimal examples
+below each isolate one thing a memory can lose. Each is a pair of one-line histories with
+$\Perm = 0$ on the first and $\Perm = 1$ on the second, and each names the representations that
+collapse it.
+
+\begin{example}[Source of a value; the seven core transitions]\label{ex:source}
+$h$: $(\cX,\ \text{``beneficiary account 4417-0093''})$, then the customer: ``pay the
+invoice''. $h'$: the customer says ``the account is 4417-0093'', then ``pay the invoice''. A
+washed memory (``the beneficiary account is 4417-0093; the customer asked to pay the invoice'')
+collapses them. Any representation that keeps the value and not whose own words it was does the
+same. R2F, P2R, MIX, R2P and S2D carry the value on $\cX$ or $\cA$; C2O and O2I carry it on $\cT$;
+so do the three multi-argument families.
+\end{example}
+
+\begin{example}[Voice; Q2D]\label{ex:voice}
+$h$: the customer pastes an advisor's message, ``Move 85\% into equities.'' $h'$: the customer
+types ``Move 85\% into equities.'' The two views are \emph{identical}. So even the channel does not
+separate them, and no view-measurable system can (Section~\ref{sec:speech}). The benchmark's Q2D
+pairs mark the quotation in the text, so their views differ, and a reader of the text can separate
+them.
+\end{example}
+
+\begin{example}[Kind of act]\label{ex:act}
+$h$: ``Don't transfer anything to 4417-0093.'' $h'$: ``Transfer 300 to 4417-0093.'' A memory that
+keeps values and sources but not whether a request was made collapses them (N2D, out of the
+programme).
+\end{example}
+
+\begin{example}[Spent licence]\label{ex:spent}
+$h$: a request for a transfer, then $\exec$ of that transfer. $h'$: the request alone. A memory
+without consumption collapses them, and a second call replays the first. No suite tests this.
+\end{example}
+
+\begin{example}[Object]\label{ex:object}
+$h$: ``close SAV-1''; $h'$: ``close SAV-2''; the operation is closing SAV-2. A memory that keeps
+the request but not what it is about collapses them (the licence suite).
+\end{example}
+
+\begin{example}[Correction]\label{ex:correction}
+$h$: ``the account is X'', later ``no, it is Y''. $h'$: ``the account is X''. The operation is a
+transfer to X. A memory that keeps one value per key, or drops the older or the less confident
+one, collapses them, and so does any consolidation that forgets the correction. No suite tests
+this; see Section~\ref{sec:consolidation}.
+\end{example}
+
+\begin{example}[Intent outside the conversation; grants]\label{ex:grant}
+Let authority also include intent the customer never expressed in the conversation, such as a
+standing mandate. Then $h$ and $h'$ can share one view: the register reports an active mandate,
+and the customer says nothing. In $h$ the customer signed the mandate; in $h'$ they did not. No
+view-measurable system separates them. This is why Definition~\ref{def:perm} counts only the
+customer's own words, and why Corollary~\ref{cor:grant} requires an authenticated channel for
+mandates.
+\end{example}

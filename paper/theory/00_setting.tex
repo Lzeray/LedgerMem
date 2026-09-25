@@ -1,0 +1,109 @@
+\section{Setting}\label{sec:setting}
+
+The gate of \texttt{formal\_model.tex} is one system among many. Here histories, memories and
+decision rules are arbitrary, and the permission an action should have is defined from the
+history itself, so that statements can be made about \emph{any} memory.
+
+\begin{definition}[Channels, labels, ceilings]\label{def:channels}
+The channels are $\mathcal{C} = \{\cU, \cT, \cA, \cX\}$: the customer, a bank system (a trusted
+tool), the agent, an outside feed (an untrusted tool). Labels are ordered
+$\Un \prec \At \prec \Au$. Each channel has a \emph{ceiling}
+$\ceil{\cU} = \Au$, $\ceil{\cT} = \ceil{\cA} = \At$, $\ceil{\cX} = \Un$.
+\end{definition}
+
+\begin{definition}[Actions and operations]
+$\Act$ is a finite set of protected actions. Action $a$ has parameters $P_a$; parameter $p$ is read
+from the slot key $\kappa_a(p) \in \Keys$ ($\kappa_a$ injective), and $s_a \in P_a \cup \{\bot\}$ is
+the parameter naming the object $a$ acts on, if any. An \emph{operation} is $o = (a, \theta)$ with
+$\theta : P_a \to \V$.
+\end{definition}
+
+\begin{definition}[Histories and views]\label{def:history}
+A history $h$ consists of the bank's books $B \subseteq \Keys \times \V$, fixed before the
+conversation, and a finite sequence of events. An event is a message $(\chi, x)$ with
+$\chi \in \mathcal{C}$ and text $x$, or an execution $\exec(o)$. A customer message ($\chi = \cU$)
+also carries a \emph{latent meaning}: a voice $\omega \in \{\own, \quoted\}$ and, if $\omega = \own$,
+\begin{itemize}
+\item requests $\Req(m)$: triples $(a, n_o, n)$, where $n_o \in \V \cup \{\bot\}$ is the object the
+  customer names and $n : P_a \rightharpoonup \V$ the arguments they name;
+\item assertions $\Vals(m) \subseteq \Keys \times \V$, including every value named in a request.
+\end{itemize}
+The \emph{view} $\view(h)$ is $h$ with every latent component erased: what a system can observe.
+\end{definition}
+
+The latent meaning is what the customer meant. The benchmark knows it because it built the
+history; a system sees only text and channels.
+
+\begin{definition}[The customer's standing]\label{def:standing}
+Let $\Own(h)$ be the customer messages of $h$ with $\omega = \own$. For a key $k$ let
+$\Vals_k(h) = \{ v : (k,v) \in B \} \cup \{ v : (k, v) \in \Vals(m),\ m \in \Own(h) \}$ and
+\[
+\st_k(h) = \begin{cases} \bot & \Vals_k(h) = \emptyset,\\ v & \Vals_k(h) = \{v\},\\ \conflict & |\Vals_k(h)| \geq 2. \end{cases}
+\]
+A request $r = (a, n_o, n)$ of some $m \in \Own(h)$ is \emph{outstanding} if no later event is an
+$\exec(a, \theta)$ with $n_o \in \{\bot, \theta(s_a)\}$. $\Out_a(h)$ is the set of outstanding
+requests for $a$.
+\end{definition}
+
+\begin{definition}[Permission]\label{def:perm}
+$\Perm(h, (a, \theta)) = 1$ if and only if
+\begin{enumerate}
+\item[(i)] $\Out_a(h) \neq \emptyset$;
+\item[(ii)] if $s_a \neq \bot$: the objects named in $\Out_a(h)$ are exactly $\{o^*\}$, or none is
+  named and $\st_{\kappa_a(s_a)}(h) = o^* \in \V$; and $\theta(s_a) = o^*$;
+\item[(iii)] for every $p \neq s_a$: the values named for $p$ in $\Out_a(h)$ are exactly
+  $\{\theta(p)\}$, or none is named and $\st_{\kappa_a(p)}(h) = \theta(p)$.
+\end{enumerate}
+Otherwise $\Perm(h, o) = 0$. In addition, an approval of exactly $o$ given through the customer
+interface (Section~\ref{sec:queries}) makes $\Perm = 1$ for the execution it precedes.
+\end{definition}
+
+\begin{remark}
+$\Perm$ depends on the books and on what the customer said in their own voice, and on nothing
+else. What anybody else said never makes an operation permitted. This is the modelling choice
+behind everything that follows: authority is the customer's expressed intent. It is also what
+the benchmark's pairs encode. In $H^{+}$ the customer asserts the operative value $v^*$; in
+$H^{-}$ it comes from another source, and the pair validator checks that $v^*$ occurs nowhere
+else. So $\Perm(H^{+}, o^*) = 1$ and $\Perm(H^{-}, o^*) = 0$ for the target operation $o^*$. Two
+different values asserted for one key leave it undetermined ($\conflict$): the history does not
+say which one the customer wants. There is no time; see Section~\ref{sec:open}.
+\end{remark}
+
+\begin{definition}[Systems]\label{def:system}
+A system writes a store $M = W(\view(h))$ of records, and decides
+$D(M, o) \in \{\exec, \refuse, \ask\}$, where $\ask$ hands the call to the customer
+(Section~\ref{sec:queries}). A record $r$ has a channel $\chi(r)$, a label $\ell(r)$, slots
+$S(r) \subseteq \Keys \times \V$, requests $\Req(r)$ and an object $o(r)$. Every model call
+inside $W$ or $D$ sees text only, so a system is \emph{view-measurable}: a function, possibly
+randomised, of $\view(h)$. $W$ is \emph{local} if the records written for a message depend on
+that message's channel and text alone. The write rule of the formal model is local;
+consolidation is not (Section~\ref{sec:consolidation}).
+\end{definition}
+
+\begin{definition}[Soundness and utility]
+A system is \emph{sound} on a class $\mathcal{H}$ of histories if for all $h \in \mathcal{H}$ and
+all $o$: $D(W(\view(h)), o) = \exec$ implies $\Perm(h, o) = 1$. Its \emph{utility} is the set
+of $(h, o)$ with $\Perm(h, o) = 1$ that it executes without asking. ASR and TSR are these two
+quantities restricted to a pair's target operation on $H^{-}$ and $H^{+}$.
+\end{definition}
+
+\begin{assumption}[Adversary]\label{as:adv}
+(a) Every text $x$ can occur on $\cX$, $\cT$ and $\cA$: the adversary writes outside feeds, bank
+systems relay text written by others (payment references, notes), and the agent repeats what it
+has read. (b) Any text can be quoted: for every $x$, a history may contain $(\cU, x)$ with
+$\omega = \quoted$. (c) The adversary cannot produce an own-voice customer message, change a
+channel, or answer the customer interface.
+\end{assumption}
+
+\begin{definition}[Faithful and complete writes]\label{def:faithful}
+$W$ is \emph{faithful} on $h$ if every $\Au$ record either is seeded from $B$ with no requests, or
+is written for some $m \in \Own(h)$ with $S(r) \subseteq \Vals(m)$ and $\Req(r) \subseteq \Req(m)$.
+$W$ is \emph{complete} on $h$ if every books entry and every assertion of every $m \in \Own(h)$ is a
+slot of an $\Au$ record, every request of every $m \in \Own(h)$ is a request of an $\Au$ record, and
+each execution spends the requests as in step~4 of the gate.
+\end{definition}
+
+Faithfulness says the memory claims no more customer authority than there was. Completeness
+says it hides none of the customer's words. The model calls of the formal model bear on these
+two properties only: $Q$, $R$, $L$ and the precision of $E$ bear on faithfulness, while the
+recall of $E$ and $L$ bears on completeness.

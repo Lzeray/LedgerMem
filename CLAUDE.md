@@ -211,6 +211,10 @@ the core dev and held-out suites, the multi-argument suites, Q2D, and the two re
 arms — about 3,350 episodes. `logs_final/results.md` and `logs_result/<model>/<dev|held-out>/<module_b|module_c>/` are its
 output.
 
+The plan agreed after the advisor's letter is `paper/PIPELINE.md`: freeze and run the suites, a
+theory of what memory must keep (`paper/theory/`, one file per section, built by `main.tex`), and a
+small experiment on where models lose a claim's source.
+
 What is left, in priority order:
 
 1. Finish the programme on a model strong enough for every arm, and recompute every table with n

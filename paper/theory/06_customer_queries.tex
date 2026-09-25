@@ -1,0 +1,39 @@
+\section{Asking the customer}\label{sec:queries}
+
+\begin{definition}[Interface]
+The customer interface $K$ offers four fixed questions about a call to $a$: $\mathsf{provide}(p)$,
+a typed value that must fit $p$'s format; $\mathsf{choose}(p, V)$, one of the options $V$, each
+shown with its least trusted source; $\mathsf{confirm}(p, v)$, which accepts, rejects or replaces
+$v$; and $\mathsf{approve}(o)$, a yes or no on the whole operation. The customer answers
+truthfully, according to the operation they want. Answers are own-voice by construction and
+cannot be quoted, and the adversary cannot answer them (Assumption~\ref{as:adv}(c)).
+\end{definition}
+
+Call a parameter of $a$ \emph{determined} by a memory if every history in its fibre gives it the
+same value with $\Perm = 1$, and \emph{undetermined} otherwise.
+
+\begin{proposition}[What must be asked]\label{prop:queries}
+Let a system be sound and execute the operation the customer wants whenever one is wanted, and
+let $k$ parameters be undetermined. Then, in the worst case over the fibre, it must obtain a value
+for each of the $k$ from the customer: $k$ answers, or one form with $k$ fields. If it is to be
+sound independently of how customer text is read (Theorem~\ref{thm:nomodel}), it also needs
+$\mathsf{approve}$, even when $k = 0$.
+\end{proposition}
+\begin{proof}
+If an undetermined parameter is not asked, the fibre contains two histories that want different
+values for it, and the system executes the same one in both. The approval is
+Theorem~\ref{thm:nomodel}.
+\end{proof}
+
+$G$ asks one question per parameter that is not bound: missing ones are provided, ambiguous ones
+chosen, blocked ones confirmed. When any question was asked, it adds the approval. So it meets the
+bound with $k$ answers plus one approval for $k \geq 1$, and asks nothing at $k = 0$, which is the
+case where it relies on $Q$, $R$, $L$ and $E$ (Corollary~\ref{cor:residual}). Choosing among $r$
+candidates costs one $\mathsf{choose}$ where yes/no confirmations need up to $r - 1$.
+
+\begin{remark}
+This section is the weakest of the set. The counting is immediate, and ``number of questions''
+depends on the interface. It is likely to become a remark in the paper rather than a theorem. A
+sharper version would weigh questions by the information the customer supplies, in bits
+conditional on memory, and ask which interface minimises it.
+\end{remark}

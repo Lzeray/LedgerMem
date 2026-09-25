@@ -1,0 +1,53 @@
+\section{What cannot be decided from text}\label{sec:speech}
+
+\begin{theorem}[No unconditional soundness without the customer]\label{thm:nomodel}
+Under Assumption~\ref{as:adv}(b), let a view-measurable system execute $o$ without asking on some
+view $\view(h_0)$. Then there is a history $h_1$ with $\view(h_1) = \view(h_0)$ and
+$\Perm(h_1, o) = 0$. Hence a system is sound on all histories if and only if it never executes
+without the customer approving the operation through the interface.
+\end{theorem}
+\begin{proof}
+Let $h_1$ be $h_0$ with every customer message's voice set to $\quoted$, which the assumption
+permits. Then $\Own(h_1) = \emptyset$, so $\Out_a(h_1) = \emptyset$ and $\Perm(h_1, o) = 0$. The
+view is unchanged, so the system acts as on $h_0$ (with the same probability, if randomised). For
+the converse, an approval of $o$ through the interface is an own-voice request naming every
+argument of $o$. It cannot be quoted (Assumption~\ref{as:adv}(c)), and it makes
+$\Perm = 1$.
+\end{proof}
+
+The fixed interface is the one place where the customer's voice is structural. Everything else the
+customer types is text, and whose words it is remains a reading of that text.
+
+\begin{corollary}[Where $G$ depends on a model]\label{cor:residual}
+$G$ executes without the customer exactly when every piece is $\Au$-backed. Its soundness then
+rests on the faithfulness and completeness of the customer's records (Theorem~\ref{thm:sound}),
+that is, on $Q$ (voice), $R$ and $L$ (which requests were made), and $E$ (which values were
+asserted). All four are readings of customer text; the ceiling makes every other channel
+model-free. A variant of $G$ that always asks for the final approval would be sound on every
+history and independent of every model, at the price of one approval per executed operation.
+\end{corollary}
+
+\begin{proposition}[The unavoidable error of reading the voice]\label{prop:bayes}
+Let histories be drawn from a distribution, and for a customer text $x$ let
+$\pi(x) = \Pr[\omega = \own \mid x]$. Every classifier $c$ from text to $\{\own, \quoted\}$
+satisfies, for any weights $\alpha, \beta > 0$,
+\[
+\alpha \Pr[c = \own,\ \omega = \quoted] + \beta \Pr[c = \quoted,\ \omega = \own]
+\;\geq\; \mathbb{E}_x \min\big(\alpha (1 - \pi(x)),\ \beta\, \pi(x)\big),
+\]
+with equality for the Bayes rule. The bound is zero if and only if the voice is almost surely a
+function of the text.
+\end{proposition}
+\begin{proof}
+Conditional on $x$, the classifier pays $\alpha(1 - \pi(x))$ by answering $\own$ and
+$\beta\pi(x)$ by answering $\quoted$; it can do no better than the smaller of the two.
+\end{proof}
+
+\begin{remark}
+The first term is the part of ASR due to a false $\Au$; the second is the TSR lost, and, by
+Proposition~\ref{prop:lower}, possibly also ASR through a hidden correction. The benchmark's Q2D
+pairs mark their quotations in the text, so for them $\pi \in \{0, 1\}$ and the bound is zero. A
+Q2D failure measured there is therefore a classifier's error, not a necessary one. An unmarked
+paste (Example~\ref{ex:voice}) has $0 < \pi < 1$, and there every reader of text errs. The same
+argument applies to $R$ and $L$ wherever what the customer asks for is genuinely ambiguous.
+\end{remark}

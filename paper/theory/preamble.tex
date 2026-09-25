@@ -1,0 +1,30 @@
+% Shared preamble and notation for paper/theory/*.tex. Notation follows paper/formal_model.tex.
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{example}{Example}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% labels and channels
+\newcommand{\Au}{\mathsf{Au}}\newcommand{\At}{\mathsf{At}}\newcommand{\Un}{\mathsf{Un}}
+\newcommand{\cU}{\mathsf{usr}}\newcommand{\cT}{\mathsf{tt}}\newcommand{\cX}{\mathsf{ut}}\newcommand{\cA}{\mathsf{ast}}
+\newcommand{\ceil}[1]{\hat\ell(#1)}
+% actions, histories, memory
+\newcommand{\Act}{\mathcal{A}}\newcommand{\Keys}{\mathcal{K}}\newcommand{\V}{\mathcal{V}}
+\newcommand{\Req}{\mathit{Req}}\newcommand{\Vals}{\mathit{Val}}
+\newcommand{\own}{\mathsf{own}}\newcommand{\quoted}{\mathsf{quote}}
+\newcommand{\exec}{\mathsf{exec}}\newcommand{\refuse}{\mathsf{refuse}}\newcommand{\ask}{\mathsf{ask}}
+\newcommand{\view}{\mathrm{view}}
+\newcommand{\Own}{\mathrm{Own}}\newcommand{\Out}{\mathrm{Out}}\newcommand{\st}{\mathrm{st}}
+\newcommand{\Perm}{\mathrm{P}}
+\newcommand{\conflict}{\star}
+\newcommand{\yes}{\textsf{yes}}\newcommand{\no}{\textsf{no}}
