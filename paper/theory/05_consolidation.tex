@@ -184,6 +184,22 @@ EAL-Bench's endogenous laundering (arXiv:2609.01836), characterised: the safe me
 those that forget only through marks.
 \end{corollary}
 
+\begin{corollary}[A safe consolidation contract]\label{cor:contract}
+A consolidation step is safe, in every future, if and only if the authority state it leaves is a
+safe replacement for the one it was given. By Theorems~\ref{thm:safe} and~\ref{thm:safe-rev},
+Corollary~\ref{cor:dichotomy} and Theorem~\ref{thm:ceiling}, a consolidator
+\begin{itemize}
+\item \emph{may} drop or rewrite anything that is not the customer's own words or the books;
+\item \emph{may} paraphrase, merge and reorder freely, provided the carried state is unchanged;
+\item \emph{may} drop a customer's value or request only by leaving a mark: a contested key, a
+  blocked action, or $\diamond$;
+\item \emph{may not} resolve a conflict, drop a correction, a retraction or a withdrawal, keep a
+  retracted value or a withdrawn request unmarked, or give anything a label above its source's
+  ceiling.
+\end{itemize}
+This is checkable: it is a condition on the state carried beside the text, not on the text.
+\end{corollary}
+
 \begin{corollary}[Silent forgetting is unsafe]
 A consolidator that drops a value or a correction, or keeps one of two contested values, is not
 merely less useful. It is unsafe for some future. Example~\ref{ex:correction} with the correction
