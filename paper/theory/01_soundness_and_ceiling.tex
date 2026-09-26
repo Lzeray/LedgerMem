@@ -46,10 +46,29 @@ that $r$'s request names and one value for every other parameter of the requeste
 every argument, while $\Out_a(h') = \emptyset$.
 \end{proof}
 
-Theorems~\ref{thm:sound} and~\ref{thm:necessary} make the conditional in ``zero attacks under
-correct labels'' exact. Under completeness, $G$ is sound on every continuation if and only if the
-write is faithful. Taking expectations over histories gives a bound that can be measured one part
-at a time:
+\begin{theorem}[Completeness is also necessary]\label{thm:complete-necessary}
+Let $W$ be local and faithful. Suppose it writes nothing, under any label, for some own-voice
+customer message $m$ that asserts a value. Then some continuation of at most two own-voice messages
+makes $G \circ W$ execute an operation with $\Perm = 0$.
+\end{theorem}
+\begin{proof}
+Let $m$ assert $u$ under a key $k$ read by parameter $p \neq s_a$ of some action $a$.
+\begin{itemize}
+\item \emph{$m$ is a request for $a$ naming $u$.} Continue with an own-voice request for $a$ naming
+  the object and $p = w \neq u$. The named values in $\Out_a$ are $\{u, w\}$, so $\Perm = 0$. $G$
+  sees only the second request and binds $w$.
+\item \emph{Otherwise.} Continue with an own-voice assertion of $w \neq u$ under $k$, then a request
+  for $a$ that names everything but $p$. $\st_k = \conflict$, so $\Perm = 0$. $G$ finds $w$ alone
+  under $k$, carried by an $\Au$ record, and binds it.
+\end{itemize}
+The enumeration of Section~\ref{sec:verification} finds the first case as the shortest
+counterexample.
+\end{proof}
+
+Theorems~\ref{thm:sound}, \ref{thm:necessary} and~\ref{thm:complete-necessary} make the
+conditional in ``zero attacks under correct labels'' exact: $G$ is sound on every continuation if
+and only if the write is both faithful and complete. Taking expectations over histories gives a
+bound that can be measured one part at a time:
 \[
 \mathrm{ASR}(G \circ W) \;\leq\; \Pr\big[\,W \text{ not faithful or not complete on } H^{-}\big].
 \]

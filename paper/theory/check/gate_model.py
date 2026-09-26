@@ -86,6 +86,32 @@ def gate_executes(records, op, veto=True):
     return True
 
 
+def run_dropped():
+    """Completeness is necessary: drop one own-voice message entirely (not written at all) and look
+    for an unsafe execution. The theory predicts one exists."""
+    kinds = ("own", "quote", "outside")
+    cs = contents()
+    for n in range(1, MAX_LEN + 1):
+        for msgs in itertools.product(itertools.product(kinds, cs), repeat=n):
+            history = [c for k, c in msgs if k == "own"]
+            truth = {op for op in A.OPS if A.raw_permitted(history, op)}
+            for drop in [i for i, (k, _) in enumerate(msgs) if k == "own"]:
+                records = []
+                for i, (k, c) in enumerate(msgs):
+                    if i == drop:
+                        continue
+                    if k == "own":
+                        records.append(("Au", "usr", slots_of(c), c[1:] if c[0] == "req" else None))
+                    elif k == "quote":
+                        records.append(("Un", "usr", slots_of(c), None))
+                    else:
+                        records.append(("Un", "ut", slots_of(c), None))
+                for op in A.OPS:
+                    if gate_executes(records, op) and op not in truth:
+                        return msgs, drop, op
+    return None
+
+
 def run(veto):
     kinds = ("own", "quote", "outside")
     cs = contents()
@@ -117,3 +143,5 @@ if __name__ == "__main__":
           else f"FAIL  counterexample with veto: {bad}")
     bad = run(veto=False)
     print("veto needed: counterexample without it:", bad if bad else "none found")
+    bad = run_dropped()
+    print("completeness needed: counterexample with one customer message unwritten:", bad if bad else "none found")
