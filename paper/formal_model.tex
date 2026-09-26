@@ -144,7 +144,7 @@ only through a mislabeled customer message, as in Q2D.
 
 \paragraph{Departures and limitations.}
 Beyond the paper: a quoting customer is $\Un$; a bank system's
-result is $\At$, a grant included. (a) No time: an unused request never lapses (EAL-Bench's threat model, arXiv:2609.01836); two identical requests
+result is $\At$, a grant included. (a) No time or withdrawal: a later refusal does not withdraw an earlier request, which until executed is stopped only by the agent or by the customer's final \no\ when one is asked; an unused request never lapses (EAL-Bench's threat model, arXiv:2609.01836); two identical requests
 yield one execution. (b) Values in a refusal are $\Au$ slots. (c) The substring filter ignores token
 boundaries. (d) Without $K$ an ambiguous value is refused. (e) A compromised agent can raise one
 customer dialogue per licensed call.
