@@ -107,29 +107,6 @@ of what was lost. Let memory keys also hold a \emph{mark} $\diamond$: a value th
 ``something here was forgotten''. No retraction removes it, since nobody can name it; an expiry of
 the key clears it; while present, the key never reads as a single value.
 
-\begin{theorem}[Safe forgetting leaves a mark: revocable regime]\label{thm:safe-rev}
-In the revocable regime, with memory keys that may hold $\diamond$, $s' \preceq s$ if and only if
-\begin{itemize}
-\item every key has $s'_k = s_k$ or $\diamond \in s'_k$;
-\item every action has $\rho'_a = \rho_a$, or $\rho'_a = \mathsf{blocked}$, or ($\rho_a$ bare and
-  $\rho'_a = \mathsf{absent}$).
-\end{itemize}
-Unlike the static regime, keys are constrained even for blocked actions, because a withdrawal can
-unblock them. Without the mark, keys admit no loss at all.
-\end{theorem}
-\begin{proof}
-\emph{If.} A key holding $\diamond$ permits nothing through it until an expiry, after which both
-sides agree. The request states are handled as in Theorem~\ref{thm:safe}, and a withdrawal resets
-both sides alike.
-
-\emph{Only if.} Suppose $s'_k \neq s_k$ and $\diamond \notin s'_k$. If $s'_k$ holds a value $v$ that
-$s_k$ lacks, retract everything else: $s'$ reads $v$ and $s$ reads nothing. If $s_k$ holds a value
-that $s'_k$ lacks, retract everything else but some $w \in s'_k$ (or assert a fresh $w$ if
-$s'_k = \emptyset$): $s'$ reads $w$, while $s$ holds two values. In either case, a withdrawal
-followed by a request that names everything but the parameter on $k$ is permitted by $s'$ only.
-Request states: as in Theorem~\ref{thm:safe}, after a withdrawal where needed.
-\end{proof}
-
 \begin{lemma}[One register]\label{lem:register}
 A \emph{register} holds a set $S \subseteq \V \cup \{\diamond\}$. It is updated by
 $\mathsf{add}(v)$, $\mathsf{retract}(v)$ for $v \in \V$, and $\mathsf{clear}$, and it is read as
@@ -174,6 +151,29 @@ That is where the dead states of the static regime come from, and why the revoca
 which every register can be reset and re-read, has none. Any authority semantics assembled from
 registers of this kind should admit exactly the same safe losses. Stating that class precisely is
 left open (Section~\ref{sec:open}).
+
+\begin{theorem}[Safe forgetting leaves a mark: revocable regime]\label{thm:safe-rev}
+In the revocable regime, with memory keys that may hold $\diamond$, $s' \preceq s$ if and only if
+\begin{itemize}
+\item every key has $s'_k = s_k$ or $\diamond \in s'_k$;
+\item every action has $\rho'_a = \rho_a$, or $\rho'_a = \mathsf{blocked}$, or ($\rho_a$ bare and
+  $\rho'_a = \mathsf{absent}$).
+\end{itemize}
+Unlike the static regime, keys are constrained even for blocked actions, because a withdrawal can
+unblock them. Without the mark, keys admit no loss at all.
+\end{theorem}
+\begin{proof}
+\emph{If.} A key holding $\diamond$ permits nothing through it until an expiry, after which both
+sides agree. The request states are handled as in Theorem~\ref{thm:safe}, and a withdrawal resets
+both sides alike.
+
+\emph{Only if.} Suppose $s'_k \neq s_k$ and $\diamond \notin s'_k$. If $s'_k$ holds a value $v$ that
+$s_k$ lacks, retract everything else: $s'$ reads $v$ and $s$ reads nothing. If $s_k$ holds a value
+that $s'_k$ lacks, retract everything else but some $w \in s'_k$ (or assert a fresh $w$ if
+$s'_k = \emptyset$): $s'$ reads $w$, while $s$ holds two values. In either case, a withdrawal
+followed by a request that names everything but the parameter on $k$ is permitted by $s'$ only.
+Request states: as in Theorem~\ref{thm:safe}, after a withdrawal where needed.
+\end{proof}
 
 \begin{corollary}[Forgetting a revocation is unsafe]
 A memory that keeps a value the customer retracted, or a request the customer withdrew, is not a
