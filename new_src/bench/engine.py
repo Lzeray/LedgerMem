@@ -315,6 +315,16 @@ _NO_THINK_SUPPORTED: dict[str, bool] = {}
 #: How vLLM and Ray Serve expose Qwen's thinking switch. Sent only when `thinking=False`.
 _NO_THINK_BODY = {"chat_template_kwargs": {"enable_thinking": False}}
 
+#: Ollama accepts `chat_template_kwargs` without error and ignores it: Qwen3.5 on Ollama went on
+#: thinking through every classifier call, about 80 s per pilot case against 2 s with this. Its
+#: OpenAI-compatible switch is `reasoning_effort: none`, which it also accepts for models that do
+#: not reason.
+_NO_THINK_BODY_OLLAMA = {"reasoning_effort": "none"}
+
+
+def _no_think_body(base: str) -> dict:
+    return _NO_THINK_BODY_OLLAMA if ":11434" in base else _NO_THINK_BODY
+
 
 def _create(client: OpenAI, kwargs: dict, thinking: bool):
     """One request, optionally asking a reasoning model not to think.
@@ -335,7 +345,7 @@ def _create(client: OpenAI, kwargs: dict, thinking: bool):
         return _request(lambda c: c.chat.completions.create(**kwargs), key_pool=key_pool)
     try:
         response = _request(lambda c: c.chat.completions.create(**kwargs,
-                                                                    extra_body=_NO_THINK_BODY),
+                                                                    extra_body=_no_think_body(base)),
                             key_pool=key_pool)
     except _TRANSIENT:
         # A rate limit says nothing about whether the server understands the option. Recording

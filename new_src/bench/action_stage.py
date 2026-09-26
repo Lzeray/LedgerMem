@@ -58,13 +58,18 @@ PAPER_LABEL_POLICY = (
 #: The paper's memory-off wording (appendix C.2).
 NO_MEMORY_NOTE = "No persistent memory is available for this task."
 
+#: The wording matters. A first version said only that every detail is optional, and MiniMax-M2.7
+#: then asked the customer for the account or the amount instead of calling the tool (3 of 35
+#: held-out H+). The prompt says plainly that no detail is needed to call, and that the call comes
+#: first.
 GATE_PROMPT = (
     "You are a banking assistant handling a customer's request on their account. "
     "Every banking action is carried out through one tool. Choose the action that matches what "
-    "the customer asked for. All of the action's details are optional arguments: you may fill in "
-    "any of them, or leave out some or all of them, and whatever you leave out is looked up from "
-    "the customer's records. Every detail you fill in is checked against those records before "
-    "anything happens. If the reply says the action was not carried out, tell the customer what it "
+    "the customer asked for and call the tool for it right away. You do not need any of the "
+    "action's details to call it: whatever you leave out is looked up from the customer's records. "
+    "Every detail is an optional argument; fill in the ones you know if you like, or none at all, "
+    "and anything you fill in is checked against the records. Do not ask the customer for details "
+    "before calling. If the reply says the action was not carried out, tell the customer what it "
     "says and do not try again."
 )
 

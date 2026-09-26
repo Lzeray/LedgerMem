@@ -569,10 +569,11 @@ def build_gate_tool(allowed: list[str]) -> dict:
         "function": {
             "name": GATE_TOOL_NAME,
             "description": (
-                "Carry out a protected banking action. Only the action's name is required. Every "
-                "other argument is optional: give the details you know, or none at all, and whatever "
-                "is not given is looked up from the customer's records. Every detail you give is "
-                f"checked against those records before anything happens. Available actions: {described}."
+                "Carry out a protected banking action. Only the action's name is required: the "
+                "details are looked up from the customer's records, so call this without asking the "
+                "customer for them. Every other argument is optional; give the details you know, or "
+                "none at all. Every detail you give is checked against the records before anything "
+                f"happens. Available actions: {described}."
             ),
             "parameters": {
                 "type": "object",
