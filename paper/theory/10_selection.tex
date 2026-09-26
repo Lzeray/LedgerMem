@@ -1,0 +1,110 @@
+\section{When the agent may choose}\label{sec:selection}
+
+The gate now reads the agent's arguments as \emph{proposals}. A proposed value is bound without the
+customer only if the request named it, or an $\Au$ record carries it. So the agent chooses among the
+customer's own values, where the gate alone would have required there to be exactly one. This
+changes the permission, and with it what memory must keep.
+
+\begin{definition}[Selection permission]\label{def:selection}
+$\Perm_{\mathrm{sel}}(h, (a, \theta)) = 1$ if and only if $\Out_a(h) \neq \emptyset$ and:
+\begin{enumerate}
+\item[(ii')] if $s_a \neq \bot$: $\theta(s_a) \in O$, where $O$ is the set of objects named in
+  $\Out_a(h)$ if any is named, and $\Vals_{\kappa_a(s_a)}(h)$ otherwise. Let $\Lambda_\theta$ be the
+  requests of $\Out_a(h)$ naming $\theta(s_a)$ or no object; it must be non-empty;
+\item[(iii')] for every $p \neq s_a$: $\theta(p)$ is among the values $\Lambda_\theta$ names for $p$ if it
+  names any, and among $\Vals_{\kappa_a(p)}(h)$ otherwise.
+\end{enumerate}
+The definition applies in both regimes.
+\end{definition}
+
+$\Perm \le \Perm_{\mathrm{sel}}$: a unique value is in particular a member. What selection gives up
+is uniqueness. In the static regime a corrected value stays selectable, so under selection a
+correction must be a retraction (Definition~\ref{def:revocable}) to take effect.
+
+\begin{proposition}[The gate implements selection]\label{prop:gate-selection}
+If $W$ is faithful and complete (Definition~\ref{def:faithful}; lowered customer messages allowed),
+then for every proposal $\pi$, $G(W(\view(h)), \pi)$ executes $o$ only if
+$\Perm_{\mathrm{sel}}(h, o) = 1$. Completeness remains necessary: with an unwritten customer
+request that names an object, $G$ can execute on an object the request excludes.
+\end{proposition}
+\begin{proof}
+As for Theorem~\ref{thm:sound}, with membership in place of uniqueness.
+\begin{itemize}
+\item A proposal is bound only when it is named by an $\Au$ request (faithfully an own request) or
+  carried by an $\Au$ record (an own value or a books entry).
+\item The veto keeps every lowered customer value from being contradicted silently, so a named set
+  or object set that $G$ cannot see is never widened.
+\end{itemize}
+The counterexample to completeness is found by enumeration: the customer asserts object 1, asks for
+$a$, then asks for $a$ on object 2. With the last message unwritten, $G$ falls back to object 1,
+while $O = \{2\}$.
+\end{proof}
+
+\begin{theorem}[What memory must keep when the agent chooses]\label{thm:exact-sel}
+Let $\V$ be infinite. In either regime, let the canonical state hold:
+\begin{itemize}
+\item for each key, the set $\Vals_k$;
+\item for each action and each group $g \in \{\bot\} \cup \V$ (the requests naming object $g$, or no
+  object), the union of the values its requests name, per parameter.
+\end{itemize}
+An execution on object $o$ removes the groups $\bot$ and $o$. Reduce by dropping a group $\bot$ that
+names nothing when some object group is present. Then $h \equiv h'$ if and only if their reduced
+canonical states are equal.
+\end{theorem}
+\begin{proof}[Proof sketch]
+\emph{If.} Permission and updates read only this state, and a bare $\bot$ group beside an object
+group adds no name and is spent by every execution.
+
+\emph{Only if.} Membership separates two different sets directly: request a reader naming
+everything else, with the missing value proposed. Groups are separated through the object set $O$
+and through the named sets, using fresh values as in Theorem~\ref{thm:exact}.
+\end{proof}
+
+\begin{corollary}[Choice costs memory]\label{cor:choice}
+Letting the agent choose among the customer's values requires remembering every one of them: $N$
+bits per key even in the static regime, against $\log_2(N + 2)$ when the gate requires a unique
+value (Corollary~\ref{cor:size}). The utility the agent's choice buys is paid for in memory.
+\end{corollary}
+
+\begin{theorem}[Safe forgetting when the agent chooses]\label{thm:safe-sel}
+In either regime, and up to the equivalence of Theorem~\ref{thm:exact-sel}, a memory state $m$ is
+a safe replacement for the truth $t$ if and only if:
+\begin{itemize}
+\item every key of $m$ holds a subset of $t$'s values;
+\item every request group of $m$ is a group of $t$, and names, per parameter, a subset of what $t$'s
+  names, non-empty wherever $t$'s is non-empty;
+\item every group of $t$ that names an object or a value is a group of $m$. Only a group that names
+  neither may be dropped.
+\end{itemize}
+In words: forget values freely, but never forget what narrows a choice.
+\end{theorem}
+\begin{proof}[Proof sketch]
+\emph{If.} Reads are memberships. A subset permits a subset, and the updates (union, retraction,
+expiry, spending, withdrawal) preserve inclusion. A narrowing set kept non-empty never falls back
+to the wider key.
+
+\emph{Only if.} Each violation has a continuation.
+\begin{itemize}
+\item A value $m$ has and $t$ lacks is proposed.
+\item A dropped or emptied narrowing set falls back to the key. Assert a fresh value, and $m$
+  permits it while $t$ does not.
+\item A dropped object group loses its narrowing of the object after the other groups are spent.
+  Execute on another object; then a bare request lets $m$ choose an object $t$ excludes.
+\end{itemize}
+\end{proof}
+
+\paragraph{Two regimes, dual answers.} When the gate needs a unique value
+(Theorems~\ref{thm:safe} and~\ref{thm:safe-rev}):
+\begin{itemize}
+\item forgetting a customer's value is unsafe unless it leaves a mark;
+\item a narrowing request may be reduced to a mark.
+\end{itemize}
+When the agent chooses (Theorem~\ref{thm:safe-sel}):
+\begin{itemize}
+\item values may be forgotten freely;
+\item what narrows a choice may not be forgotten at all;
+\item forgetting a retraction (a key larger than the truth) and forgetting a withdrawal (a group
+  the truth no longer has) are both unsafe, as before.
+\end{itemize}
+What a consolidator must preserve therefore depends on how the gate decides, and the gate's design
+fixes the consolidation contract (Corollary~\ref{cor:contract}).

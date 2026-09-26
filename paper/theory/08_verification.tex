@@ -2,7 +2,7 @@
 
 Every statement above that can be put on a finite instance is checked by exhaustive enumeration
 (the \texttt{check} directory beside these files). The instance has two keys, an action $a$ with an object and one
-parameter, an action $b$ with one parameter sharing $a$'s key, and $N$ values. The semantics is
+parameter, an action $b$ with one parameter sharing $a$'s key, and $N$ values. At finite $N$ a state that has used every value can look equivalent to another, or safe, only for want of a fresh value to separate them; where the theorem assumes $\V$ infinite, the comparison is restricted to states that leave a value unused. The semantics is
 implemented twice, once literally from the history (Definitions~\ref{def:perm}
 and~\ref{def:revocable}) and once as the canonical state machine. Nerode classes are computed by
 Moore minimisation, and $\preceq$ as the greatest fixed point of Lemma~\ref{lem:simulation}. Each
@@ -27,6 +27,12 @@ Theorem~\ref{thm:safe-rev} (revocable, with marks) & $N = 2$; $N = 3$ ($1.9 \tim
 Theorem~\ref{thm:sound} with Proposition~\ref{prop:lower} & gate steps 1--2 on records; $N = 2$
   with $\le 4$ messages, $N = 3$ with $\le 3$ & no unsafe execution under any pattern of lowering \\
 the veto is needed & the same, veto removed & counterexample found \\
+Theorem~\ref{thm:exact-sel} (selection) & $N = 3$, both instances; revocable $N = 2$ & exact
+  match on states with an unused value \\
+Theorem~\ref{thm:safe-sel} (selection) & $N = 2$ static and revocable; $N = 3$, one action & exact
+  match up to equivalence \\
+Proposition~\ref{prop:gate-selection} & the gate with every pattern of proposals, $N = 2, 3$,
+  $\le 3$ messages & sound; unwritten request gives a counterexample \\
 Theorem~\ref{thm:complete-necessary} & the same, one customer message not written & counterexample found \\
 \hline
 \end{tabular}

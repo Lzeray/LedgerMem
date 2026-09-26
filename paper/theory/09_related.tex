@@ -50,6 +50,10 @@ The method is not claimed as new. The findings are:
   sidesteps the question by requiring confirmation for every high-risk action. We show that
   without a fixed interface no system is sound on all histories, and bound the error of any
   reader of voice (Proposition~\ref{prop:bayes}).
+\item \emph{The decision rule fixes the memory contract} (Section~\ref{sec:selection}). When
+  the gate needs a unique value, values can only be forgotten with a mark; when the agent chooses
+  among the customer's values, values can be forgotten freely but nothing that narrows a choice
+  can, and the memory needed grows from $\log_2(N+2)$ to $N$ bits per key.
 \item \emph{Completeness as a safety condition} (Theorem~\ref{thm:sound},
   Proposition~\ref{prop:lower}). Soundness needs the customer's words to be \emph{complete} in
   memory, not only authority to be \emph{faithful}. A misread quotation that hides a correction is
