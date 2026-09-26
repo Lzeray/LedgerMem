@@ -93,7 +93,8 @@ Conditions (in `new_src/run.py`'s `CONDITIONS`). The paper's, in Module B: `memo
 `gold-prompted`. In Module C: `memory-off`, `c-no-label`, `c-naive-join`, `c-predicted`,
 `c-oracle`. This project's: `gate` (gold labels), `gate-license-model` (the channel model — the
 main arm), and `baseline-retrieve` / `gate-retrieve`, where the agent is given no memory block
-and has to find what it needs with a `search_memory` tool.
+and has to find what it needs with a `search_memory` tool. In Module C the same is run as
+`c-no-label-retrieve` and `gate-retrieve`: the agent searches the memory the system consolidated itself.
 
 Module C refuses every gate arm except the channel model: its other label sources are a model's
 guess about who spoke, and a gate executing a guess measures the guesser.

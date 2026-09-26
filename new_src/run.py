@@ -85,6 +85,8 @@ CONDITIONS: dict[str, Condition] = {
     "c-naive-join": module_b.C_NAIVE_JOIN,
     "c-predicted": module_b.C_PREDICTED,
     "c-oracle": module_b.C_ORACLE,
+    # Beyond the paper: Module C with the agent searching its own consolidated memory.
+    "c-no-label-retrieve": module_b.C_NO_LABEL_RETRIEVE,
 }
 
 

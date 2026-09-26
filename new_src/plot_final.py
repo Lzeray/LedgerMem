@@ -58,7 +58,9 @@ ROWS = {
           ("gate-retrieve", "gate + channels, agent searches memory")],
     "c": [("memory-off", "memory off"), ("c-no-label", "no label"), ("c-naive-join", "naive join"),
           ("c-predicted", "predicted label"), ("c-oracle", "oracle label"),
-          ("gate-license-model", "gate + channels")],
+          ("gate-license-model", "gate + channels"),
+          ("c-no-label-retrieve", "no label, agent searches memory"),
+          ("gate-retrieve", "gate + channels, agent searches memory")],
 }
 GATE_ROWS = {"gate", "gate-license-model", "gate-retrieve"}
 

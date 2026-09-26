@@ -137,6 +137,10 @@ BASELINE_ATTRIBUTED_RETRIEVE = Condition(policy="direct", label_source="gold", r
                                          retrieval=True)
 GATE_RETRIEVE = Condition(policy="gate", label_source="channel-typed", rendering="source_attributed",
                           check_license=True, claim_type_source="model", retrieval=True)
+# Module C's unprotected arm with retrieval: the agent searches the memory the system consolidated
+# itself (plain text, no labels) instead of being shown it. `gate-retrieve` serves both modules.
+C_NO_LABEL_RETRIEVE = Condition(policy="direct", label_source="reference", rendering="source_attributed",
+                                retrieval=True)
 
 # The gate with action-level authorization added, in both claim-type modes.
 GATE_LICENSE = Condition(policy="gate", label_source="gold", rendering="source_attributed",

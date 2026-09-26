@@ -155,6 +155,12 @@ def _phases() -> list[Phase]:
         b(runner, "multiarg", "baseline-attributed", "sanitizer", "conservative-join", "gold-washed", "gate")
         b(runner, "speechact2" if runner == "heldout" else "speechact", "gate")
         c(runner, "multiarg", "memory-off", "c-naive-join", "c-predicted")
+    # 6. retrieval in Module C as well: the agent is shown no memory and searches what the system
+    #    consolidated itself — the unprotected arm (no labels) and the gate. The speech-act suites
+    #    have no operative value to consolidate, so Module C does not run them.
+    for runner in ("heldout", "run"):
+        for suite in ("core", "multiarg"):
+            c(runner, suite, "c-no-label-retrieve", "gate-retrieve")
     return phases
 
 
