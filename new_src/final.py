@@ -161,6 +161,12 @@ def _phases() -> list[Phase]:
     for runner in ("heldout", "run"):
         for suite in ("core", "multiarg"):
             c(runner, suite, "c-no-label-retrieve", "gate-retrieve")
+    # 7. controls for what complete memory is worth in Module C: an unprotected agent shown the
+    #    gate's whole write-time journal instead of the consolidated memory, and the gate with the
+    #    agent's own search limited to the consolidated memory.
+    for runner in ("heldout", "run"):
+        for suite in ("core", "multiarg"):
+            c(runner, suite, "c-journal", "gate-retrieve-consolidated")
     return phases
 
 

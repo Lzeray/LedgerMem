@@ -64,6 +64,14 @@ class Condition:
     #: the gate's shape shows: it resolves arguments from the store itself, so a retrieval miss
     #: costs it nothing, while a direct agent has to find the value before it can use it.
     retrieval: bool = False
+    #: Module C only. `True`: the agent is shown the write-time journal (every message of the
+    #: conversation, verbatim, as "role: text", no labels) instead of the consolidated memory —
+    #: the same complete record the gate reads, so a direct agent given it isolates what complete
+    #: memory is worth from what labels and the gate add.
+    journal: bool = False
+    #: Retrieval arms: "store" searches every row the system holds (consolidated memory and, for
+    #: the gate, its journal); "shown" searches only the memory an unprotected agent would get.
+    search_scope: str = "store"
     #: The paper's text-sanitizer baseline (appendix C.2): the washed item plus only a fixed
     #: warning that memory may be distorted or unreliable.
     sanitizer: bool = False
@@ -75,6 +83,8 @@ class Condition:
         licence = f"-licence_{self.claim_type_source}" if self.check_license else ""
         return f"{self.policy}{surface}{licence}-{self.label_source}-{self.rendering}-{metadata}" + (
             "-retrieve" if self.retrieval else "") + (
+            "-consolidatedonly" if self.search_scope == "shown" else "") + (
+            "-journal" if self.journal else "") + (
             "-sanitize" if self.sanitizer else ""
         ) + ("-confirm" if self.confirm_followup else "")
 
@@ -141,6 +151,14 @@ GATE_RETRIEVE = Condition(policy="gate", label_source="channel-typed", rendering
 # itself (plain text, no labels) instead of being shown it. `gate-retrieve` serves both modules.
 C_NO_LABEL_RETRIEVE = Condition(policy="direct", label_source="reference", rendering="source_attributed",
                                 retrieval=True)
+# Module C controls for what complete memory is worth. `c-journal`: an unprotected agent shown the
+# whole write-time journal instead of the consolidated memory. `gate-retrieve-consolidated`: the
+# gate as before (it still reads its journal), but the agent's own search covers only the
+# consolidated memory, as an unprotected agent's does.
+C_JOURNAL = Condition(policy="direct", label_source="reference", rendering="source_attributed", journal=True)
+GATE_RETRIEVE_CONSOLIDATED = Condition(policy="gate", label_source="channel-typed", rendering="source_attributed",
+                                       check_license=True, claim_type_source="model", retrieval=True,
+                                       search_scope="shown")
 
 # The gate with action-level authorization added, in both claim-type modes.
 GATE_LICENSE = Condition(policy="gate", label_source="gold", rendering="source_attributed",

@@ -233,7 +233,10 @@ def recall_facts(
     query: str,
     top_k: int = 5,
     label: AuthorityLabel | None = None,
+    ids: list[int] | None = None,
 ) -> list[SemanticRecord]:
+    """`ids` restricts the search to those rows (e.g. the consolidated memory, not the gate's
+    own write-time journal)."""
     stmt = (
         select(SemanticRecord)
         .order_by(SemanticRecord.embedding.cosine_distance(embed(query)))
@@ -241,6 +244,8 @@ def recall_facts(
     )
     if label:
         stmt = stmt.where(SemanticRecord.label == label)
+    if ids is not None:
+        stmt = stmt.where(SemanticRecord.id.in_(ids))
     return list(session.scalars(stmt).all())
 
 

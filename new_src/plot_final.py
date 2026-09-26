@@ -60,9 +60,11 @@ ROWS = {
           ("c-predicted", "predicted label"), ("c-oracle", "oracle label"),
           ("gate-license-model", "gate + channels"),
           ("c-no-label-retrieve", "no label, agent searches memory"),
-          ("gate-retrieve", "gate + channels, agent searches memory")],
+          ("gate-retrieve", "gate + channels, agent searches memory"),
+          ("c-journal", "no label, whole journal as memory"),
+          ("gate-retrieve-consolidated", "gate + channels, agent searches consolidated memory only")],
 }
-GATE_ROWS = {"gate", "gate-license-model", "gate-retrieve"}
+GATE_ROWS = {"gate", "gate-license-model", "gate-retrieve", "gate-retrieve-consolidated"}
 
 
 def _cells(model: str) -> tuple[dict, dict]:

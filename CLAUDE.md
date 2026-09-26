@@ -95,6 +95,11 @@ Conditions (in `new_src/run.py`'s `CONDITIONS`). The paper's, in Module B: `memo
 main arm), and `baseline-retrieve` / `gate-retrieve`, where the agent is given no memory block
 and has to find what it needs with a `search_memory` tool. In Module C the same is run as
 `c-no-label-retrieve` and `gate-retrieve`: the agent searches the memory the system consolidated itself.
+Two Module C controls separate complete memory from labels. The gate keeps TWO memories: the same
+consolidated summary the unprotected agent is shown, and its own write-time journal (every message
+captured verbatim with channel, label, requests and slots), which only the gate reads.
+`c-journal` shows an unprotected agent that whole journal instead of the summary;
+`gate-retrieve-consolidated` limits the gate agent's own search to the summary.
 
 Module C refuses every gate arm except the channel model: its other label sources are a model's
 guess about who spoke, and a gate executing a guess measures the guesser.

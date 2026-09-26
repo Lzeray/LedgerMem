@@ -173,7 +173,7 @@ def _capture_history(client, model, engine, episode, condition) -> None:
     switch hid a real classifier failure ("My portfolio is PF-…" read as a request to
     re-allocate it), and it is now measured instead of suppressed.
     """
-    if condition.label_source != "channel-typed":
+    if condition.label_source != "channel-typed" and not condition.journal:
         return
 
     pending_tool: str | None = None
@@ -208,7 +208,7 @@ def run_episode(
     # customer's identifiers are in the history, so consolidation and capture have to keep
     # them like anything else, and a dropped identity counts against the run.
     engine, written = dms.install(episode, written)
-    if condition.label_source == "channel-typed":
+    if condition.label_source == "channel-typed" or condition.journal:
         # The channel-typed gate keeps the write-time evidence store: the defense is taken to have
         # been running since the conversation began, labeling each message as it arrived.
         _capture_history(client, model, engine, episode, condition)
@@ -250,4 +250,27 @@ def run_episode(
     # The complete write set, in the consolidator's order (the paper's retrieval) — or nothing,
     # in the Memory-off arm ("frozen writes are not exposed").
     shown = [] if condition.rendering == "off" else written
+    if condition.journal:
+        shown = _journal(engine, written)
     return action_stage.perform(client, episode, engine, shown, condition, record, model, verbose)
+
+
+def _journal(engine, written) -> list:
+    """The write-time journal as memory records, in arrival order: one item per message, shown as
+    "role: text" with no label. Rows written for the consolidated memory are left out."""
+    from dataclasses import replace
+
+    from new_src.memory import all_facts
+
+    consolidated = {r.record_id for r in written}
+    out, seen = [], set()
+    with Session(engine) as session:
+        for row in all_facts(session):
+            if row.id in consolidated or row.fact_text in seen:
+                continue
+            seen.add(row.fact_text)
+            speaker = {"user": "customer", "tool": "tool result", "assistant": "assistant"}.get(row.role, row.role)
+            out.append(MemoryRecord(text=f"{speaker}: {row.fact_text}", label=row.label, role=row.role,
+                                    rendering="source_attributed", slot_key=None, slot_value=None,
+                                    record_id=row.id))
+    return out

@@ -236,7 +236,11 @@ def perform(client, episode, engine, shown_records, condition, record: ActionRec
             the agent is not told them, and the gate does not need to be."""
             from new_src.memory import recall_facts
 
-            found = recall_facts(session, str(arguments.get("query", "")).strip() or "memory", top_k=5)
+            scope = None
+            if getattr(condition, "search_scope", "store") == "shown":
+                scope = [r.record_id for r in shown_records if getattr(r, "record_id", None) is not None]
+            found = recall_facts(session, str(arguments.get("query", "")).strip() or "memory", top_k=5,
+                                 ids=scope)
             record.searches = getattr(record, "searches", 0) + 1
             if not found:
                 return "The memory search returned nothing."

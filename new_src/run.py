@@ -87,6 +87,8 @@ CONDITIONS: dict[str, Condition] = {
     "c-oracle": module_b.C_ORACLE,
     # Beyond the paper: Module C with the agent searching its own consolidated memory.
     "c-no-label-retrieve": module_b.C_NO_LABEL_RETRIEVE,
+    "c-journal": module_b.C_JOURNAL,
+    "gate-retrieve-consolidated": module_b.GATE_RETRIEVE_CONSOLIDATED,
 }
 
 
