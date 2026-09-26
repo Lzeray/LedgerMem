@@ -66,7 +66,9 @@ the request but not what it is about collapses them (the licence suite).
 \begin{example}[Correction]\label{ex:correction}
 $h$: ``the account is X'', later ``no, it is Y''. $h'$: ``the account is X''. The operation is a
 transfer to X. A memory that keeps one value per key, or drops the older or the less confident
-one, collapses them, and so does any consolidation that forgets the correction. No suite tests
+one, collapses them, and so does any consolidation that forgets the correction. In the static
+regime a correction leaves the key contested; in the revocable regime it is a retraction of X
+followed by an assertion of Y, and only Y holds (Definition~\ref{def:revocable}). No suite tests
 this; see Section~\ref{sec:consolidation}.
 \end{example}
 
