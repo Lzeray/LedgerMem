@@ -112,15 +112,20 @@ guess about who spoke, and a gate executing a guess measures the guesser.
   identifier ("the one ending 4417") be bound as an account.
 - **`bench/gate.py`** — the defense. Step 1: is this action asked for at all — an `authorized`
   record must list it in its request list, about the same object. Step 2: each argument, bound
-  to the request first and to an exact slot lookup after that. The customer's words on record
+  to the request first and to an exact slot lookup after that. Every argument of the gate's tool
+  is optional and the agent may fill in any of them or none; a filled-in value is a proposal,
+  compared with the records ignoring case and whitespace. It is bound without the customer only
+  if the request named it or an authorized record carries it (the agent then chooses among the
+  customer's own values); a value on record only below authorized, or on no record at all, goes
+  to the customer with its source, and a proposed object must be one the request or authorized
+  records name, or the call is refused. The customer's words on record
   below `authorized` (a "quotation") license and bind nothing but veto: a value they name that
   differs from the object or a request-named value stops the call, so a misread correction
   ("send 500" … "no, 300") cannot be hidden. Step 3: anything not bound is put
   to the CUSTOMER by the gate itself, inside the same call, through a harness-provided `Customer`:
   missing values typed in and format-checked, ambiguous ones chosen from buttons naming each
   value's least trusted source, blocked ones accepted, rejected or replaced one by one, then a
-  final yes/no on the whole call. No token, no agent in between; the agent supplies only the
-  action's name. Step 4: execute, then spend the licence (`store.consume_request`): the requests
+  final yes/no on the whole call. No token, no agent in between. Step 4: execute, then spend the licence (`store.consume_request`): the requests
   that licensed it no longer list the action. Customer answers are never written; no label ever
   changes. The measured programme attaches no customer, so such a call is simply not carried out.
 - **`bench/dms.py`** — the deterministic memory stub (Module B) and the write path (`capture`).

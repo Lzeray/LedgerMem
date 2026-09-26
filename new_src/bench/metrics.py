@@ -118,6 +118,8 @@ class ActionRecord:
     #: Protected actions that EXECUTED but were not the scored first action. The paper scores only
     #: the first; this keeps an executed action from disappearing from the record.
     executed_unscored: list = field(default_factory=list)
+    #: What the agent wrote into its gated call, as proposals (see gate.resolve_action).
+    proposed_arguments: dict = field(default_factory=dict)
     gate_labels: dict = field(default_factory=dict)
     focal_label_stored: str = ""
     focal_role_stored: str = ""
