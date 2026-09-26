@@ -25,9 +25,8 @@ no permitted operation on these histories and their continuations must separate 
 So it must carry at least $n$ bits beyond the text in the worst case, and $H(S)$ bits on average.
 \end{theorem}
 \begin{proof}
-For $S \neq S'$, pick $i \in S \setminus S'$ (or the reverse). Then $\st_{k_i}(h_S) = v_i$ and
-$\st_{k_i}(h_{S'}) = \bot$, and by Theorem~\ref{thm:statistic}(ii) a common continuation separates
-their permissions. By Theorem~\ref{thm:statistic}(iii), the representation must map them apart.
+For $S \neq S'$ pick $i$ in their symmetric difference. Then $\st_{k_i}$ is $v_i$ on one side and
+$\bot$ on the other, and by Theorem~\ref{thm:exact} the two histories are not equivalent.
 $2^n$ distinct memories that share the same text need $n$ bits outside it, and a uniquely
 decodable encoding needs $H(S)$ bits on average.
 \end{proof}
@@ -36,36 +35,77 @@ The carried label of the formal model is one of three values per record, $\log_2
 within a constant factor of this bound. It must be written by code: by
 Theorem~\ref{thm:ceiling}, the agent cannot write it into the text.
 
+\subsection*{Which losses are safe}
+
+A memory that is smaller than the canonical state (Corollary~\ref{cor:size}) must lose something.
+The question is which losses can only cost utility and never safety.
+
 \begin{definition}[Safe replacement]
-A key state $s' \in \V \cup \{\bot, \conflict\}$ is a \emph{safe replacement} for $s$ if, for every
-sequence of further own-voice assertions under that key, the state reached from $s'$ is a value $v$
-only when the state reached from $s$ is the same value $v$.
+A state $s'$ is a \emph{safe replacement} for the true state $s$ if, for every continuation that
+executes only what $s'$ permits, $\Perm(s' u, o) = 1$ implies $\Perm(s u, o) = 1$. That is, a system
+that remembers $s'$ in place of $s$ never executes anything $s$ forbids.
 \end{definition}
 
-\begin{theorem}[Safe forgetting leaves a mark]\label{thm:tombstone}
-The safe replacements of a key state $s$ are exactly $s$ itself and $\conflict$. In particular,
-forgetting a value ($v \mapsto \bot$), resolving a conflict ($\conflict \mapsto v$), inventing a value
-($\bot \mapsto v$) and substituting another value ($v \mapsto v'$) are all unsafe. Marking a key
-contested ($\cdot \mapsto \conflict$) is always safe.
+\begin{theorem}[Safe forgetting leaves a mark]\label{thm:safe}\label{thm:tombstone}
+$s'$ is a safe replacement for $s$ if and only if, for every action $a$, one of the following holds:
+\begin{enumerate}
+\item[(1)] $\rho'_a = \mathsf{blocked}$;
+\item[(2)] $\rho_a$ is bare and $\rho'_a = \mathsf{absent}$, and every key $a$ reads satisfies (3);
+\item[(3)] $\rho'_a = \rho_a$, and every key $k$ that $a$ reads has $\st'_k \in \{\st_k, \conflict\}$.
+\end{enumerate}
+Keys read only by blocked actions are unconstrained. In words, exactly three losses are safe:
+\begin{itemize}
+\item mark a key \emph{contested};
+\item mark an action \emph{blocked};
+\item drop a request that named nothing.
+\end{itemize}
+Forgetting a value ($v \mapsto \bot$), resolving a conflict ($\conflict \mapsto v$), changing a
+value, and dropping or trimming a request that named something are each unsafe for some future.
 \end{theorem}
 \begin{proof}
-From $\conflict$ no value is ever reached, so $\conflict$ is safe for everything, and nothing
-but $\conflict$ is safe for $\conflict$. Next, $\bot \mapsto v$ and $v \mapsto v'$ are unsafe with
-no further assertion. For $v \mapsto \bot$, assert $w \neq v$: the original state becomes
-$\conflict$ and the replacement becomes $w$.
+\emph{If.} A blocked action is never permitted. A dropped bare request contributes nothing to
+later merges (Theorem~\ref{thm:exact}(b)), so before a new request it permits nothing, and after
+one the two states agree. For a key with $\st'_k = \conflict$, the key stays $\conflict$, since
+$\conflict$ is absorbing, and permits nothing through that key. A key with $\st'_k = \st_k$ evolves
+identically. The request states evolve identically, because they do not depend on keys, and the
+executions are the same events on both sides. So whenever $s'u$ permits $o$, every key it reads
+carries the same value in $su$, and $su$ permits $o$.
+
+\emph{Only if.} For each violation, a continuation makes $s'$ permit what $s$ forbids.
+\begin{itemize}
+\item $\st'_k = v$ against $\st_k \in \{\bot, \conflict, v'\}$: request a reader of $k$ naming
+  everything else.
+\item $\st'_k = \bot$ against $\st_k = v$: first assert a fresh $w$, which gives $w$ against
+  $\conflict$.
+\item $\rho'_a$ drops or changes a named value or object: a request naming a fresh value there
+  leaves $s'$ unblocked and blocks $s$.
+\item $\rho'_a$ invents one: $s'$ binds it while $s$ reads a key that does not hold it.
+\item $\rho'_a$ unblocks what $\rho_a$ blocks: any consistent request is permitted by $s'$ only.
+\end{itemize}
+Where the request state names the parameter to be read, one permitted execution first resets
+both sides. That execution is permitted by $s'$, and if $s$ forbids it, it is already a
+violation.
 \end{proof}
 
-\begin{corollary}
-A consolidator that forgets silently is unsafe for the future, not merely less useful. Take
-Example~\ref{ex:correction} with the correction dropped: the memory holds X alone, while the
-customer's state is $\conflict$, and $G$ pays X. The safe way to compress is to replace what is
-forgotten with an explicit mark (``this key is contested'', ``a request of unknown content is
-outstanding''), never with absence. The same holds for requests. Dropping one can turn two named
-objects into one (Proposition~\ref{prop:lower}), so a dropped request must leave a mark that
-blocks the action.
+\begin{corollary}[Silent forgetting is unsafe]
+A consolidator that drops a value or a correction, or keeps one of two contested values, is not
+merely less useful. It is unsafe for some future. Example~\ref{ex:correction} with the correction
+dropped leaves X alone in memory while the customer's state is $\conflict$, and $G$ pays X. The
+gate's veto on lowered customer words (Proposition~\ref{prop:lower}) applies this theorem: demoted
+words still mark the key.
 \end{corollary}
 
-\paragraph{Link to the experiment.} Theorems~\ref{thm:bits} and~\ref{thm:tombstone} make two
-testable predictions about real consolidators: whether they keep the source bit of each value
-(Module~A's judge measures this), and whether they forget contested values silently or with a
-mark. The second needs correction pairs, which the suites do not have yet.
+\begin{corollary}[Memory under a budget]
+A safe memory smaller than the canonical state must lose information through marks. Its utility
+loss is the probability that a later operation needs a marked component. Under a budget, the best
+safe memory marks the components least likely to be needed. Every other way of fitting the budget
+is unsafe.
+\end{corollary}
+
+\paragraph{Link to the experiment.} Theorems~\ref{thm:bits} and~\ref{thm:safe} make testable
+predictions about real consolidators:
+\begin{itemize}
+\item whether they keep the source of each value (Module~A's judge measures this);
+\item whether they forget contested values and corrections silently or with a mark.
+\end{itemize}
+The second needs correction pairs, which the suites do not have yet.

@@ -51,16 +51,104 @@ values on record and does not execute without the customer. The gap costs TSR an
 The same holds for requests naming two objects.
 \end{remark}
 
-\begin{remark}[Open: the exact quotient]
-$\sigma$ is not exactly the coarsest sufficient statistic (the Nerode equivalence of
-$\Perm$ over continuations). A few states are dead: for example, an outstanding request that names
-nothing, for an action every one of whose keys is already $\conflict$, is never separable from
-its absence. Characterising the exact quotient is open; it changes no statement above.
-\end{remark}
+\subsection*{The exact minimal memory}
 
-\paragraph{Reading.} What authority requires of a memory is small. It must know which values are
-the customer's own words, whether a key is contested, which requests are outstanding, and what
-each names. This is the advisor's third outcome, ``a few trusted fields''. Where the question
-stops being small is Sections~\ref{sec:speech} and~\ref{sec:consolidation}. The voice cannot be
-computed from the view, and these fields do not survive compression unless they are carried
-outside the text.
+Theorem~\ref{thm:statistic} says what cannot be dropped. It does not say exactly when two
+histories are interchangeable for every future. That needs the future made precise.
+
+\begin{definition}[Admissible continuations]
+A continuation is a sequence of own-voice customer messages, messages on other channels, and
+executions of operations that are permitted at the point where they occur. A sound system
+executes nothing else. Interface approvals are left out here; they are the subject of
+Section~\ref{sec:queries}. Histories $h, h'$ are \emph{equivalent}, $h \equiv h'$, if
+$\Perm(hu, o) = \Perm(h'u, o)$ for every admissible continuation $u$ and every $o$. This is the
+Nerode equivalence of $\Perm$.
+\end{definition}
+
+\begin{definition}[Request state]
+For an action $a$, collapse $\Out_a(h)$ to $\rho_a(h)$:
+\begin{itemize}
+\item $\mathsf{absent}$ if $\Out_a(h) = \emptyset$;
+\item $\mathsf{blocked}$ if the requests name two different objects, or two different values
+  for some parameter;
+\item otherwise $(n_o, (c_p)_{p \neq s_a})$, where $n_o$ is the one object named or $\bot$, and
+  $c_p$ is the one value named for $p$ or $\emptyset$.
+\end{itemize}
+A request state is \emph{bare} if it is $(\bot, (\emptyset)_p)$: something was asked for and
+nothing was named. The \emph{canonical state} is $\tilde\sigma(h) = ((\st_k(h))_k, (\rho_a(h))_a)$.
+\end{definition}
+
+\begin{lemma}[The canonical state is a state machine]\label{lem:machine}
+$\Perm(h, \cdot)$ is a function of $\tilde\sigma(h)$, and $\tilde\sigma(he)$ is a function of
+$\tilde\sigma(h)$ and the event $e$:
+\begin{itemize}
+\item an assertion of $v$ under $k$ turns $\bot$ into $v$ and a different value into $\conflict$;
+\item a request merges into $\rho_a$, and any disagreement gives $\mathsf{blocked}$;
+\item a permitted execution of $a$ resets $\rho_a$ to $\mathsf{absent}$.
+\end{itemize}
+Both $\conflict$ and $\mathsf{blocked}$ are absorbing.
+\end{lemma}
+\begin{proof}
+$\Perm(h, (a, \theta)) = 1$ iff $\rho_a$ is neither $\mathsf{absent}$ nor $\mathsf{blocked}$,
+$\theta(s_a)$ equals $n_o$ (or, if $n_o = \bot$, equals $\st_{\kappa_a(s_a)}(h) \in \V$), and every
+other $\theta(p)$ equals $c_p$ (or, if $c_p = \emptyset$, equals $\st_{\kappa_a(p)}(h) \in \V$). A
+permitted execution has $\theta(s_a)$ equal to the only object in play. So it spends every
+outstanding request (Definition~\ref{def:standing}). A blocked action is never permitted, so it
+is never reset.
+\end{proof}
+
+\begin{theorem}[When two histories are interchangeable]\label{thm:exact}
+Let $\V$ be infinite and every key be read by some parameter. Reduce the canonical state in two
+ways:
+\begin{enumerate}
+\item[(a)] erase $\st_k$ for every key all of whose reading actions are $\mathsf{blocked}$;
+\item[(b)] replace a bare $\rho_a$ by $\mathsf{absent}$ when some key read by $a$ is $\conflict$.
+\end{enumerate}
+Then $h \equiv h'$ if and only if their reduced canonical states are equal.
+\end{theorem}
+\begin{proof}[Proof]
+\emph{If.} By Lemma~\ref{lem:machine}, it suffices that the reductions commute with every event
+and do not change $\Perm$. (a): a blocked action never becomes unblocked, so an erased key is
+never read again. (b): a bare request adds nothing to any merge, so bare $\oplus\, r = r =
+\mathsf{absent} \oplus r$. Before a new request arrives, the action reads a key stuck at
+$\conflict$ and is never permitted, exactly as when $\mathsf{absent}$.
+
+\emph{Only if.} Each difference between reduced states is separated by an admissible
+continuation. Values named in these continuations are fresh unless stated otherwise.
+\begin{itemize}
+\item \emph{$\rho_a$ differs.} Against $\mathsf{blocked}$: a request naming everything
+  consistently with the other side permits it, and $\mathsf{blocked}$ stays refused. A named
+  value $u$ or object $o$ on one side only: a request naming a fresh value there blocks that
+  side and not the other. $u$ against $u'$: a request repeating $u$ permits one side and blocks
+  the other. Bare (not reduced) against $\mathsf{absent}$: no key of $a$ is $\conflict$, so
+  asserting fresh values for the keys at $\bot$ permits the bare side only.
+\item \emph{$\st_k$ differs, with the $\rho$'s equal.} Pick an unblocked reader $a$ and a
+  parameter $p$ with $\kappa_a(p) = k$. If $\rho_a$ names $p$, then $k$ holds $u$ or $\conflict$
+  on both sides. First name every parameter consistently and execute on both sides, which is
+  permitted and equal. Then request $a$ naming everything but $p$. The permission now reads
+  $\st_k$ alone, and the two sides differ.
+\end{itemize}
+\end{proof}
+
+\begin{corollary}[Size of the minimal memory]\label{cor:size}
+With $N$ possible values, the classes number at most
+$\prod_k (N + 2) \cdot \prod_a \big( (N + 1)^{|P_a|} + 2 \big)$. So a memory that decides every
+future exactly needs about
+$\sum_k \log_2 (N + 2) + \sum_a |P_a| \log_2 (N + 1)$ bits in the worst case. This covers the
+customer's own values per key (or none, or contested) and what each outstanding request names.
+\emph{Values from anybody else contribute nothing.}
+\end{corollary}
+
+\begin{corollary}[Keep foreign content only with its source]\label{cor:dichotomy}
+A memory can decide authority exactly without storing anything that did not come from the
+customer or the books. A memory that does store foreign content, as an agent's memory does to be
+useful, must also store what tells it apart from the customer's: at least one bit per value in the
+worst case (Theorem~\ref{thm:bits}).
+\end{corollary}
+
+\paragraph{Reading.} What authority requires of a memory is small, and now exact: the customer's
+own values per key, with ``none'' and ``contested'', and the named contents of outstanding
+requests. It never requires foreign content. Section~\ref{sec:speech} and
+Section~\ref{sec:consolidation} are where it stops being small. The voice cannot be computed from
+the view, and a memory that compresses must lose information only in the few ways
+Theorem~\ref{thm:safe} allows.

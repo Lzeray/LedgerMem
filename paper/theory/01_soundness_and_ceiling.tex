@@ -7,21 +7,23 @@ If $W$ is faithful and complete on $h$, then $G(W(\view(h)), o) = \exec$ implies
 $\Perm(h, o) = 1$.
 \end{theorem}
 \begin{proof}
-Let $G$ execute $o = (a, \theta)$ and let $C$ be the $\Au$ records requesting $a$. By faithfulness
-each request in $C$ is an own-voice request of the customer. A request is still listed only if no
-execution spent it, and by completeness every outstanding request is listed. So the requests of
-$C$ are exactly $\Out_a(h)$, and (i) holds.
+Let $G$ execute $o = (a, \theta)$, let $C$ be the $\Au$ records requesting $a$, and call a record
+\emph{lowered} if it is on $\cU$ below $\Au$. By faithfulness each request in $C$ is an own-voice
+request that no execution has spent, so $\emptyset \neq C \subseteq \Out_a(h)$, and (i) holds. By
+completeness, every request in $\Out_a(h) \setminus C$ belongs to a lowered record, and whatever it
+names is a slot of that record.
 
-(ii) $G$ takes $o^*$ as the single object the requests of $C$ name, and $\Perm$ does the same.
-If none is named, $G$ takes the single value under $\kappa_a(s_a)$ on $\Au$ records. By
-faithfulness and completeness, these values are exactly $\Vals_{\kappa_a(s_a)}(h)$, so that value
-is $\st_{\kappa_a(s_a)}(h)$.
+(ii) If the requests of $C$ name exactly $o^*$, then any other object named in $\Out_a(h)$ would be a
+lowered value under $\kappa_a(s_a)$ different from $o^*$, and $G$ refuses on that. If they name
+none, $G$ takes the single $\Au$ value $o^*$ under the key, and again no lowered value differs. The
+own-voice values under the key are the $\Au$ ones and the lowered ones, so any object named in
+$\Out_a(h)$ is $o^*$, and otherwise $\st_{\kappa_a(s_a)}(h) = o^*$.
 
-(iii) Now take $p \neq s_a$ and $k = \kappa_a(p)$. If the requests in $\Lambda \subseteq C$ name
-exactly one value, $G$ binds it, and $\Perm$ agrees, because every request of $C$ names $o^*$ or
-nothing and so lies in $\Lambda$. If they name none, $G$ binds $v$ only when the values on record
-under $k$, over all labels, are $\{v\}$ and some $\Au$ record carries $v$. Faithfulness gives
-$v \in \Vals_k(h)$. Completeness gives $\Vals_k(h) \subseteq \{v\}$. Hence $\st_k(h) = v$.
+(iii) Take $p \neq s_a$ and $k = \kappa_a(p)$. If $C$ names exactly one value $u$ for $p$, $G$ binds it
+only if no lowered value under $k$ differs, so $\Out_a(h)$ names exactly $\{u\}$. If $C$ names none,
+$G$ binds $v$ only when every record under $k$, over all labels, carries $v$ and some $\Au$ record
+does. The own-voice values under $k$ are among these records (completeness) and include $v$
+(faithfulness). So any value named in $\Out_a(h)$ is $v$, and otherwise $\st_k(h) = v$.
 \end{proof}
 
 \begin{theorem}[Faithfulness is also necessary]\label{thm:necessary}
@@ -81,27 +83,21 @@ construction, one that carries the customer's verifiable signature. That is a ne
 ceiling $\Au$, not a property of the bank system that relays it.
 \end{corollary}
 
-\begin{proposition}[Lowering is safe only away from the customer]\label{prop:lower}
-Lowering the label of a record not backed by an own-voice message preserves faithfulness and
-completeness wherever they held, and so preserves soundness. Lowering the label of a backed record breaks completeness, and
-$G \circ W$ can then execute an unpermitted operation.
+\begin{proposition}[Lowering is safe]\label{prop:lower}
+Lowering the label of any record preserves faithfulness, and it preserves completeness as long as
+the record stays on its channel with its slots. So it never makes $G$ unsafe; it can only cost
+utility.
 \end{proposition}
 \begin{proof}
-The first claim holds because such a record is neither needed for completeness nor allowed to be
-$\Au$ by faithfulness. For the second, consider
-$h = \big(\text{``Send 500 EUR to Anna''},\ \text{``No wait, make it 300''}\big)$, both own-voice
-requests for a transfer, the first naming $500$ and the second $300$. The named amounts are
-$\{500, 300\}$, so every transfer has $\Perm = 0$. Suppose $Q$ wrongly calls the second message a
-quotation. It is then stored as $\Un$ with no requests; the only request left names $500$, and $G$
-sends 500 EUR. The same happens to the object when a lowered customer message carries a second
-object: step~1 of $G$ reads objects from $\Au$ records only.
+Faithfulness constrains only $\Au$ records. Completeness allows a customer message written below
+$\Au$, provided its slots are kept (Definition~\ref{def:faithful}).
 \end{proof}
 
 \begin{remark}
-So a false ``quote'' on a customer message is not harmless. It can hide a correction.
-Proposition~\ref{prop:lower} makes precise the rule that a label may be lowered but never
-raised: lowering is free for everything that is not the customer's own words. For
-arguments, step~2 already reads values over all labels, and a lowered value still blocks. Step~1
-and the request list do not. Whether to close this is a design decision; it would cost utility
-only.
+This holds for $G$ only since the gate reads lowered customer words as a \emph{veto}: they license
+nothing and bind nothing, but a value they name that differs from the one about to be used stops
+the call (steps~1 and~2). Without that, a false ``quotation'' could hide a correction. Let $h$ be ``Send 500 EUR to Anna'', then ``No wait, make it 300'', with the second message
+misread as a quote: the only request left names $500$, and $G$ would send 500 EUR while
+$\Perm = 0$. This is Theorem~\ref{thm:tombstone} in miniature: what is demoted must still leave a
+mark.
 \end{remark}

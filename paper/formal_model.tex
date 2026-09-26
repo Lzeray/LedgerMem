@@ -74,12 +74,14 @@ to $a$ is decided from $M$:
 \begin{enumerate}
 \item \emph{License.} Let $C = \{ r \in M^{\Au} : a \in \Req(r) \}$; if empty, refuse. If
   $s_a \neq \bot$, the object $o^*$ is the one the requests of $C$ name if they name exactly one;
-  if they name none, the single value under $\kappa_a(s_a)$ on $M^{\Au}$; otherwise refuse. Let
+  if they name none, the single value under $\kappa_a(s_a)$ on $M^{\Au}$; otherwise refuse. Also
+  refuse if a non-$\Au$ record on $\cU$ has another value under $\kappa_a(s_a)$. Let
   $\Lambda = \{ r \in C : s_a = \bot \vee o(r) \in \{\bot, o^*\} \}$. If $\Lambda = \emptyset$,
   refuse. A refusal asks the customer nothing.
 \item \emph{Arguments.} The object parameter $s_a$ is bound to $o^*$. For each other $p \in P_a$
   with $k = \kappa_a(p)$: if the records of $\Lambda$
-  name exactly one value, bind it, and if they name several, $p$ is ambiguous. If they name none,
+  name exactly one value, bind it, unless a non-$\Au$ record on $\cU$ has another value under $k$;
+  then, as when they name several, $p$ is ambiguous. If they name none,
   let $V = \vals(M_k)$. If $V = \emptyset$, $p$ is missing; if $|V| > 1$, $p$ is ambiguous. If
   $V = \{v\}$, bind $v$ when $\max\{\ell(r) : r \in M_k\} = \Au$, and otherwise mark $p$ blocked.
 \item \emph{Customer.} If a parameter is not bound, the gate asks the customer, within the same

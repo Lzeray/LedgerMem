@@ -98,6 +98,19 @@ class Customer(Protocol):
         """The whole call, every argument shown: the final yes/no."""
 
 
+def _lowered_customer_values(session: Session, slot_key: str) -> set[str]:
+    """Values under this key that the customer said but that are on record below `authorized`:
+    words on the customer's channel the write path took for a quotation.
+
+    Such words never license and never bind; they can only stop. A false "quotation" on the
+    customer's own correction ("send 500" ... "no wait, make it 300") would otherwise hide it
+    from the licence and from the request's named values, and the gate would carry out the
+    version the customer withdrew. Lowering a label is safe for anybody else's words; for the
+    customer's, the gate still has to see that they said something different."""
+    return {row.slot_value for row in lookup_slot(session, slot_key)
+            if row.label != "authorized" and (row.channel or row.role) == "user"}
+
+
 def _resolve_license(session: Session, action_name: str):
     """Step 1: is this action asked for at all? Returns (eligible requests | None, the object the
     licence was checked for | None, refusal | None).
@@ -161,6 +174,9 @@ def _resolve_license(session: Session, action_name: str):
                 return None, None, (f"the customer has more than one {license_spec.scope_param} on record "
                               f"and their words do not say which one")
             scope_value = rows[0].slot_value
+        if _lowered_customer_values(session, spec.slots[license_spec.scope_param]) - {scope_value}:
+            return None, None, (f"the customer's words on record also mention another "
+                                f"{license_spec.scope_param}")
 
     # An unbound request is allowed to license: an instruction rarely names the object, and
     # the object was settled separately from the bank's own records. A request bound to a
@@ -209,7 +225,8 @@ def _resolve_arguments(session: Session, action_name: str, parameters: list[str]
 
       * The request named the value in its own words -> that value, under the request's label.
         Only `authorized` requests reach here, so this is the customer stating the value
-        themselves. Two requests naming different values -> ask which.
+        themselves. Two requests naming different values -> ask which. So does a request naming
+        one value while the customer's words on record below `authorized` name another.
       * The request did not name it -> the slot in the rest of memory, by DISTINCT VALUE:
           none            -> ask the customer for it;
           exactly one     -> use it, under the best label any record gives that value;
@@ -229,6 +246,13 @@ def _resolve_arguments(session: Session, action_name: str, parameters: list[str]
                         for r in requests
                         if decode_arguments(r.arguments).get(action_name, {}).get(parameter)})
         if len(named) == 1:
+            others = sorted(_lowered_customer_values(session, spec.slots[parameter]) - {named[0]})
+            if others:
+                # The request named one value and the customer also said another, on record as a
+                # quotation: which one they meant is theirs to say.
+                ambiguous[parameter] = [named[0], *others]
+                missing.append(parameter)
+                continue
             resolved[parameter] = named[0]
             labels[parameter] = "authorized"
             continue

@@ -98,12 +98,14 @@ channel, or answer the customer interface.
 \begin{definition}[Faithful and complete writes]\label{def:faithful}
 $W$ is \emph{faithful} on $h$ if every $\Au$ record either is seeded from $B$ with no requests, or
 is written for some $m \in \Own(h)$ with $S(r) \subseteq \Vals(m)$ and $\Req(r) \subseteq \Req(m)$.
-$W$ is \emph{complete} on $h$ if every books entry and every assertion of every $m \in \Own(h)$ is a
-slot of an $\Au$ record, every request of every $m \in \Own(h)$ is a request of an $\Au$ record, and
-each execution spends the requests as in step~4 of the gate.
+$W$ is \emph{complete} on $h$ if the books are seeded as $\Au$ records, every $m \in \Own(h)$ is
+written on $\cU$ with every assertion as a slot and, if its record is $\Au$, with all its requests,
+and each execution spends the requests as in step~4 of the gate.
 \end{definition}
 
 Faithfulness says the memory claims no more customer authority than there was. Completeness
-says it hides none of the customer's words. The model calls of the formal model bear on these
+says it hides none of the customer's words. A customer message may be written below $\Au$ (a
+false ``quotation'') and still count: its requests are lost, but what they named is still on
+record as slots. The model calls of the formal model bear on these
 two properties only: $Q$, $R$, $L$ and the precision of $E$ bear on faithfulness, while the
 recall of $E$ and $L$ bears on completeness.

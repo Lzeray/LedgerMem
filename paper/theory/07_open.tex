@@ -8,11 +8,17 @@
 \item \emph{Derived values.} An amount computed from several sources (a sum, a conversion)
   should carry the meet of their labels. Show that the meet is the only safe label for a derived
   value, and bound what must be kept to compute it.
-\item \emph{The exact quotient.} Characterise the Nerode equivalence of $\Perm$ exactly
-  (Section~\ref{sec:statistic}), and hence the minimal memory in bits for a given action catalogue.
-\item \emph{Lowering on the customer channel.} Proposition~\ref{prop:lower} shows that a false
-  ``quote'' can hide a correction. Characterise the rules for which lowering is always safe:
-  reading objects and requests over all labels, as step~2 already reads values.
+\item \emph{Withdrawal.} A customer who asks and then says ``cancel that'' withdraws a request.
+  Neither $\Perm$ nor the gate models this: a later refusal leaves the earlier request
+  outstanding. A withdrawal event resets $\rho_a$ to $\mathsf{absent}$. Faithfulness
+  then covers refusals too, and $R$ misreading a refusal becomes a source of ASR.
+\item \emph{Approvals in the continuation.} Theorem~\ref{thm:exact} leaves interface
+  approvals out. With them, $\mathsf{blocked}$ is no longer absorbing, and the classes may
+  change.
+\item \emph{Generality.} The results are stated for one authority semantics. The exact
+  characterisation (Theorem~\ref{thm:exact}) and the safe-loss theorem (Theorem~\ref{thm:safe})
+  should hold for any semantics built from monotone accumulation with conflicts, spending and
+  resets. State that class and prove them once for it.
 \item \emph{Bounds from measured error rates.} Instantiate
   $\mathrm{ASR} \le \Pr[\text{not faithful or not complete}]$ with separately measured error rates
   of $Q$, $R$, $L$ and $E$ on each model, and compare the bound with the measured ASR.

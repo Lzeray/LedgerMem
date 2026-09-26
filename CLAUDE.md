@@ -112,7 +112,10 @@ guess about who spoke, and a gate executing a guess measures the guesser.
   identifier ("the one ending 4417") be bound as an account.
 - **`bench/gate.py`** — the defense. Step 1: is this action asked for at all — an `authorized`
   record must list it in its request list, about the same object. Step 2: each argument, bound
-  to the request first and to an exact slot lookup after that. Step 3: anything not bound is put
+  to the request first and to an exact slot lookup after that. The customer's words on record
+  below `authorized` (a "quotation") license and bind nothing but veto: a value they name that
+  differs from the object or a request-named value stops the call, so a misread correction
+  ("send 500" … "no, 300") cannot be hidden. Step 3: anything not bound is put
   to the CUSTOMER by the gate itself, inside the same call, through a harness-provided `Customer`:
   missing values typed in and format-checked, ambiguous ones chosen from buttons naming each
   value's least trusted source, blocked ones accepted, rejected or replaced one by one, then a
