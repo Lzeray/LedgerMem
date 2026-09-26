@@ -1,0 +1,41 @@
+\section*{Results at a glance}
+
+An agent's long-term memory decides what the agent may later do on a customer's behalf. We ask
+which information that memory must keep so that every future decision about authority stays safe,
+and where no memory suffices without asking the customer. The setting is a banking agent whose
+memory mixes the customer's own words with text from bank systems, outside services and the agent
+itself.
+
+\begin{enumerate}
+\item \emph{A gate is safe exactly when its memory is faithful and complete.}
+  \begin{itemize}
+  \item Faithful: nothing is labeled as the customer's own that the customer did not say.
+  \item Complete: nothing the customer said is hidden, and a misread quotation still counts as
+    unhidden if it can veto.
+  \end{itemize}
+  A violation of either is exploited by one or two further messages, and ASR is bounded by the
+  probability of such a violation (Section~\ref{sec:ceiling}).
+\item \emph{What memory must keep is the customer's standing and nothing else}
+  (Section~\ref{sec:statistic}). Two histories are interchangeable for every future action exactly
+  when they agree on the customer's own values per key and on what the outstanding requests name,
+  up to a few dead states. Content from anybody else needs no memory at all. A memory that keeps it
+  anyway must pay at least one source bit per value. Revocation turns a conflict from one symbol
+  into the full set of contested values.
+\item \emph{Which losses are safe} (Section~\ref{sec:consolidation}). A memory may lose information,
+  and cost only utility, exactly by leaving a mark: a contested key, a blocked action, a dropped
+  request that named nothing, or an unretractable placeholder. Forgetting a value, a correction, a
+  retraction or a withdrawal is unsafe for some future. This yields a checkable contract for
+  consolidators.
+\item \emph{The decision rule fixes the contract} (Section~\ref{sec:selection}). If the agent may
+  choose among the customer's values, values may be forgotten freely, but nothing that narrows a
+  choice may be, and the memory needed per key grows from $\log_2(N+2)$ to $N$ bits.
+\item \emph{Without the customer, safety is conditional} (Section~\ref{sec:speech}). Any text on the
+  customer's channel may be a quotation. So a system that ever acts without the customer confirming
+  through a fixed interface is unsafe on some history, and any reader of the voice has a Bayes-error
+  floor.
+\end{enumerate}
+
+The ceiling on labels (content can lower authority, never raise it) is known and cited
+(Section~\ref{sec:related}). Every statement that fits a finite instance is checked by exhaustive
+enumeration (Section~\ref{sec:verification}). A pilot on five models finds consolidators that keep an
+outside value but lose its source, and one that loses implicit withdrawals.

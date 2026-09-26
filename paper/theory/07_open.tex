@@ -14,13 +14,16 @@
 \item \emph{Approvals in the continuation.} Theorem~\ref{thm:exact} leaves interface
   approvals out. With them, $\mathsf{blocked}$ is no longer absorbing, and the classes may
   change.
+\item \emph{Selection with a unique fallback.} The gate binds a unique value when the agent
+  proposes none, and lets the agent choose when it proposes one; the permission it implements is
+  therefore between $\Perm$ and $\Perm_{\mathrm{sel}}$, depending on the agent. Characterise the
+  memory needed when both paths are live.
+\item \emph{Measured bounds.} Measure $Q$, $R$, $L$ and $E$ on each model's customer messages and
+  instantiate $\mathrm{ASR} \le \Pr[\text{not faithful or not complete}]$ against the measured ASR.
 \item \emph{Generality.} The results are stated for one authority semantics. The exact
   characterisation (Theorem~\ref{thm:exact}) and the safe-loss theorem (Theorem~\ref{thm:safe})
   should hold for any semantics built from monotone accumulation with conflicts, spending and
   resets. State that class and prove them once for it.
-\item \emph{Bounds from measured error rates.} Instantiate
-  $\mathrm{ASR} \le \Pr[\text{not faithful or not complete}]$ with separately measured error rates
-  of $Q$, $R$, $L$ and $E$ on each model, and compare the bound with the measured ASR.
 \item \emph{Delegation.} Several principals (a customer and a representative) turn $\Own$ into a
   relation between principals and actions; the ceiling then depends on the principal, not only on
   the channel.
