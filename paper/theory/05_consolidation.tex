@@ -130,18 +130,50 @@ followed by a request that names everything but the parameter on $k$ is permitte
 Request states: as in Theorem~\ref{thm:safe}, after a withdrawal where needed.
 \end{proof}
 
-\begin{remark}[The shape of the result]
-Both theorems compose one fact about a single register. Take a register holding a set of values,
-updated by adding a value, retracting one, and clearing all, and read only as ``exactly one value,
-or nothing''. A replacement for it is safe in every future if and only if it is equal, or it
-contains something no update can remove and no read can mistake for a value. In the static
-regime nothing is retracted, so that something is the contested state $\conflict$. In the
-revocable regime it must be a mark. Request records are registers of the same kind, with
-$\mathsf{blocked}$ as the mark, and a bare request carries no content to lose. The theorems are
-this lemma taken over every register, plus the dead states the static regime creates. Any
-authority semantics built from such registers, whatever the domain, should therefore admit
-exactly the same safe losses. Stating that class precisely is left open (Section~\ref{sec:open}).
-\end{remark}
+\begin{lemma}[One register]\label{lem:register}
+A \emph{register} holds a set $S \subseteq \V \cup \{\diamond\}$. It is updated by
+$\mathsf{add}(v)$, $\mathsf{retract}(v)$ for $v \in \V$, and $\mathsf{clear}$, and it is read as
+$r(S) = v$ if $S = \{v\}$ with $v \in \V$, and as nothing otherwise. Call $S'$ \emph{safe for} $S$ if,
+after every sequence of updates $u$, $r(S'u) = v$ implies $r(Su) = v$. Then:
+\begin{enumerate}
+\item[(a)] $S'$ is safe for $S$ if and only if $S' = S$ or $\diamond \in S'$;
+\item[(b)] without $\mathsf{retract}$ and $\mathsf{clear}$, writing $\conflict$ for any set of two or
+  more elements, $S'$ is safe for $S$ if and only if $S' = S$ or $S' = \conflict$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(a) \emph{If.} Updates act on $S'$ and $S$ alike. $\diamond$ survives every update but
+$\mathsf{clear}$, and while it is present $r(S'u)$ is nothing. After a $\mathsf{clear}$ both sides
+are empty and remain equal.
+
+\emph{Only if.} Let $S' \neq S$ with $\diamond \notin S'$.
+\begin{itemize}
+\item If some $v \in S' \setminus S$, retract every other value: $r(S'u) = v$, while $Su$ is empty.
+\item Otherwise $S' \subsetneq S$. Pick $x \in S \setminus S'$, and $w \in S'$ if $S'$ is non-empty,
+  else add a fresh $w$ to both. Retract everything except $x$ and $w$: $r(S'u) = w$, while $Su$
+  holds $x$ as well.
+\end{itemize}
+
+(b) Without retraction, sets only grow, so $\conflict$ is absorbing and reads as nothing. If
+$S' = \emptyset \neq S$, add a fresh $w$: $S'$ reads $w$, $S$ holds two values. If $S' = \{v\}$ and
+$S \neq S'$: $S'$ reads $v$ at once, and $S$ does not.
+\end{proof}
+
+The canonical state is a product of such registers: one per key, and one per parameter and
+object slot of each action's request state, where $\mathsf{blocked}$ plays the part of $\diamond$
+or $\conflict$. A permission is a conjunction of reads, and each read takes the request's named
+value if there is one and the key's value otherwise. So the \emph{if} directions of
+Theorems~\ref{thm:safe} and~\ref{thm:safe-rev} follow register by register:
+\begin{itemize}
+\item an operation permitted by $s'u$ reads, in every register it consults, a value that
+  Lemma~\ref{lem:register} guarantees $su$ reads too;
+\item a blocked request, or a key holding a mark, permits nothing through it.
+\end{itemize}
+The \emph{only if} directions need, in addition, that each register can be consulted on its own.
+That is where the dead states of the static regime come from, and why the revocable regime, in
+which every register can be reset and re-read, has none. Any authority semantics assembled from
+registers of this kind should admit exactly the same safe losses. Stating that class precisely is
+left open (Section~\ref{sec:open}).
 
 \begin{corollary}[Forgetting a revocation is unsafe]
 A memory that keeps a value the customer retracted, or a request the customer withdrew, is not a
