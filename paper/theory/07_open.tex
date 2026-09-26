@@ -1,17 +1,16 @@
 \section{Open questions}\label{sec:open}
 
 \begin{enumerate}
-\item \emph{Time and revocation.} $\Perm$ has no time. Adding expiry and revocation (EAL-Bench,
-  arXiv:2609.01836) makes key states and requests time-indexed. Theorem~\ref{thm:tombstone} should
-  then extend to ``forgetting a revocation is unsafe'', and the one-bit bound grows to cover each
-  validity interval.
+\item \emph{Richer revocation.} The revocable regime retracts a value, withdraws all requests
+  for an action, and expires a key. Retracting one request among several, and time windows on
+  requests rather than on values, are the next step. The mark theorem should extend: what cannot
+  be named cannot be retracted, so it must block.
 \item \emph{Derived values.} An amount computed from several sources (a sum, a conversion)
   should carry the meet of their labels. Show that the meet is the only safe label for a derived
   value, and bound what must be kept to compute it.
-\item \emph{Withdrawal.} A customer who asks and then says ``cancel that'' withdraws a request.
-  Neither $\Perm$ nor the gate models this: a later refusal leaves the earlier request
-  outstanding. A withdrawal event resets $\rho_a$ to $\mathsf{absent}$. Faithfulness
-  then covers refusals too, and $R$ misreading a refusal becomes a source of ASR.
+\item \emph{Withdrawal in the gate.} The theory now has withdrawal (Definition~\ref{def:revocable});
+  the gate does not model it, and a later refusal leaves an earlier request outstanding. This is
+  a stated limitation of the implementation.
 \item \emph{Approvals in the continuation.} Theorem~\ref{thm:exact} leaves interface
   approvals out. With them, $\mathsf{blocked}$ is no longer absorbing, and the classes may
   change.

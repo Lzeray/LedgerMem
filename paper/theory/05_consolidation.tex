@@ -41,13 +41,28 @@ A memory that is smaller than the canonical state (Corollary~\ref{cor:size}) mus
 The question is which losses can only cost utility and never safety.
 
 \begin{definition}[Safe replacement]
-A state $s'$ is a \emph{safe replacement} for the true state $s$ if, for every continuation that
-executes only what $s'$ permits, $\Perm(s' u, o) = 1$ implies $\Perm(s u, o) = 1$. That is, a system
-that remembers $s'$ in place of $s$ never executes anything $s$ forbids.
+A memory state $s'$ is a \emph{safe replacement} for the true state $s$, written $s' \preceq s$, if
+for every continuation $u$ that executes only what the memory permits,
+$\Perm(s' u, o) = 1$ implies $\Perm(s u, o) = 1$. A system that remembers $s'$ in place of $s$ then
+never executes anything $s$ forbids.
 \end{definition}
 
-\begin{theorem}[Safe forgetting leaves a mark]\label{thm:safe}\label{thm:tombstone}
-$s'$ is a safe replacement for $s$ if and only if, for every action $a$, one of the following holds:
+\begin{lemma}[Safety is a simulation]\label{lem:simulation}
+$\preceq$ is the greatest relation $R$ such that $s' \mathrel{R} s$ implies
+$\Perm(s') \subseteq \Perm(s)$, and $\delta(s', e) \mathrel{R} \delta(s, e)$ for every event $e$ the
+memory admits. An online memory, updated by the same events as the truth, is safe forever if and
+only if it starts, and so remains, in this relation.
+\end{lemma}
+\begin{proof}
+This is the standard greatest-fixed-point characterisation of a simulation preorder. Closure under
+events is built in.
+\end{proof}
+
+The lemma is general. The content is in computing $\preceq$ for the authority semantics.
+
+\begin{theorem}[Safe forgetting leaves a mark: static regime]\label{thm:safe}\label{thm:tombstone}
+Up to the equivalence of Theorem~\ref{thm:exact}, $s' \preceq s$ if and only if, for every action
+$a$, one of the following holds:
 \begin{enumerate}
 \item[(1)] $\rho'_a = \mathsf{blocked}$;
 \item[(2)] $\rho_a$ is bare and $\rho'_a = \mathsf{absent}$, and every key $a$ reads satisfies (3);
@@ -63,29 +78,66 @@ Forgetting a value ($v \mapsto \bot$), resolving a conflict ($\conflict \mapsto 
 value, and dropping or trimming a request that named something are each unsafe for some future.
 \end{theorem}
 \begin{proof}
-\emph{If.} A blocked action is never permitted. A dropped bare request contributes nothing to
-later merges (Theorem~\ref{thm:exact}(b)), so before a new request it permits nothing, and after
-one the two states agree. For a key with $\st'_k = \conflict$, the key stays $\conflict$, since
-$\conflict$ is absorbing, and permits nothing through that key. A key with $\st'_k = \st_k$ evolves
-identically. The request states evolve identically, because they do not depend on keys, and the
-executions are the same events on both sides. So whenever $s'u$ permits $o$, every key it reads
-carries the same value in $su$, and $su$ permits $o$.
+\emph{If.} A blocked action is never permitted. A dropped bare request contributes nothing to later
+merges (Theorem~\ref{thm:exact}(b)), so before a new request it permits nothing, and after one the
+two states agree. A key marked $\conflict$ stays $\conflict$, since $\conflict$ is absorbing, and
+permits nothing through that key. A key with $\st'_k = \st_k$ evolves identically. Request states
+evolve identically, because they do not depend on keys, and the executions are the same events on
+both sides. So whenever $s'u$ permits $o$, every key it reads carries the same value in $su$, and
+$su$ permits $o$.
 
-\emph{Only if.} For each violation, a continuation makes $s'$ permit what $s$ forbids.
+\emph{Only if.} For each violation, a continuation makes $s'$ permit what $s$ forbids:
 \begin{itemize}
 \item $\st'_k = v$ against $\st_k \in \{\bot, \conflict, v'\}$: request a reader of $k$ naming
-  everything else.
-\item $\st'_k = \bot$ against $\st_k = v$: first assert a fresh $w$, which gives $w$ against
-  $\conflict$.
+  everything else;
+\item $\st'_k = \bot$ against $\st_k = v$: first assert a fresh $w$, giving $w$ against $\conflict$;
 \item $\rho'_a$ drops or changes a named value or object: a request naming a fresh value there
-  leaves $s'$ unblocked and blocks $s$.
-\item $\rho'_a$ invents one: $s'$ binds it while $s$ reads a key that does not hold it.
+  leaves $s'$ unblocked and blocks $s$;
+\item $\rho'_a$ invents a named value: $s'$ binds it, while $s$ reads a key that does not hold it;
 \item $\rho'_a$ unblocks what $\rho_a$ blocks: any consistent request is permitted by $s'$ only.
 \end{itemize}
 Where the request state names the parameter to be read, one permitted execution first resets
-both sides. That execution is permitted by $s'$, and if $s$ forbids it, it is already a
-violation.
+both sides. It is permitted by $s'$, and if $s$ forbids it, that is already a violation. States
+that are equivalent but differ in form (the dead states of Theorem~\ref{thm:exact}) are safe
+replacements for each other, which is why the statement holds up to equivalence.
 \end{proof}
+
+In the revocable regime a key's state is a set, and forgetting needs something to write in place
+of what was lost. Let memory keys also hold a \emph{mark} $\diamond$: a value that stands for
+``something here was forgotten''. No retraction removes it, since nobody can name it; an expiry of
+the key clears it; while present, the key never reads as a single value.
+
+\begin{theorem}[Safe forgetting leaves a mark: revocable regime]\label{thm:safe-rev}
+In the revocable regime, with memory keys that may hold $\diamond$, $s' \preceq s$ if and only if
+\begin{itemize}
+\item every key has $s'_k = s_k$ or $\diamond \in s'_k$;
+\item every action has $\rho'_a = \rho_a$, or $\rho'_a = \mathsf{blocked}$, or ($\rho_a$ bare and
+  $\rho'_a = \mathsf{absent}$).
+\end{itemize}
+Unlike the static regime, keys are constrained even for blocked actions, because a withdrawal can
+unblock them. Without the mark, keys admit no loss at all.
+\end{theorem}
+\begin{proof}
+\emph{If.} A key holding $\diamond$ permits nothing through it until an expiry, after which both
+sides agree. The request states are handled as in Theorem~\ref{thm:safe}, and a withdrawal resets
+both sides alike.
+
+\emph{Only if.} Suppose $s'_k \neq s_k$ and $\diamond \notin s'_k$. If $s'_k$ holds a value $v$ that
+$s_k$ lacks, retract everything else: $s'$ reads $v$ and $s$ reads nothing. If $s_k$ holds a value
+that $s'_k$ lacks, retract everything else but some $w \in s'_k$ (or assert a fresh $w$ if
+$s'_k = \emptyset$): $s'$ reads $w$, while $s$ holds two values. In either case, a withdrawal
+followed by a request that names everything but the parameter on $k$ is permitted by $s'$ only.
+Request states: as in Theorem~\ref{thm:safe}, after a withdrawal where needed.
+\end{proof}
+
+\begin{corollary}[Forgetting a revocation is unsafe]
+A memory that keeps a value the customer retracted, or a request the customer withdrew, is not a
+safe replacement for the truth. The retraction case is $s'_k \supsetneq s_k$ without $\diamond$; the
+withdrawal case is $\rho'_a$ present against $\rho_a = \mathsf{absent}$. A consolidator that drops the
+sentence ``cancel that'' or ``not that account'' is therefore unsafe, not merely stale. This is
+EAL-Bench's endogenous laundering (arXiv:2609.01836), characterised: the safe memories are exactly
+those that forget only through marks.
+\end{corollary}
 
 \begin{corollary}[Silent forgetting is unsafe]
 A consolidator that drops a value or a correction, or keeps one of two contested values, is not

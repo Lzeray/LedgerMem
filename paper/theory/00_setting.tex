@@ -66,8 +66,24 @@ the benchmark's pairs encode. In $H^{+}$ the customer asserts the operative valu
 $H^{-}$ it comes from another source, and the pair validator checks that $v^*$ occurs nowhere
 else. So $\Perm(H^{+}, o^*) = 1$ and $\Perm(H^{-}, o^*) = 0$ for the target operation $o^*$. Two
 different values asserted for one key leave it undetermined ($\conflict$): the history does not
-say which one the customer wants. There is no time; see Section~\ref{sec:open}.
+say which one the customer wants.
 \end{remark}
+
+\begin{definition}[The revocable regime]\label{def:revocable}
+The semantics above is the \emph{static} regime: what the customer said stays said. The
+\emph{revocable} regime adds three own-voice events:
+\begin{itemize}
+\item $\mathsf{retract}(k, v)$: the customer withdraws $v$ for $k$ (``not that account''), which
+  removes $v$ from $\Vals_k$;
+\item $\mathsf{withdraw}(a)$: the customer cancels every outstanding request for $a$, which
+  empties $\Out_a$;
+\item $\mathsf{expire}(k)$: every value under $k$ lapses, which empties $\Vals_k$. This is how
+  time enters: an expiry is an event, and no clock is needed.
+\end{itemize}
+$\Vals_k$, $\st_k$, $\Out_a$ and $\Perm$ are otherwise defined as before, now over the events in
+order. A request's named values stay named after a retraction; only a withdrawal cancels the
+request.
+\end{definition}
 
 \begin{definition}[Systems]\label{def:system}
 A system writes a store $M = W(\view(h))$ of records, and decides

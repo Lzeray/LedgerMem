@@ -97,7 +97,7 @@ outstanding request (Definition~\ref{def:standing}). A blocked action is never p
 is never reset.
 \end{proof}
 
-\begin{theorem}[When two histories are interchangeable]\label{thm:exact}
+\begin{theorem}[When two histories are interchangeable: static regime]\label{thm:exact}
 Let $\V$ be infinite and every key be read by some parameter. Reduce the canonical state in two
 ways:
 \begin{enumerate}
@@ -144,6 +144,40 @@ A memory can decide authority exactly without storing anything that did not come
 customer or the books. A memory that does store foreign content, as an agent's memory does to be
 useful, must also store what tells it apart from the customer's: at least one bit per value in the
 worst case (Theorem~\ref{thm:bits}).
+\end{corollary}
+
+\subsection*{Revocation makes every state live}
+
+\begin{theorem}[When two histories are interchangeable: revocable regime]\label{thm:exact-rev}
+In the revocable regime (Definition~\ref{def:revocable}), let the canonical state be
+$\hat\sigma(h) = ((\Vals_k(h))_k, (\rho_a(h))_a)$: the \emph{set} of live values per key, not its
+collapse to $\bot$, $v$ or $\conflict$, and the request states as before. Let $\V$ be infinite and
+every key be read by some parameter. Then $h \equiv h'$ if and only if
+$\hat\sigma(h) = \hat\sigma(h')$. No reduction is needed.
+\end{theorem}
+\begin{proof}
+\emph{If.} Lemma~\ref{lem:machine} carries over. A retraction removes a value from the set, an
+expiry empties it, and a withdrawal resets $\rho_a$ to $\mathsf{absent}$. Permission reads the set
+only through its collapse, and the updates are functions of the set.
+
+\emph{Only if.} Take $v \in \Vals_k(h) \setminus \Vals_k(h')$. Retract every other value either side
+holds under $k$; then $h$ holds $\{v\}$ and $h'$ holds $\emptyset$. Request a reader of $k$ naming
+everything but that parameter, after withdrawing its earlier requests on both sides. Only $h$ is
+permitted. Request states that differ are separated as in Theorem~\ref{thm:exact}, first
+expiring and freshly re-asserting the keys the action reads so that nothing else blocks. The
+static reductions disappear:
+\begin{itemize}
+\item a blocked action can be withdrawn, so its keys are read again;
+\item a contested key can be resolved by retraction, so a bare request is no longer dead.
+\end{itemize}
+\end{proof}
+
+\begin{corollary}[Revocation multiplies the memory]\label{cor:rev-size}
+With $N$ values, the static regime needs $\log_2 (N + 2)$ bits per key. The revocable regime needs
+$N$: every live value, contested ones included, must be remembered, because a later retraction
+can resolve a conflict either way. A conflict can no longer be summarised as ``contested''. This
+parallels ResidualAuth's redundancy--memory law for delegation (arXiv:2609.08062), where
+revocation likewise raises the state from linear to quadratic in the exponent.
 \end{corollary}
 
 \paragraph{Reading.} What authority requires of a memory is small, and now exact: the customer's

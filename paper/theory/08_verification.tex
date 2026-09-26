@@ -1,0 +1,42 @@
+\section{Machine check}\label{sec:verification}
+
+Every statement above that can be put on a finite instance is checked by exhaustive enumeration
+(the \texttt{check} directory beside these files). The instance has two keys, an action $a$ with an object and one
+parameter, an action $b$ with one parameter sharing $a$'s key, and $N$ values. The semantics is
+implemented twice, once literally from the history (Definitions~\ref{def:perm}
+and~\ref{def:revocable}) and once as the canonical state machine. Nerode classes are computed by
+Moore minimisation, and $\preceq$ as the greatest fixed point of Lemma~\ref{lem:simulation}. Each
+is compared with what the theorem predicts.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+\hline
+statement & instance & result \\
+\hline
+literal semantics $=$ canonical machine & $N = 2, 3, 4$, both regimes; all histories of length
+  $\le 2$ and 4000 random ones of length 10 & agree on about 41\,000 prefixes each \\
+Theorem~\ref{thm:exact} (static) & $N = 2$ / $3$ / $4$ & 312 / 610 / 1036 reachable states;
+  244 / 500 / 874 classes, as predicted \\
+Theorem~\ref{thm:exact-rev} (revocable) & $N = 2$ / $3$ / $4$ & 880 / 6912 / 48\,384 states,
+  each its own class, as predicted \\
+Theorem~\ref{thm:safe} (static) & $N = 2, 3$, all pairs of states & exact match up to equivalence \\
+Theorem~\ref{thm:safe-rev} (revocable, with marks) & $N = 2$; $N = 3$ ($1.9 \times 10^8$ pairs) &
+  exact match \\
+Theorem~\ref{thm:sound} with Proposition~\ref{prop:lower} & gate steps 1--2 on records; $N = 2$
+  with $\le 4$ messages, $N = 3$ with $\le 3$ & no unsafe execution under any pattern of lowering \\
+the veto is needed & the same, veto removed & counterexample found \\
+\hline
+\end{tabular}
+\end{center}
+
+The counterexample without the veto is as short as possible: two messages. The customer asks for $a$ naming
+$p = 1$, then asks again naming the object and $p = 2$, and the first message is misread as a
+quotation. The named values conflict, so nothing is permitted, but a gate that ignores the demoted
+message executes $p = 2$.
+
+\paragraph{What the check does not cover.} It checks the theorems on one instance shape with a few
+values, not in general. Fresh values are scarce at small $N$, and the results agree at every
+$N$ tried, which suggests the ``$\V$ infinite'' assumption is not doing hidden work. The voice
+theorem (Theorem~\ref{thm:nomodel}) and the bit bounds are not finite-instance statements and are
+not checked here.

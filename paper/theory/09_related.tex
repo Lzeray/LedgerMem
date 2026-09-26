@@ -1,0 +1,57 @@
+\section{Position among related results}\label{sec:related}
+
+\paragraph{What is not new here.}
+\begin{itemize}
+\item \emph{The ceiling.} That authority must not be raised by content is Biba's integrity rule
+  (1977), and nonmalleable information flow (Cecchetti, Myers, Arden, CCS 2017) makes it precise
+  under downgrading.
+\item \emph{Origin-bound authority for agent memory.} Louck (arXiv:2606.24322) proves it in TLA+:
+  content- or lineage-based gates are malleable (T1), write-time origin binding is necessary (T2),
+  and it suffices with corroboration or fresh user authorization (T3).
+\item \emph{Least authority over consolidation.} PPMF (arXiv:2607.29167) enforces the meet of the
+  supporting sources' authority as \emph{non-amplification}.
+\end{itemize}
+Theorems~\ref{thm:necessary} and~\ref{thm:ceiling} restate this base in our setting. They
+differ in one place: a bank system's grant is $\At$, because it is not the customer's intent,
+whereas Louck lets a trusted tool act.
+
+\paragraph{The closest method.} ResidualAuth (arXiv:2609.08062) computes the Nerode quotient of
+authorization under revocable delegation and counts its states exactly. Theorems~\ref{thm:exact}
+and~\ref{thm:exact-rev} apply the same method to another semantics, one that ResidualAuth does
+not treat:
+\begin{itemize}
+\item authority over \emph{values} rather than delegation edges;
+\item conflicts, and one-shot requests;
+\item a conversation in which most of what memory holds comes from parties with no authority.
+\end{itemize}
+The method is not claimed as new. The findings are:
+\begin{itemize}
+\item foreign content needs no memory at all for authority (Corollary~\ref{cor:dichotomy});
+\item where memory does keep it, one source bit per value is the price (Theorem~\ref{thm:bits});
+\item revocation forces a conflict to be remembered in full (Corollary~\ref{cor:rev-size}).
+\end{itemize}
+
+\paragraph{What we have not found elsewhere.}
+\begin{enumerate}
+\item \emph{Which losses are safe} (Theorems~\ref{thm:safe} and~\ref{thm:safe-rev}). Two kinds of
+  compression result exist:
+  \begin{itemize}
+  \item decision-theoretic compression of agent memory (Zou et al., arXiv:2605.10870) gives an
+    exact forgetting boundary for \emph{two-sided} decision distortion;
+  \item ResidualAuth's information bottleneck bounds the error of a lossy monitor.
+  \end{itemize}
+  Neither characterises the \emph{one-sided} losses: those that can cost utility but never
+  safety. Here they are exactly marks: a contested key, a blocked action, a dropped bare
+  request, and in the revocable regime a mark that no retraction removes. Every other loss is
+  unsafe for some future. This includes forgetting a correction, a retraction or a withdrawal,
+  the failure EAL-Bench (arXiv:2609.01836) measures.
+\item \emph{The customer's channel does not authenticate its content}
+  (Theorem~\ref{thm:nomodel}). Origin-bound schemes take the user channel as authoritative. PPMF
+  sidesteps the question by requiring confirmation for every high-risk action. We show that
+  without a fixed interface no system is sound on all histories, and bound the error of any
+  reader of voice (Proposition~\ref{prop:bayes}).
+\item \emph{Completeness as a safety condition} (Theorem~\ref{thm:sound},
+  Proposition~\ref{prop:lower}). Soundness needs the customer's words to be \emph{complete} in
+  memory, not only authority to be \emph{faithful}. A misread quotation that hides a correction is
+  a safety failure. The fix, a veto by demoted customer words, is an instance of the mark theorem.
+\end{enumerate}
