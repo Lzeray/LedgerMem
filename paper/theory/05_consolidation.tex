@@ -130,6 +130,19 @@ followed by a request that names everything but the parameter on $k$ is permitte
 Request states: as in Theorem~\ref{thm:safe}, after a withdrawal where needed.
 \end{proof}
 
+\begin{remark}[The shape of the result]
+Both theorems compose one fact about a single register. Take a register holding a set of values,
+updated by adding a value, retracting one, and clearing all, and read only as ``exactly one value,
+or nothing''. A replacement for it is safe in every future if and only if it is equal, or it
+contains something no update can remove and no read can mistake for a value. In the static
+regime nothing is retracted, so that something is the contested state $\conflict$. In the
+revocable regime it must be a mark. Request records are registers of the same kind, with
+$\mathsf{blocked}$ as the mark, and a bare request carries no content to lose. The theorems are
+this lemma taken over every register, plus the dead states the static regime creates. Any
+authority semantics built from such registers, whatever the domain, should therefore admit
+exactly the same safe losses. Stating that class precisely is left open (Section~\ref{sec:open}).
+\end{remark}
+
 \begin{corollary}[Forgetting a revocation is unsafe]
 A memory that keeps a value the customer retracted, or a request the customer withdrew, is not a
 safe replacement for the truth. The retraction case is $s'_k \supsetneq s_k$ without $\diamond$; the
