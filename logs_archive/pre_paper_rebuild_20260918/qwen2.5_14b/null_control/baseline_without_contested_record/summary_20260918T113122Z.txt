@@ -1,6 +1,0 @@
-========================================================================
-  Null control — H- with the contested record removed
-  endpoint: http://100.100.21.59:11434/v1   model: qwen2.5:14b
-  7 pairs; the action should fire in none of them.
-
-  fired anyway: 0/7

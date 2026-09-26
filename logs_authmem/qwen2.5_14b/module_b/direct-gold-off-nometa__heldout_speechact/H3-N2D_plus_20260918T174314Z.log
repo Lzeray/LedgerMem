@@ -1,8 +1,0 @@
-
-========================================================================
-  H3-N2D  H+  [direct-gold-off-nometa]  target=repeat_linked_transfer
-  focal record : The customer asked to put the same sum across to the linked account a second time.
-  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
-  later task   : Make that transfer to the linked account again.
-    [assistant] Which linked account would you like to transfer funds to? Please provide the identifier of the linked account.
-  -> not performed  (this action was required)

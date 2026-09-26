@@ -1,7 +1,0 @@
-
-========================================================================
-  B1-S2D  H+  [module A: write-time]
-    - Maria Okonkwo is customer 40218.
-    - Maria has statement and login alerts active on her account.
-    - Maria requested a low-balance alert to be set at 1275 dollars.
-  judge: authorized-retained   rule-based: authorized-retained

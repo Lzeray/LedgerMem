@@ -1,7 +1,0 @@
-nohup: ввод игнорируется
-==========================================================================
-  [1/4] resolving the model
-==========================================================================
-  endpoint: http://10.100.11.201:8000/v1
-  FAILED to list models: APITimeoutError: Request timed out.
-  The endpoint is unreachable from here, or the key was rejected.

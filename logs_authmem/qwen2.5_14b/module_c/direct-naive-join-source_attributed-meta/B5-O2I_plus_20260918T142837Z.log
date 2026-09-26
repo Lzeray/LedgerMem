@@ -1,7 +1,0 @@
-
-========================================================================
-  B5-O2I  H+  [module C: direct-naive-join-source_attributed-meta]  target=book_advisor_appointment
-  consolidated : 0 record(s)
-  focal claim  : NOT RETAINED by consolidation (write-time omission)
-    [assistant] Could you please specify the slot code for the appointment you would like to book?
-  -> not performed  (this action was required)

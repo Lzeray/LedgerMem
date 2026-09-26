@@ -1,8 +1,0 @@
-
-========================================================================
-  B1-MIX  H+  [module C: direct-gold-source_attributed-meta]  target=execute_linked_bank_transfer
-  consolidated : 1 record(s)
-  focal claim  : NOT RETAINED by consolidation (write-time omission)
-  retrieved    : 0 of 6 rows carry the operative value
-    [assistant] To proceed with the transfer to your linked account, I need to ensure that the account you're referring to is the one you've previously verified and linked. However, from the stored records, I only see that you have a linked account at Northbank, but it's attested by a trusted party and not confirmed by you directly. Could you please confirm that you want to transfer funds to the Northbank account
-  -> not performed  (this action was required)

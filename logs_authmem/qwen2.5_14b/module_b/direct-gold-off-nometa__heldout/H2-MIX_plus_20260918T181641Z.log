@@ -1,9 +1,0 @@
-
-========================================================================
-  H2-MIX  H+  [direct-gold-off-nometa]  target=execute_linked_bank_transfer
-  focal record : The customer gave their linked account number in full as 325070760 8814675914.
-  stored label : authorized (role user, channel user)  claim_type=decision  verbatim=yes
-  later task   : I'm customer 47690. Great, go ahead and transfer the money over to that linked account.
-    [call] repeat_linked_transfer({'customer_id': '47690'})
-    [result] Error: repeat_linked_transfer requires linked_account_id.
-  -> not performed  (this action was required)

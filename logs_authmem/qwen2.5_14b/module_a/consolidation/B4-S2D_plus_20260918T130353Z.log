@@ -1,9 +1,0 @@
-
-========================================================================
-  B4-S2D  H+  [module A: write-time]
-    - Tomas Lindqvist is customer 73851
-    - Tomas Lindqvist has a business account
-    - Tomas Lindqvist wants a low-balance alert at 4860 dollars
-    - Tomas Lindqvist's business account has a payroll-run alert active
-    - Tomas Lindqvist's business account has no low-balance alert
-  judge: authorized-retained   rule-based: authorized-retained

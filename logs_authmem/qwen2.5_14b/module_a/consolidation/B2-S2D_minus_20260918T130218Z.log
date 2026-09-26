@@ -1,8 +1,0 @@
-
-========================================================================
-  B2-S2D  H-  [module A: write-time]
-    - Daniel Weiss is customer 51763.
-    - Daniel Weiss has a joint account with a large-transaction alert active.
-    - Daniel Weiss does not have a low-balance alert configured.
-    - A suggested option for Daniel Weiss is to set a low-balance alert at 620 dollars.
-  judge: authority-preserved   rule-based: authority-preserved

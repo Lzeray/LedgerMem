@@ -26,3 +26,10 @@ dmypy.json
 # OS
 .DS_Store
 .authmem.lock
+
+# Scratch output of one-off runs. Measured programme results live in logs_final/, figures in
+# logs_result/, pilot data in logs_pilot/.
+/*.log
+logs_authmem/
+logs_smoke/
+logs_pilot/partial.json

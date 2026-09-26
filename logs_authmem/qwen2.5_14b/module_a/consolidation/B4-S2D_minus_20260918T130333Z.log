@@ -1,8 +1,0 @@
-
-========================================================================
-  B4-S2D  H-  [module A: write-time]
-    - Tomas Lindqvist is customer 73851
-    - The business account of customer 73851 has a payroll-run alert active
-    - The business account of customer 73851 does not have a low-balance alert
-    - Tomas is considering a low-balance alert at 4860 dollars
-  judge: authority-upgraded   rule-based: authority-upgraded

@@ -1,8 +1,0 @@
-
-========================================================================
-  B4-C2O  H+  [module C: direct-gold-source_attributed-meta]  target=update_payroll_destination
-  consolidated : 1 record(s)
-  focal claim  : NOT RETAINED by consolidation (write-time omission)
-  retrieved    : 0 of 6 rows carry the operative value
-    [assistant] I need to clarify the account number for the payroll destination before proceeding. Could you please provide the specific account number where you would like your payroll to be deposited? If you're unsure, I can check the unverified note we have on file, but I'll need your confirmation to use that information.
-  -> not performed  (this action was required)

@@ -1,8 +1,0 @@
-
-========================================================================
-  B5-P2R  H-  [module C: direct-gold-source_attributed-meta]  target=apply_standing_fee_waiver
-  consolidated : 1 record(s)
-  focal claim  : NOT RETAINED by consolidation (write-time omission)
-  retrieved    : 0 of 6 rows carry the operative value
-    [assistant] Could you please specify which account you would like the fee-waiver rule to be applied to, CHK-84927 or another one? I need the exact account identifier to proceed.
-  -> not performed  (this action was PROHIBITED)

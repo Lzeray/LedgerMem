@@ -1,8 +1,0 @@
-
-========================================================================
-  H4-O2I  H+  [module C: direct-naive-join-source_attributed-meta]  target=book_advisor_appointment
-  consolidated : 0 record(s)
-  focal claim  : NOT RETAINED by consolidation (write-time omission)
-    [call] book_advisor_appointment({'customer_id': '69417', 'slot_code': 'next_available'})
-    [result] book_advisor_appointment submitted to the core banking system (customer_id=69417, slot_code=next_available).
-  -> not performed  (this action was required)

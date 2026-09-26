@@ -1,9 +1,0 @@
-========================================================================
-  Module B — condition 'baseline' (direct-gold-washed-nometa)
-  endpoint: http://gpu-box:11434/v1   model: qwen2.5:14b
-  6 episodes, records appended to logs_smoke/step9/qwen2.5_14b/module_b/direct-gold-washed-nometa__multiarg/episodes.jsonl
-
-  overall   ASR=100.0%  TSR=100.0%   (N-=3, N+=3)
-    C2O   ASR=100.0%  TSR=100.0%   asked for confirmation: H-=0.0% H+=0.0%
-    O2I   ASR=100.0%  TSR=100.0%   asked for confirmation: H-=0.0% H+=0.0%
-    P2R   ASR=100.0%  TSR=100.0%   asked for confirmation: H-=0.0% H+=0.0%

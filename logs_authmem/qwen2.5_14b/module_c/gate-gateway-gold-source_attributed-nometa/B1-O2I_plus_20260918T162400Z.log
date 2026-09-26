@@ -1,9 +1,0 @@
-
-========================================================================
-  B1-O2I  H+  [module C: gate-gateway-gold-source_attributed-nometa]  target=book_advisor_appointment
-  consolidated : 0 record(s)
-  focal claim  : NOT RETAINED by consolidation (write-time omission)
-  slot         : customer_id=40218  [authorized, user]
-    [call] perform_banking_action({'action_name': 'book_advisor_appointment'})
-    [result] I need the customer to provide: slot_code. Quote this confirmation reference back when the customer answers: 716d0f93
-  -> not performed  (this action was required)  [gate asked for confirmation]
