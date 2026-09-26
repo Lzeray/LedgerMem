@@ -1,0 +1,35 @@
+hC0          current only             use=correct  'DE12500105170648489890'
+hR0          old marked               use=correct  'SAV-40000-1'
+hW0          dropped                  use=unclear  'UNCLEAR'
+hC1          current only             use=unclear  'UNCLEAR'
+hR1          old marked               use=correct  'SAV-40274-3'
+hW1          dropped                  use=unclear  'UNCLEAR'
+hC2          current only             use=unclear  'UNCLEAR'
+hR2          old marked               use=correct  'SAV-40548-5'
+hW2          dropped                  use=unclear  'UNCLEAR'
+hC3          current only             use=unclear  'UNCLEAR'
+hR3          old marked               use=correct  'SAV-40822-7'
+hW3          dropped                  use=unclear  'UNCLEAR'
+hC4          current only             use=correct  'SE4550000000058398257466'
+hR4          old marked               use=correct  'SAV-41096-2'
+hW4          dropped                  use=unclear  'UNCLEAR'
+hC5          current only             use=unclear  'UNCLEAR'
+hR5          old marked               use=correct  'SAV-41370-4'
+hW5          dropped                  use=unclear  'UNCLEAR'
+hC6          current only             use=correct  'IE29AIBK93115212345678'
+hR6          old marked               use=correct  'SAV-41644-6'
+hW6          dropped                  use=unclear  'UNCLEAR'
+hC7          current only             use=unclear  'UNCLEAR'
+hR7          old marked               use=correct  'SAV-41918-1'
+hW7          dropped                  use=unclear  'UNCLEAR'
+
+summary
+  source      write {}
+  source      use   {}
+  correction  write {'current only': 8}
+  correction  use   {'correct': 3, 'unclear': 5}
+  retraction  write {'old marked': 8}
+  retraction  use   {'correct': 8}
+  withdrawal  write {'dropped': 8}
+  withdrawal  use   {'unclear': 8}
+written to logs_pilot/memory_hard_qwen3.5_9b.json

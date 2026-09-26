@@ -1,0 +1,35 @@
+hC0          current only             use=correct  'DE12500105170648489890'
+hR0          old marked, new lost     use=unclear  'UNCLEAR'
+hW0          marked                   use=correct  'no'
+hC1          current only             use=correct  'NL91ABNA0417164300'
+hR1          old marked               use=correct  'SAV-40274-3'
+hW1          marked                   use=correct  'no'
+hC2          current only             use=correct  'IT60X0542811101000000123456'
+hR2          old marked               use=correct  'SAV-40548-5'
+hW2          marked                   use=correct  'no'
+hC3          current only             use=correct  'BE68539007547034'
+hR3          old marked               use=correct  'SAV-40822-7'
+hW3          marked                   use=correct  'no'
+hC4          current only             use=correct  'SE4550000000058398257466'
+hR4          old marked               use=correct  'SAV-41096-2'
+hW4          dropped                  use=unclear  'UNCLEAR'
+hC5          current only             use=correct  'DK5000400440116243'
+hR5          old marked               use=correct  'SAV-41370-4'
+hW5          marked                   use=correct  'no'
+hC6          current only             use=correct  'IE29AIBK93115212345678'
+hR6          old marked               use=correct  'SAV-41644-6'
+hW6          marked                   use=correct  'no'
+hC7          current only             use=correct  'HU42117730161111101800000000'
+hR7          old marked               use=correct  'SAV-41918-1'
+hW7          marked                   use=correct  'no'
+
+summary
+  source      write {}
+  source      use   {}
+  correction  write {'current only': 8}
+  correction  use   {'correct': 8}
+  retraction  write {'old marked, new lost': 1, 'old marked': 7}
+  retraction  use   {'unclear': 1, 'correct': 7}
+  withdrawal  write {'marked': 7, 'dropped': 1}
+  withdrawal  use   {'correct': 7, 'unclear': 1}
+written to logs_pilot/memory_hard_Qwen_Qwen3.6-35B-A3B.json

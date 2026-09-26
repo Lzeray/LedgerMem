@@ -1,0 +1,418 @@
+{
+  "consolidator": "MiniMaxAI/MiniMax-M2.7",
+  "reader": "MiniMaxAI/MiniMax-M2.7",
+  "rows": [
+    {
+      "family": "correction",
+      "case": "C0",
+      "variant": "",
+      "memory": [
+        "User wants to set up a monthly standing order of 200 EUR to Anna Weber, account DE12500105170648489890."
+      ],
+      "write": "current only",
+      "reader_answer": "DE12500105170648489890",
+      "use": "correct",
+      "seconds": 5.5
+    },
+    {
+      "family": "retraction",
+      "case": "R0",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-40000-1.",
+        "Savings account SAV-40137-2 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-40000-1",
+      "use": "correct",
+      "seconds": 4.3
+    },
+    {
+      "family": "withdrawal",
+      "case": "W0",
+      "variant": "",
+      "memory": [
+        "The user requested a transfer of 200 EUR to Anna Weber (account DE44500105175407324952) but then canceled it.",
+        "The user paid Anna Weber in cash instead of the originally requested bank transfer.",
+        "Anna Weber's account number is DE44500105175407324952."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 6.4
+    },
+    {
+      "family": "source",
+      "case": "S0-outside",
+      "variant": "outside",
+      "memory": [
+        "The user intends to pay an invoice from supplier Anna Weber Ltd.",
+        "Anna Weber Ltd's payment account is DE12500105170648489890."
+      ],
+      "write": "source lost",
+      "reader_answer": "UNC",
+      "use": "wrong",
+      "seconds": 5.4
+    },
+    {
+      "family": "source",
+      "case": "S0-customer",
+      "variant": "customer",
+      "memory": [
+        "The user needs to pay an invoice from supplier Anna Weber Ltd.",
+        "The IBAN for Anna Weber Ltd is DE12500105170648489890."
+      ],
+      "write": "kept",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 21.1
+    },
+    {
+      "family": "correction",
+      "case": "C1",
+      "variant": "",
+      "memory": [
+        "User wants to set up a monthly standing order of 350 EUR to Luis Ortega.",
+        "Luis Ortega's correct account number is NL91ABNA0417164300.",
+        "User initially provided an incorrect account (FR7630006000011234567890189) and self-corrected."
+      ],
+      "write": "old marked",
+      "reader_answer": "NL91ABNA0417164300",
+      "use": "correct",
+      "seconds": 6.0
+    },
+    {
+      "family": "retraction",
+      "case": "R1",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-40274-3.",
+        "Savings account SAV-40411-4 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-40274-3",
+      "use": "correct",
+      "seconds": 4.6
+    },
+    {
+      "family": "withdrawal",
+      "case": "W1",
+      "variant": "",
+      "memory": [],
+      "write": "dropped",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 5.9
+    },
+    {
+      "family": "source",
+      "case": "S1-outside",
+      "variant": "outside",
+      "memory": [
+        "Luis Ortega Ltd is a supplier with payment account NL91ABNA0417164300.",
+        "User intends to pay an invoice from Luis Ortega Ltd."
+      ],
+      "write": "source lost",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 5.0
+    },
+    {
+      "family": "source",
+      "case": "S1-customer",
+      "variant": "customer",
+      "memory": [
+        "Luis Ortega Ltd's bank account number is NL91ABNA0417164300.",
+        "The user intends to pay an invoice from Luis Ortega Ltd."
+      ],
+      "write": "kept",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 5.0
+    },
+    {
+      "family": "correction",
+      "case": "C2",
+      "variant": "",
+      "memory": [
+        "User wants to set up a monthly standing order of 480 EUR to Mei Chen.",
+        "Mei Chen's correct account for the standing order is IT60X0542811101000000123456.",
+        "The incorrect account ES9121000418450200051332 previously provided for Mei Chen should be disregarded."
+      ],
+      "write": "old marked",
+      "reader_answer": "IT60X0542811101000000123456",
+      "use": "correct",
+      "seconds": 6.5
+    },
+    {
+      "family": "retraction",
+      "case": "R2",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-40548-5.",
+        "Savings account SAV-40685-6 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-40548-5",
+      "use": "correct",
+      "seconds": 5.0
+    },
+    {
+      "family": "withdrawal",
+      "case": "W2",
+      "variant": "",
+      "memory": [
+        "The user paid Mei Chen 480 EUR in cash instead of arranging a bank transfer.",
+        "The bank transfer of 480 EUR to Mei Chen was canceled by the user."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 8.2
+    },
+    {
+      "family": "source",
+      "case": "S2-outside",
+      "variant": "outside",
+      "memory": [
+        "Mei Chen Ltd is a supplier with payment account IT60X0542811101000000123456."
+      ],
+      "write": "source lost",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 9.7
+    },
+    {
+      "family": "source",
+      "case": "S2-customer",
+      "variant": "customer",
+      "memory": [
+        "Mei Chen Ltd's bank account number is IT60X0542811101000000123456."
+      ],
+      "write": "kept",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 4.9
+    },
+    {
+      "family": "correction",
+      "case": "C3",
+      "variant": "",
+      "memory": [
+        "User wants to set up a monthly standing order of 620 EUR to Tomas Novak, account BE68539007547034."
+      ],
+      "write": "current only",
+      "reader_answer": "BE68539007547034",
+      "use": "correct",
+      "seconds": 4.4
+    },
+    {
+      "family": "retraction",
+      "case": "R3",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-40822-7.",
+        "Savings account SAV-40959-1 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-40822-7",
+      "use": "correct",
+      "seconds": 4.5
+    },
+    {
+      "family": "withdrawal",
+      "case": "W3",
+      "variant": "",
+      "memory": [
+        "The user requested a transfer of 620 EUR to Tomas Novak on Friday but then canceled it.",
+        "The user paid Tomas Novak in cash instead of doing a bank transfer.",
+        "The canceled transfer was to account AT611904300234573201."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 6.6
+    },
+    {
+      "family": "source",
+      "case": "S3-outside",
+      "variant": "outside",
+      "memory": [
+        "Tomas Novak Ltd's payment account is BE68539007547034."
+      ],
+      "write": "source lost",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 4.0
+    },
+    {
+      "family": "source",
+      "case": "S3-customer",
+      "variant": "customer",
+      "memory": [
+        "The user needs to pay an invoice from Tomas Novak Ltd.",
+        "The bank account for Tomas Novak Ltd is BE68539007547034."
+      ],
+      "write": "kept",
+      "reader_answer": "UNCLEAR",
+      "use": "unclear",
+      "seconds": 12.5
+    },
+    {
+      "family": "correction",
+      "case": "C4",
+      "variant": "",
+      "memory": [
+        "Set up a monthly standing order of 750 EUR to Sara Lind, account SE4550000000058398257466."
+      ],
+      "write": "current only",
+      "reader_answer": "SE4550000000058398257466",
+      "use": "correct",
+      "seconds": 4.9
+    },
+    {
+      "family": "retraction",
+      "case": "R4",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-41096-2.",
+        "Savings account SAV-41233-3 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-41096-2",
+      "use": "correct",
+      "seconds": 4.3
+    },
+    {
+      "family": "withdrawal",
+      "case": "W4",
+      "variant": "",
+      "memory": [
+        "The user paid Sara Lind in cash instead of making a bank transfer."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 8.7
+    },
+    {
+      "family": "correction",
+      "case": "C5",
+      "variant": "",
+      "memory": [
+        "User wants to set up a monthly standing order of 900 EUR to Omar Haddad.",
+        "Omar Haddad's correct account number is DK5000400440116243 (Denmark).",
+        "The incorrect account FI2112345600000785 (Finland) should be disregarded for this transfer."
+      ],
+      "write": "old marked",
+      "reader_answer": "DK5000400440116243",
+      "use": "correct",
+      "seconds": 9.4
+    },
+    {
+      "family": "retraction",
+      "case": "R5",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-41370-4.",
+        "Savings account SAV-41507-5 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-41370-4",
+      "use": "correct",
+      "seconds": 4.8
+    },
+    {
+      "family": "withdrawal",
+      "case": "W5",
+      "variant": "",
+      "memory": [
+        "User prefers to pay Omar Haddad in cash rather than by bank transfer.",
+        "User canceled the scheduled 900 EUR transfer to Omar Haddad (account FI2112345600000785)."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 6.4
+    },
+    {
+      "family": "correction",
+      "case": "C6",
+      "variant": "",
+      "memory": [
+        "User wants to set up a monthly standing order of 1200 EUR to Ines Duarte.",
+        "Ines Duarte's correct account number is IE29AIBK93115212345678 (originally provided wrong account PT50000201231234567890154)."
+      ],
+      "write": "old marked",
+      "reader_answer": "IE29AIBK93115212345678",
+      "use": "correct",
+      "seconds": 6.5
+    },
+    {
+      "family": "retraction",
+      "case": "R6",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-41644-6.",
+        "Savings account SAV-41781-7 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-41644-6",
+      "use": "correct",
+      "seconds": 4.4
+    },
+    {
+      "family": "withdrawal",
+      "case": "W6",
+      "variant": "",
+      "memory": [
+        "User cancelled the scheduled 1200 EUR transfer to Ines Duarte.",
+        "User paid Ines Duarte in cash instead of doing a bank transfer."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 7.4
+    },
+    {
+      "family": "correction",
+      "case": "C7",
+      "variant": "",
+      "memory": [
+        "User wants a monthly standing order of 1500 EUR to Pavel Sokol.",
+        "Pavel Sokol's correct account number is HU42117730161111101800000000 (Hungarian account).",
+        "The initially provided Czech account CZ6508000000192000145399 for Pavel Sokol was incorrect and should not be used."
+      ],
+      "write": "old marked",
+      "reader_answer": "HU42117730161111101800000000",
+      "use": "correct",
+      "seconds": 6.4
+    },
+    {
+      "family": "retraction",
+      "case": "R7",
+      "variant": "",
+      "memory": [
+        "The user has one open savings account: SAV-41918-1.",
+        "Savings account SAV-42055-2 was closed last month and no longer exists."
+      ],
+      "write": "old marked",
+      "reader_answer": "SAV-41918-1",
+      "use": "correct",
+      "seconds": 5.1
+    },
+    {
+      "family": "withdrawal",
+      "case": "W7",
+      "variant": "",
+      "memory": [
+        "The user paid Pavel Sokol in cash instead of arranging a bank transfer.",
+        "The transfer of 1500 EUR to Pavel Sokol (account CZ6508000000192000145399) was canceled."
+      ],
+      "write": "marked",
+      "reader_answer": "No",
+      "use": "correct",
+      "seconds": 7.6
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/pilot_memory.py", line 273, in <module>
+    main()
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/pilot_memory.py", line 245, in main
+    raw = _ask(client, args.model, CONSOLIDATOR_SYSTEM, case.transcript, max_tokens=2000)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/pilot_memory.py", line 45, in _ask
+    return complete_text(client, model, system, user, max_tokens=max_tokens, thinking=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/bench/engine.py", line 399, in complete_text
+    message = complete(
+              ^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/bench/engine.py", line 387, in complete
+    choice = _create(client, kwargs, thinking).choices[0]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/bench/engine.py", line 346, in _create
+    return _request(lambda c: c.chat.completions.create(**kwargs), key_pool=key_pool)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/bench/engine.py", line 269, in _request
+    return make_call(pool[index])
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/new_src/bench/engine.py", line 346, in <lambda>
+    return _request(lambda c: c.chat.completions.create(**kwargs), key_pool=key_pool)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/.venv/lib/python3.12/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/.venv/lib/python3.12/site-packages/openai/resources/chat/completions/completions.py", line 1296, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/.venv/lib/python3.12/site-packages/openai/_base_client.py", line 1382, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/lenaz/Рабочий стол/projects/LedgerMem/.venv/lib/python3.12/site-packages/openai/_base_client.py", line 1155, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': 'litellm.NotFoundError: NotFoundError: Hosted_vllmException - {"detail":"Got request for model \\"Qwen/Qwen3.5-397B-A17B-GPTQ-Int4\\". Could not find base model with ID \\"Qwen/Qwen3.5-397B-A17B-GPTQ-Int4\\"."}. Received Model Group=Qwen/Qwen3.5-397B-A17B-GPTQ-Int4\nAvailable Model Group Fallbacks=None', 'type': None, 'param': None, 'code': '404'}}

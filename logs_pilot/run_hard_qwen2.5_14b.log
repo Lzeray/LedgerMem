@@ -1,0 +1,35 @@
+hC0          current only             use=correct  'DE12500105170648489890'
+hR0          old marked               use=correct  'SAV-40000-1'
+hW0          unmarked (unsafe)        use=unclear  'UNCLEAR'
+hC1          current only             use=correct  'NL91ABNA0417164300'
+hR1          old marked               use=correct  'SAV-40274-3'
+hW1          unmarked (unsafe)        use=wrong    'yes'
+hC2          current only             use=correct  'IT60X0542811101000000123456'
+hR2          old marked               use=correct  'SAV-40548-5'
+hW2          unmarked (unsafe)        use=wrong    'yes'
+hC3          current only             use=correct  'BE68539007547034'
+hR3          old marked               use=correct  'SAV-40822-7'
+hW3          unmarked (unsafe)        use=unclear  'UNCLEAR'
+hC4          current only             use=correct  'SE4550000000058398257466'
+hR4          old marked               use=correct  'SAV-41096-2'
+hW4          unmarked (unsafe)        use=wrong    'yes'
+hC5          current only             use=correct  'DK5000400440116243'
+hR5          old marked               use=correct  'SAV-41370-4'
+hW5          unmarked (unsafe)        use=unclear  'UNCLEAR'
+hC6          current only             use=correct  'IE29AIBK93115212345678'
+hR6          old marked               use=correct  'SAV-41644-6'
+hW6          unmarked (unsafe)        use=wrong    'yes'
+hC7          current only             use=unclear  'UNCLEAR'
+hR7          old marked               use=correct  'SAV-41918-1'
+hW7          unmarked (unsafe)        use=wrong    'yes'
+
+summary
+  source      write {}
+  source      use   {}
+  correction  write {'current only': 8}
+  correction  use   {'correct': 7, 'unclear': 1}
+  retraction  write {'old marked': 8}
+  retraction  use   {'correct': 8}
+  withdrawal  write {'unmarked (unsafe)': 8}
+  withdrawal  use   {'unclear': 3, 'wrong': 5}
+written to logs_pilot/memory_hard_qwen2.5_14b.json
