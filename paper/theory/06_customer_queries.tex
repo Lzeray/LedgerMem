@@ -26,7 +26,9 @@ Theorem~\ref{thm:nomodel}.
 \end{proof}
 
 $G$ asks one question per parameter that is not bound: missing ones are provided, ambiguous ones
-chosen, blocked ones confirmed. When any question was asked, it adds the approval. So it meets the
+chosen, blocked ones confirmed. A proposal that no record carries is confirmed like a blocked value,
+with the agent named as its source, or offered as one more button when the customer has values of
+their own. When any question was asked, it adds the approval. So it meets the
 bound with $k$ answers plus one approval for $k \geq 1$, and asks nothing at $k = 0$, which is the
 case where it relies on $Q$, $R$, $L$ and $E$ (Corollary~\ref{cor:residual}). Choosing among $r$
 candidates costs one $\mathsf{choose}$ where yes/no confirmations need up to $r - 1$.

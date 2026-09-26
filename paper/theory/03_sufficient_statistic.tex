@@ -48,7 +48,9 @@ Under faithfulness and completeness the store determines $\sigma$, so $D^*$ is c
 $G$ equals $D^*$ with one deliberate exception. When the customer's value under $k$ is unique but
 another source gives a different value, $\st_k = v$ and $D^*$ binds $v$, whereas $G$ sees two
 values on record and does not execute without the customer. The gap costs TSR and never ASR.
-The same holds for requests naming two objects.
+The same holds for requests naming two objects. The agent's proposals close exactly this gap: if the
+agent proposes $v$, $G$ binds it, because an $\Au$ record carries it. The cost is that $G$ then
+implements selection rather than uniqueness (Section~\ref{sec:selection}).
 \end{remark}
 
 \subsection*{The exact minimal memory}

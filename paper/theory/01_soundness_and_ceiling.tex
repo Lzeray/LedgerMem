@@ -1,6 +1,9 @@
 \section{Soundness, faithfulness and the ceiling}\label{sec:ceiling}
 
-Let $G$ be the gate of the formal model, run with no customer attached.
+Let $G$ be the gate of the formal model, run with no customer attached. In this section the
+agent proposes nothing ($\pi = \emptyset$), and $G$ then decides by the uniqueness permission
+$\Perm$. With proposals, the gate implements the weaker selection permission, and the
+corresponding results are in Section~\ref{sec:selection}.
 
 \begin{theorem}[Soundness reduces to the write]\label{thm:sound}
 If $W$ is faithful and complete on $h$, then $G(W(\view(h)), o) = \exec$ implies
