@@ -34,6 +34,20 @@ from pathlib import Path
 
 from new_src.bench.engine import complete_text, make_client
 from new_src.bench.module_a import CONSOLIDATOR_SYSTEM, _parse_consolidation
+from new_src.config import BASE_URL
+
+
+def _ask(client, model: str, system: str, user: str, max_tokens: int) -> str:
+    """One answer with reasoning off. Ollama ignores `chat_template_kwargs`, which is how the shared
+    engine asks vLLM to stop thinking; there a reasoning model spends its whole budget thinking and
+    one case takes over a minute. Ollama's switch is `reasoning_effort: none`."""
+    if ":11434" not in BASE_URL:
+        return complete_text(client, model, system, user, max_tokens=max_tokens, thinking=False)
+    response = client.chat.completions.create(
+        model=model, temperature=0, max_tokens=max_tokens,
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        extra_body={"reasoning_effort": "none"})
+    return (response.choices[0].message.content or "").strip()
 
 OUT = Path("logs_pilot")
 
@@ -228,12 +242,11 @@ def main():
     partial = OUT / "partial.json"
     for case in _cases(args.hard):
         t0 = time.time()
-        raw = complete_text(client, args.model, CONSOLIDATOR_SYSTEM, case.transcript, max_tokens=2000,
-                            thinking=False)
+        raw = _ask(client, args.model, CONSOLIDATOR_SYSTEM, case.transcript, max_tokens=2000)
         items = [text for text, _ in _parse_consolidation(raw)]
-        answer = complete_text(client, reader, READER_SYSTEM,
-                               "Memory notes:\n" + "\n".join(f"- {t}" for t in items) +
-                               f"\n\nQuestion: {case.question}", max_tokens=200, thinking=False)
+        answer = _ask(client, reader, READER_SYSTEM,
+                      "Memory notes:\n" + "\n".join(f"- {t}" for t in items) +
+                      f"\n\nQuestion: {case.question}", max_tokens=200)
         row = {"family": case.family, "case": case.case_id, "variant": case.variant, "memory": items,
                "write": score_write(case, items), "reader_answer": answer, "use": score_use(case, answer),
                "seconds": round(time.time() - t0, 1)}
